@@ -141,9 +141,7 @@
     <vertexScaleByHeight>158</vertexScaleByHeight>
     <waitProcessExitting>false</waitProcessExitting>
     <pmxAssetPath>Assets/Item/Characters/Miku_Panda/PandaMiku.pmx</pmxAssetPath>
-    <vmdAssetPathList>
-      <string>Assets/Item/Animation/Animation.vmd</string>
-    </vmdAssetPathList>
+    <vmdAssetPathList />
     <fbxOutputPath>Assets/Item/Characters/Miku_Panda/PandaMiku.fbx</fbxOutputPath>
     <bulletPhysicsVersion>_275</bulletPhysicsVersion>
     <useWineFlag>false</useWineFlag>
@@ -182,5 +180,7 @@
       <selfShadowEnabled>true</selfShadowEnabled>
       <sphereMapEnabled>true</sphereMapEnabled>
     </materialGlobalProperty>
+    <materialProperyList />
+    <materialBlockPropertyList />
   </mmd4MecanimProperty>
 </PMX2FBXConfig>

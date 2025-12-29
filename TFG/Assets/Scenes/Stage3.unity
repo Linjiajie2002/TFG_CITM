@@ -269,6 +269,14 @@ PrefabInstance:
       value: Miku224
       objectReference: {fileID: 0}
     - target: {fileID: 4907022980049178400, guid: e07375e4417f8b84a806678767dee074, type: 3}
+      propertyPath: animEnabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4907022980049178400, guid: e07375e4417f8b84a806678767dee074, type: 3}
+      propertyPath: editorViewPage
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4907022980049178400, guid: e07375e4417f8b84a806678767dee074, type: 3}
       propertyPath: nextEdgeMaterial_Pass4
       value: 
       objectReference: {fileID: 1626894301}
@@ -319,7 +327,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4886686345108835354, guid: e07375e4417f8b84a806678767dee074, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1523367833}
   m_SourcePrefab: {fileID: 100100000, guid: e07375e4417f8b84a806678767dee074, type: 3}
 --- !u!1 &785781186
 GameObject:
@@ -479,6 +490,33 @@ Material:
     - _EdgeColor: {r: 0.39999998, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+--- !u!1 &1523367829 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4886686345108835354, guid: e07375e4417f8b84a806678767dee074, type: 3}
+  m_PrefabInstance: {fileID: 771274455}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &1523367831 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 2196352743927139546, guid: e07375e4417f8b84a806678767dee074, type: 3}
+  m_PrefabInstance: {fileID: 771274455}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1523367833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1523367829}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 012769f313cee1f4da4d79e4e9d5a4bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DanceController
+  animator: {fileID: 1523367831}
+  danceStateNames:
+  - Animation_vmd
+  - Animation2_vmd
+  transitionDuration: 0.5
 --- !u!21 &1626894301
 Material:
   serializedVersion: 8

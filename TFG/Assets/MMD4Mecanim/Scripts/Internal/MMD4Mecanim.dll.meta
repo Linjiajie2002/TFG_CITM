@@ -1,14 +1,20 @@
 fileFormatVersion: 2
 guid: 900acfa85703e094c83da0439179f736
-timeCreated: 1467892247
-licenseType: Pro
 PluginImporter:
-  serializedVersion: 1
+  externalObjects: {}
+  serializedVersion: 3
   iconMap: {}
   executionOrder: {}
+  defineConstraints: []
   isPreloaded: 0
   isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
   platformData:
+    :
+      enabled: 0
+      settings:
+        CPU: AnyCPU
     Android:
       enabled: 0
       settings:
@@ -32,33 +38,33 @@ PluginImporter:
         Exclude WindowsStoreApps: 1
         Exclude iOS: 0
         Exclude tvOS: 1
+    CloudRendering:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
     Editor:
       enabled: 0
       settings:
         CPU: AnyCPU
         DefaultValueInitialized: true
         OS: AnyOS
-    Linux:
+    EmbeddedLinux:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+    GameCoreScarlett:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+    GameCoreXboxOne:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+    Kepler:
       enabled: 0
       settings:
         CPU: AnyCPU
     Linux64:
-      enabled: 0
-      settings:
-        CPU: AnyCPU
-    LinuxUniversal:
-      enabled: 0
-      settings:
-        CPU: AnyCPU
-    N3DS:
-      enabled: 0
-      settings:
-        CPU: AnyCPU
-    OSXIntel:
-      enabled: 0
-      settings:
-        CPU: AnyCPU
-    OSXIntel64:
       enabled: 0
       settings:
         CPU: AnyCPU
@@ -70,28 +76,27 @@ PluginImporter:
       enabled: 0
       settings:
         CPU: AnyCPU
-    PSM:
+    PS5:
       enabled: 0
       settings:
         CPU: AnyCPU
-    PSP2:
+    QNX:
       enabled: 0
       settings:
         CPU: AnyCPU
-    SamsungTV:
+    Switch:
       enabled: 0
       settings:
         CPU: AnyCPU
-        STV_MODEL: STANDARD_15
-    Tizen:
+    Switch2:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+    VisionOS:
       enabled: 0
       settings:
         CPU: AnyCPU
     WebGL:
-      enabled: 0
-      settings:
-        CPU: AnyCPU
-    WiiU:
       enabled: 0
       settings:
         CPU: AnyCPU
@@ -115,9 +120,6 @@ PluginImporter:
       enabled: 0
       settings:
         CPU: AnyCPU
-    data:
-      enabled: 0
-      settings: {}
     iOS:
       enabled: 1
       settings:

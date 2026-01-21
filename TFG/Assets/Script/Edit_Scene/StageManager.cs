@@ -45,7 +45,7 @@ public class StageManager : MonoBehaviour
             currentCharacter = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation);
 
             // 获取角色身上的 Animator 组件
-            charAnimator = currentCharacter.GetComponent<Animator>();
+            charAnimator = currentCharacter.GetComponentInChildren<Animator>();
 
             // 如果Prefab没挂Animator，为了防止报错，加个Log提醒
             if (charAnimator == null)

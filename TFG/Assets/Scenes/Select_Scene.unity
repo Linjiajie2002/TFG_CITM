@@ -2044,9 +2044,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   characterPrefabs:
-  - {fileID: 4886686345108835354, guid: e07375e4417f8b84a806678767dee074, type: 3}
-  - {fileID: 7068528841839385804, guid: ea812b23009a07d48826e856eba3b973, type: 3}
-  - {fileID: 2472026397745995173, guid: 9f37ff5d0ba938b4ebdb2d3ac3426bf9, type: 3}
+  - {fileID: 660886527509855514, guid: e07375e4417f8b84a806678767dee074, type: 3}
+  - {fileID: 1612306061244762309, guid: 44ec6eeef61983b4788189918f809d82, type: 3}
+  - {fileID: 6422654038556708792, guid: 6c11ee5f6edd46b4bb171733c1528f1a, type: 3}
   musicClips:
   - {fileID: 8300000, guid: 36e9a6071e9a24c43b494928bea37292, type: 3}
   - {fileID: 8300000, guid: de1259a3b6c913d42a6be4b13eaef721, type: 3}

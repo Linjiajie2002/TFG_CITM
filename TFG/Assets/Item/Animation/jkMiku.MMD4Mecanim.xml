@@ -142,8 +142,9 @@
     <waitProcessExitting>false</waitProcessExitting>
     <pmxAssetPath>Assets/Item/Animation/jkMiku.pmx</pmxAssetPath>
     <vmdAssetPathList>
-      <string>Assets/Item/Animation/Animation.vmd</string>
-      <string>Assets/Item/Animation/Animation2.vmd</string>
+      <string>Assets/Item/Animation/Action1.vmd</string>
+      <string>Assets/Item/Animation/Action2.vmd</string>
+      <string>Assets/Item/Animation/Action3.vmd</string>
     </vmdAssetPathList>
     <fbxOutputPath>Assets/Item/Animation/jkMiku.fbx</fbxOutputPath>
     <bulletPhysicsVersion>_275</bulletPhysicsVersion>
@@ -183,5 +184,7 @@
       <selfShadowEnabled>true</selfShadowEnabled>
       <sphereMapEnabled>true</sphereMapEnabled>
     </materialGlobalProperty>
+    <materialProperyList />
+    <materialBlockPropertyList />
   </mmd4MecanimProperty>
 </PMX2FBXConfig>

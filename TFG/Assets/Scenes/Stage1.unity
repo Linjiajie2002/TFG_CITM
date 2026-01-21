@@ -1649,6 +1649,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StageManager
   spawnPoint: {fileID: 1310876015}
   musicPlayer: {fileID: 1310876014}
+  baseAnimatorController: {fileID: 9100000, guid: c8e3efd29eae2a64da1c3504503108d8, type: 2}
   customizationCanvas: {fileID: 1588466568}
   editorCamera: {fileID: 279623693}
   concertCanvas: {fileID: 0}

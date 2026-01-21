@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
     [Header("Source")]
     public GameObject[] characterPrefabs; // Character List
     public AudioClip[] musicClips;        // Music List
+    public string[] danceStateNames;  // Dance Animation List
 
     [Header("Stage")]
     public string[] stageSceneNames;

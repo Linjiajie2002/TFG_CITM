@@ -2051,6 +2051,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 36e9a6071e9a24c43b494928bea37292, type: 3}
   - {fileID: 8300000, guid: de1259a3b6c913d42a6be4b13eaef721, type: 3}
   - {fileID: 8300000, guid: 5d9495ff8f71272408f8a5c09d277b52, type: 3}
+  danceStateNames:
+  - Action1_vmd
+  - Action2_vmd
+  - Action3_vmd
   stageSceneNames:
   - Stage1
   - Stage2

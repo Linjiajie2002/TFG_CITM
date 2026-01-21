@@ -1,27 +1,30 @@
 fileFormatVersion: 2
 guid: d9f0ed263a55f9945a544bd61a26bf58
-timeCreated: 1467975890
-licenseType: Pro
 PluginImporter:
-  serializedVersion: 1
+  externalObjects: {}
+  serializedVersion: 3
   iconMap: {}
   executionOrder: {}
+  defineConstraints: []
   isPreloaded: 0
   isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
   platformData:
-    Editor:
+    Any:
       enabled: 0
+      settings:
+        Exclude Editor: 1
+    Editor:
+      enabled: 1
       settings:
         CPU: x86
         DefaultValueInitialized: true
         OS: Windows
     Win:
-      enabled: 0
+      enabled: 1
       settings:
-        CPU: AnyCPU
-    data:
-      enabled: 0
-      settings: {}
+        CPU: x86
   userData: 
   assetBundleName: 
   assetBundleVariant: 

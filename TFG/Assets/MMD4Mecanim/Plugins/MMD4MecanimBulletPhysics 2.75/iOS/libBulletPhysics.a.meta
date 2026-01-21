@@ -1,23 +1,22 @@
 fileFormatVersion: 2
 guid: 781cda3485fa5429294144c1dfd74bc5
-timeCreated: 1504323898
-licenseType: Pro
 PluginImporter:
-  serializedVersion: 1
+  externalObjects: {}
+  serializedVersion: 3
   iconMap: {}
   executionOrder: {}
+  defineConstraints: []
   isPreloaded: 0
   isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
   platformData:
     Editor:
       enabled: 0
       settings:
         DefaultValueInitialized: true
-    data:
-      enabled: 0
-      settings: {}
     iOS:
-      enabled: 0
+      enabled: 1
       settings: {}
   userData: 
   assetBundleName: 

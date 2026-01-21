@@ -15,9 +15,10 @@ PluginImporter:
       enabled: 0
       settings: {}
     Editor:
-      enabled: 0
+      enabled: 1
       settings:
         DefaultValueInitialized: true
+        OS: OSX
     OSXUniversal:
       enabled: 0
       settings:

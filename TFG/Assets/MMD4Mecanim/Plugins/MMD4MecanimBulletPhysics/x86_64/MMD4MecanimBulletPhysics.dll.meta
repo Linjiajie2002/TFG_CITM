@@ -12,13 +12,13 @@ PluginImporter:
   validateReferences: 1
   platformData:
     Editor:
-      enabled: 1
+      enabled: 0
       settings:
         CPU: x86_64
         DefaultValueInitialized: true
         OS: Windows
     Win64:
-      enabled: 1
+      enabled: 0
       settings:
         CPU: x86_64
   userData: 

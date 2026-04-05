@@ -1,23 +1,26 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; 
+using UnityEngine.SceneManagement;
 
 public class StageManager : MonoBehaviour
 {
 
-    public Transform spawnPoint;      
-    public AudioSource musicPlayer;  
+    public Transform spawnPoint;
+    public AudioSource musicPlayer;
 
     [Header("Configuration Panel Mode")]//Customization Mode
-    public GameObject customizationCanvas; 
-    public Camera editorCamera;            
+    public GameObject customizationCanvas;
+    public Camera editorCamera;
 
     [Header("Concert Mode")]//Concert Mode
-    public GameObject concertCanvas;       
-    public Camera audienceCamera;          
+    public GameObject concertCanvas;
+    public Camera audienceCamera;
 
-  
-    private GameObject currentCharacter;   
-    private Animator charAnimator;         
+    // 【新增】核心连线：让 StageManager 认识 TimelineManager
+    [Header("Timeline Connection")]
+    public TimelineManager timelineManager;
+
+    private GameObject currentCharacter;
+    private Animator charAnimator;
 
     void Start()
     {
@@ -57,6 +60,24 @@ public class StageManager : MonoBehaviour
         if (GameManager.Instance.musicClips.Length > musicIndex)
         {
             musicPlayer.clip = GameManager.Instance.musicClips[musicIndex];
+        }
+
+        // --- 【新增核心逻辑：通知时间轴干活】 ---
+        if (timelineManager != null)
+        {
+            string currentDance = "Default_Dance";
+            if (GameManager.Instance.danceStateNames.Length > musicIndex)
+            {
+                currentDance = GameManager.Instance.danceStateNames[musicIndex];
+            }
+
+            Debug.Log($"【StageManager】正在向时间轴发送数据... 舞蹈: {currentDance}");
+            timelineManager.SetupDynamicTimeline(charAnimator, musicPlayer, currentDance);
+        }
+        else
+        {
+            // 防呆提示：如果你忘了连线，控制台会立刻告诉你！
+            Debug.LogError("【严重错误】StageManager 上的 Timeline Manager 槽位是空的！请在 Inspector 里把 Timeline_Root 拖进去！");
         }
     }
 
@@ -117,7 +138,7 @@ public class StageManager : MonoBehaviour
             {
                 string stateName = danceNames[musicIndex];
 
-                
+
                 charAnimator.CrossFade(stateName, 0.1f);
 
 
@@ -133,7 +154,7 @@ public class StageManager : MonoBehaviour
     // back to main menu
     public void BackToMainMenu()
     {
-     
+
         CancelInvoke();
         SceneManager.LoadScene(0);
     }

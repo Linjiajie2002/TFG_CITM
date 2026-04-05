@@ -3,7 +3,6 @@ using UnityEngine.SceneManagement;
 
 public class StageManager : MonoBehaviour
 {
-
     public Transform spawnPoint;
     public AudioSource musicPlayer;
 
@@ -15,7 +14,6 @@ public class StageManager : MonoBehaviour
     public GameObject concertCanvas;
     public Camera audienceCamera;
 
-    // 【新增】核心连线：让 StageManager 认识 TimelineManager
     [Header("Timeline Connection")]
     public TimelineManager timelineManager;
 
@@ -24,45 +22,29 @@ public class StageManager : MonoBehaviour
 
     void Start()
     {
-        // genera character and music
         SetupContent();
-
-        // start in customization mode
         EnterCustomizationMode();
     }
 
-    // generate character and prepare music
     void SetupContent()
     {
-        // get selected indices
         int charIndex = GameManager.Instance.selectedCharIndex;
         int musicIndex = GameManager.Instance.selectedMusicIndex;
 
-        // generate character
         if (GameManager.Instance.characterPrefabs.Length > charIndex)
         {
             GameObject prefab = GameManager.Instance.characterPrefabs[charIndex];
-
-            // spawn character at spawn point
             currentCharacter = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation);
-
-            // get Animator component
             charAnimator = currentCharacter.GetComponentInChildren<Animator>();
 
-            // if no Animator found, log error
-            if (charAnimator == null)
-            {
-                Debug.LogError("No Animator found");
-            }
+            if (charAnimator == null) Debug.LogError("No Animator found");
         }
 
-        // Prepare music
         if (GameManager.Instance.musicClips.Length > musicIndex)
         {
             musicPlayer.clip = GameManager.Instance.musicClips[musicIndex];
         }
 
-        // --- 【新增核心逻辑：通知时间轴干活】 ---
         if (timelineManager != null)
         {
             string currentDance = "Default_Dance";
@@ -76,85 +58,65 @@ public class StageManager : MonoBehaviour
         }
         else
         {
-            // 防呆提示：如果你忘了连线，控制台会立刻告诉你！
-            Debug.LogError("【严重错误】StageManager 上的 Timeline Manager 槽位是空的！请在 Inspector 里把 Timeline_Root 拖进去！");
+            Debug.LogError("【严重错误】StageManager 上的 Timeline Manager 槽位是空的！");
         }
     }
 
-    //customization mode
     public void EnterCustomizationMode()
     {
-        // UI change
-        if (customizationCanvas != null) customizationCanvas.SetActive(true);
-        if (concertCanvas != null) concertCanvas.SetActive(false);
+        // 【修改点1】隐藏/显示UI时，优先开关 Canvas 组件，而不是 SetActive
+        // 这样可以保证 UI 看不见，但是背后的 TimelineManager 脚本依然存活并在工作！
+        if (customizationCanvas != null)
+        {
+            Canvas canvas = customizationCanvas.GetComponent<Canvas>();
+            if (canvas != null) canvas.enabled = true;
+            else customizationCanvas.SetActive(true); // 兼容备用
+        }
 
-        // Camera change
+        if (concertCanvas != null) concertCanvas.SetActive(false);
         if (editorCamera != null) editorCamera.gameObject.SetActive(true);
         if (audienceCamera != null) audienceCamera.gameObject.SetActive(false);
 
-        // pause music
-        if (musicPlayer != null) musicPlayer.Stop();
+        // 【修改点2】从演出切回编辑时，用 Pause 暂停而不是 Stop，防止破坏状态
+        if (musicPlayer != null) musicPlayer.Pause();
     }
 
-    // Concert mode
     public void StartConcert()
     {
-        // Ui change
-        if (customizationCanvas != null) customizationCanvas.SetActive(false);
-        if (concertCanvas != null) concertCanvas.SetActive(true);
+        // 同样，只关闭渲染，保留 TimelineManager 的大脑继续运作
+        if (customizationCanvas != null)
+        {
+            Canvas canvas = customizationCanvas.GetComponent<Canvas>();
+            if (canvas != null) canvas.enabled = false;
+            else customizationCanvas.SetActive(false);
+        }
 
-        // Camera change
+        if (concertCanvas != null) concertCanvas.SetActive(true);
         if (editorCamera != null) editorCamera.gameObject.SetActive(false);
         if (audienceCamera != null) audienceCamera.gameObject.SetActive(true);
 
-        // play music
         if (musicPlayer != null && musicPlayer.clip != null)
         {
+            // 【核心修复 A】强制将音乐进度归零！确保一切从头开始
+            musicPlayer.time = 0f;
             musicPlayer.Play();
 
-            // get song duration
+            // 【核心修复 B】骗过时间轴：强制把动画速度设为0
+            // 这样时间轴在下一帧发现“咦，播放中但速度是0”，就会立刻触发一次完美的从零同步！
+            if (charAnimator != null) charAnimator.speed = 0f;
+
             float songDuration = musicPlayer.clip.length;
-
-            // Set timer to return to main menu after song ends 
             Invoke("BackToMainMenu", songDuration);
-
-            Debug.Log($"Durancion: {songDuration}");
+            Debug.Log($"Concert Duration: {songDuration}");
         }
 
-        // play dance
-        PlaySelectedDance();
+        // 【核心修复 C】彻底删除了 PlaySelectedDance() 的调用！
+        // 为什么？因为我们要求“演出模式和编辑模式完全一样”！
+        // 所以我们放权给隐藏在幕后的 TimelineManager，由它来控制所有的动画！
     }
 
-    // play dance according to selected music
-    void PlaySelectedDance()
-    {
-        if (charAnimator != null)
-        {
-            int musicIndex = GameManager.Instance.selectedMusicIndex;
-            string[] danceNames = GameManager.Instance.danceStateNames;
-
-            //check if index is valid
-            if (danceNames.Length > musicIndex)
-            {
-                string stateName = danceNames[musicIndex];
-
-
-                charAnimator.CrossFade(stateName, 0.1f);
-
-
-                //Debug.Log($"{stateName}");
-            }
-            else
-            {
-                Debug.LogWarning("GameManager no have Dance State Names");
-            }
-        }
-    }
-
-    // back to main menu
     public void BackToMainMenu()
     {
-
         CancelInvoke();
         SceneManager.LoadScene(0);
     }

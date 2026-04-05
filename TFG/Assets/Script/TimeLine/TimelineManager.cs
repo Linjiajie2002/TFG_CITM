@@ -21,7 +21,7 @@ public class TimelineManager : MonoBehaviour
     [Header("=== 核心组件 ===")]
     public AudioSource musicSource;
     public RectTransform contentParent;
-    public Slider playheadSlider;
+    public Slider playheadSlider; // 你的完美Handle，绝对不动它的内部结构
     public TextMeshProUGUI timeDisplayText;
     public TextMeshProUGUI playPauseButtonText;
 
@@ -30,16 +30,17 @@ public class TimelineManager : MonoBehaviour
     public GameObject tickPrefab;
     public GameObject dividerPrefab;
 
-    [Header("=== 配置 ===")]
+    [Header("=== 现代排版配置 ===")]
     public float pixelsPerSecond = 100f;
-    public int trackCount = 3;
+    public int trackCount = 3;             // 轨道数量
+    public float baseTrackHeight = 60f;    // 每条轨道固定高度，防止方块无限膨胀
     public float rulerInterval = 5.0f;
     public float rulerHeight = 30f;
 
     [Header("=== 位移烘焙数据 (底层引擎) ===")]
     private Vector3[] bakedPositions;
     private Quaternion[] bakedRotations;
-    private float bakeFPS = 30f; // 一秒记录30次位置
+    private float bakeFPS = 30f;
 
     private float totalDuration = 60f;
     private bool isDraggingSlider = false;
@@ -69,115 +70,71 @@ public class TimelineManager : MonoBehaviour
             totalDuration = 60f;
 
         allEvents.Clear();
-        ResizeContentWidth();
+
+        // 强行锁死 Content 为左上角原点
+        contentParent.pivot = new Vector2(0, 1);
+        contentParent.anchorMin = new Vector2(0, 1);
+        contentParent.anchorMax = new Vector2(0, 1);
+
+        ResizeContent();
         GenerateGridLines();
         GenerateRuler();
 
+        // 默认生成在最后一条轨道
         int bottomTrackIndex = trackCount - 1;
+        if (bottomTrackIndex < 0) bottomTrackIndex = 0;
         CreateClip(danceName, bottomTrackIndex, 0f, totalDuration);
 
         if (playPauseButtonText != null)
             playPauseButtonText.text = "▶";
 
+        // 保证 Handle 在最上层，并且强行拉长覆盖全区域！
         if (playheadSlider != null)
         {
             playheadSlider.transform.SetAsLastSibling();
+
+            // 【终极修复：光剑向下延伸】
+            // 无论父物体多短，强行把 Slider 底部往下拽 2000 像素，完美覆盖蓝框！
+            RectTransform sliderRt = playheadSlider.GetComponent<RectTransform>();
+            sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f);
         }
 
-        // 【超级核心】开始烘焙角色的位移轨迹！
         BakeRootMotion(danceName, totalDuration);
     }
 
     // ==========================================
-    // 引擎底层：预烘焙算法
-    // ==========================================
-    void BakeRootMotion(string stateName, float duration)
-    {
-        if (characterAnimator == null) return;
-
-        int totalFrames = Mathf.CeilToInt(duration * bakeFPS);
-        bakedPositions = new Vector3[totalFrames];
-        bakedRotations = new Quaternion[totalFrames];
-
-        // 记录刚生成时的原点位置（StageManager里的SpawnPoint）
-        Vector3 initialSpawnPos = characterAnimator.transform.position;
-        Quaternion initialSpawnRot = characterAnimator.transform.rotation;
-
-        // 强制归零到原点，并准备从0秒开始
-        characterAnimator.transform.position = initialSpawnPos;
-        characterAnimator.transform.rotation = initialSpawnRot;
-        characterAnimator.Play(stateName, 0, 0f);
-        characterAnimator.Update(0f);
-
-        // 用光速模拟未来的每一帧，并记录坐标
-        for (int i = 0; i < totalFrames; i++)
-        {
-            bakedPositions[i] = characterAnimator.transform.position;
-            bakedRotations[i] = characterAnimator.transform.rotation;
-
-            // 往未来推进 1/30 秒
-            characterAnimator.Update(1f / bakeFPS);
-        }
-
-        // 记录完毕！把角色神不知鬼不觉地复原回原点
-        characterAnimator.transform.position = initialSpawnPos;
-        characterAnimator.transform.rotation = initialSpawnRot;
-        characterAnimator.Play(stateName, 0, 0f);
-        characterAnimator.Update(0f);
-    }
-
-    // 根据时间提取烘焙好的坐标
-    void ApplyBakedRootMotion(float time)
-    {
-        if (bakedPositions == null || bakedPositions.Length == 0 || characterAnimator == null) return;
-
-        int frame = Mathf.FloorToInt(time * bakeFPS);
-        frame = Mathf.Clamp(frame, 0, bakedPositions.Length - 1);
-
-        characterAnimator.transform.position = bakedPositions[frame];
-        characterAnimator.transform.rotation = bakedRotations[frame];
-    }
+    // 视觉排版引擎 (固定高度，图3风格)
     // ==========================================
 
-
-    void ResizeContentWidth()
+    void ResizeContent()
     {
+        // 根据时间和轨道数量，精确计算 Content 的宽和高
         float totalWidth = totalDuration * pixelsPerSecond;
-        contentParent.sizeDelta = new Vector2(totalWidth, contentParent.sizeDelta.y);
+        float totalHeight = rulerHeight + (trackCount * baseTrackHeight);
+        contentParent.sizeDelta = new Vector2(totalWidth, totalHeight);
     }
 
     void GenerateGridLines()
     {
         ClearOldObjects("Divider_Template");
-        float totalWidth = contentParent.sizeDelta.x;
-        float totalHeight = contentParent.sizeDelta.y;
-        float trackAreaHeight = totalHeight - rulerHeight;
-        float singleTrackHeight = trackAreaHeight / (float)trackCount;
-        float topEdge = totalHeight / 2f;
-        float tracksStartY = topEdge - rulerHeight;
 
-        SpawnLine(0, tracksStartY, totalWidth);
-        for (int i = 1; i <= trackCount; i++)
-        {
-            float yPos = tracksStartY - (i * singleTrackHeight);
-            SpawnLine(i, yPos, totalWidth);
-        }
-    }
+        // 只在刻度尺的正下方生成一条长长的白线
+        float tracksStartY = -rulerHeight;
 
-    void SpawnLine(int index, float yPos, float width)
-    {
         GameObject line = Instantiate(dividerPrefab, contentParent);
         RectTransform rt = line.GetComponent<RectTransform>();
-        rt.anchoredPosition = new Vector2(0, yPos);
-        rt.sizeDelta = new Vector2(width, 2f);
+        rt.anchorMin = new Vector2(0, 1);
+        rt.anchorMax = new Vector2(0, 1);
+        rt.pivot = new Vector2(0, 1);
+        rt.anchoredPosition = new Vector2(0, tracksStartY);
+        rt.sizeDelta = new Vector2(contentParent.sizeDelta.x, 2f);
         line.transform.SetAsFirstSibling();
     }
 
     void GenerateRuler()
     {
         ClearOldObjects("Tick_Template");
-        float totalHeight = contentParent.sizeDelta.y;
-        float topEdge = totalHeight / 2f;
+        float tracksStartY = -rulerHeight;
 
         for (float time = 0; time <= totalDuration; time += rulerInterval)
         {
@@ -185,11 +142,26 @@ public class TimelineManager : MonoBehaviour
             float xPos = time * pixelsPerSecond;
             RectTransform rt = tick.GetComponent<RectTransform>();
 
-            float rulerCenterY = topEdge - (rulerHeight / 2f);
-            rt.anchoredPosition = new Vector2(xPos, rulerCenterY);
+            // 短刻度线：立在白线上，高度10像素
+            rt.anchorMin = new Vector2(0, 1);
+            rt.anchorMax = new Vector2(0, 1);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.sizeDelta = new Vector2(2f, 10f);
+            rt.anchoredPosition = new Vector2(xPos, tracksStartY);
 
             TextMeshProUGUI txt = tick.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null) txt.text = FormatTime(time);
+            if (txt != null)
+            {
+                txt.text = FormatTime(time);
+                txt.alignment = TextAlignmentOptions.BottomLeft;
+
+                // 数字：贴在横线上，稍微靠右
+                RectTransform txtRt = txt.GetComponent<RectTransform>();
+                txtRt.anchorMin = new Vector2(0, 0);
+                txtRt.anchorMax = new Vector2(0, 0);
+                txtRt.pivot = new Vector2(0f, 0f);
+                txtRt.anchoredPosition = new Vector2(5f, 0f);
+            }
 
             tick.transform.SetAsLastSibling();
         }
@@ -209,22 +181,61 @@ public class TimelineManager : MonoBehaviour
         allEvents.Add(newEvent);
 
         GameObject newClip = Instantiate(clipPrefab, contentParent);
-        float totalHeight = contentParent.sizeDelta.y;
-        float trackAreaHeight = totalHeight - rulerHeight;
-        float singleTrackHeight = trackAreaHeight / (float)trackCount;
-        float topEdge = totalHeight / 2f;
-        float tracksStartY = topEdge - rulerHeight;
-        float yPos = tracksStartY - (trackIndex * singleTrackHeight) - (singleTrackHeight / 2f);
-        float xPos = startTime * pixelsPerSecond;
-
         RectTransform rt = newClip.GetComponent<RectTransform>();
+
+        // 精确计算方块位置 (原点左上角)
+        float xPos = startTime * pixelsPerSecond;
+        float yPos = -rulerHeight - (trackIndex * baseTrackHeight) - (baseTrackHeight / 2f);
+
+        // 强行锁死左侧中心
+        rt.anchorMin = new Vector2(0, 1);
+        rt.anchorMax = new Vector2(0, 1);
+        rt.pivot = new Vector2(0, 0.5f);
         rt.anchoredPosition = new Vector2(xPos, yPos);
-        float clipHeight = singleTrackHeight - 10f;
-        if (clipHeight < 5f) clipHeight = 5f;
+
+        // 留出空隙：高度为轨道高度的 80%
+        float clipHeight = baseTrackHeight * 0.8f;
         rt.sizeDelta = new Vector2(duration * pixelsPerSecond, clipHeight);
 
         TextMeshProUGUI text = newClip.GetComponentInChildren<TextMeshProUGUI>();
         if (text != null) text.text = name;
+    }
+
+    // ==========================================
+    // 底层引擎与控制逻辑 (完全保留，不碰你的Handle内部)
+    // ==========================================
+
+    void BakeRootMotion(string stateName, float duration)
+    {
+        if (characterAnimator == null) return;
+        int totalFrames = Mathf.CeilToInt(duration * bakeFPS);
+        bakedPositions = new Vector3[totalFrames];
+        bakedRotations = new Quaternion[totalFrames];
+        Vector3 initialSpawnPos = characterAnimator.transform.position;
+        Quaternion initialSpawnRot = characterAnimator.transform.rotation;
+        characterAnimator.transform.position = initialSpawnPos;
+        characterAnimator.transform.rotation = initialSpawnRot;
+        characterAnimator.Play(stateName, 0, 0f);
+        characterAnimator.Update(0f);
+        for (int i = 0; i < totalFrames; i++)
+        {
+            bakedPositions[i] = characterAnimator.transform.position;
+            bakedRotations[i] = characterAnimator.transform.rotation;
+            characterAnimator.Update(1f / bakeFPS);
+        }
+        characterAnimator.transform.position = initialSpawnPos;
+        characterAnimator.transform.rotation = initialSpawnRot;
+        characterAnimator.Play(stateName, 0, 0f);
+        characterAnimator.Update(0f);
+    }
+
+    void ApplyBakedRootMotion(float time)
+    {
+        if (bakedPositions == null || bakedPositions.Length == 0 || characterAnimator == null) return;
+        int frame = Mathf.FloorToInt(time * bakeFPS);
+        frame = Mathf.Clamp(frame, 0, bakedPositions.Length - 1);
+        characterAnimator.transform.position = bakedPositions[frame];
+        characterAnimator.transform.rotation = bakedRotations[frame];
     }
 
     void ClearOldObjects(string nameKeyword) { for (int i = contentParent.childCount - 1; i >= 0; i--) { Transform child = contentParent.GetChild(i); if (child.name.Contains(nameKeyword) && child.name.Contains("Clone")) Destroy(child.gameObject); } }
@@ -260,8 +271,6 @@ public class TimelineManager : MonoBehaviour
                         {
                             characterAnimator.Play(evt.eventName, 0, normalizedTime);
                             characterAnimator.speed = 1f;
-
-                            // 刚刚从拖拽中恢复播放瞬间，强制对齐一次绝对坐标！
                             ApplyBakedRootMotion(localTime);
                         }
                     }
@@ -270,8 +279,6 @@ public class TimelineManager : MonoBehaviour
                         characterAnimator.Play(evt.eventName, 0, normalizedTime);
                         characterAnimator.speed = 0f;
                         characterAnimator.Update(0f);
-
-                        // 【核心改动】：处于暂停且被拖拽时，强行把坐标瞬移过去！
                         ApplyBakedRootMotion(localTime);
                     }
                 }

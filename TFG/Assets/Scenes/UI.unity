@@ -4780,6 +4780,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TimelineManager
   characterAnimator: {fileID: 0}
   allEvents: []
+  moduleSystem: {fileID: 2130556398}
   musicSource: {fileID: 797781319}
   contentParent: {fileID: 2048304004}
   playheadSlider: {fileID: 1998816425}
@@ -6798,6 +6799,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DynamicModuleSystem
   timeline: {fileID: 1705245555}
+  tabManager: {fileID: 1795736457}
   headerArea: {fileID: 972879133}
   headerPrefab: {fileID: 8949483581777848340, guid: b4f8625b797556646af76c77c4680bb7, type: 3}
   defaultInspector: {fileID: 0}
@@ -6805,22 +6807,26 @@ MonoBehaviour:
   - moduleName: Light
     addButton: {fileID: 1954650302}
     startPanel: {fileID: 277206255}
-    targetInspector: {fileID: 100415625}
+    targetInspector: {fileID: 1080977522}
+    tabIndex: 0
     defaultDuration: 10
   - moduleName: Camera
     addButton: {fileID: 1895858632}
     startPanel: {fileID: 1862390226}
-    targetInspector: {fileID: 100415625}
+    targetInspector: {fileID: 1464816290}
+    tabIndex: 1
     defaultDuration: 10
   - moduleName: VFX
     addButton: {fileID: 424737255}
     startPanel: {fileID: 1254575693}
-    targetInspector: {fileID: 100415625}
+    targetInspector: {fileID: 1512879110}
+    tabIndex: 2
     defaultDuration: 10
   - moduleName: Shader
     addButton: {fileID: 1749508212}
     startPanel: {fileID: 4157927}
-    targetInspector: {fileID: 100415625}
+    targetInspector: {fileID: 440006130}
+    tabIndex: 3
     defaultDuration: 10
 --- !u!4 &2130556399
 Transform:

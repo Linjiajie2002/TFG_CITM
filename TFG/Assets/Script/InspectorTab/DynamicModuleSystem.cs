@@ -3,72 +3,87 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 
-// 【精髓所在】：定义每个模块的专属数据
 [System.Serializable]
 public class ModuleData
 {
-    public string moduleName = "New Module"; // 模块的名字 (如 Light, Camera)
-    public Button addButton;                 // 这个模块专属的 Add 按钮
-    public GameObject startPanel;            // 包含该按钮的初始面板 (点击后关闭)
-    public GameObject targetInspector;       // 点击后，要在右侧显示的专属控制台
-    public float defaultDuration = 60f;      // 默认生成的蓝色方块长度
+    public string moduleName = "New Module";
+    public Button addButton;
+    public GameObject startPanel;
+    public GameObject targetInspector;       // 保留引用，但不在这里控制它了
+    public int tabIndex = 0;                 // 【新增】：它对应你 Tab 管理器里的第几个按钮？(0=Light, 1=Camera...)
+    public float defaultDuration = 60f;
 }
 
 public class DynamicModuleSystem : MonoBehaviour
 {
-    [Header("=== 全局核心引用 (只需拖一次) ===")]
-    public TimelineManager timeline;         // 时间轴管理器
-    public Transform headerArea;             // 左侧垂直排版的轨道头父物体
-    public GameObject headerPrefab;          // 轨道头的预制体
-    public GameObject defaultInspector;      // 默认的空控制台 (可选)
+    [Header("=== 全局核心引用 ===")]
+    public TimelineManager timeline;
+    public InspectorTabManager tabManager;   // 【新增】：接入你的神器 Tab 管理器！
+    public Transform headerArea;
+    public GameObject headerPrefab;
+    public GameObject defaultInspector;
 
     [Header("=== 你的所有模块列表 ===")]
-    // 在这里配置你的 4 个系统，未来可以随时随意增删！
     public List<ModuleData> allModules = new List<ModuleData>();
 
     void Start()
     {
-        // 自动遍历你配置的所有模块，为每一个按钮绑定事件
         foreach (var module in allModules)
         {
             if (module.addButton != null)
             {
-                // C# 委托防坑处理：必须用一个局部变量存起来
                 ModuleData currentModule = module;
                 currentModule.addButton.onClick.AddListener(() => OnModuleAddClicked(currentModule));
             }
         }
     }
 
-    // 任何一个模块的按钮被点击时，都会执行这个核心逻辑
     void OnModuleAddClicked(ModuleData module)
     {
-        // 1. 关闭它自己的初始询问面板
         if (module.startPanel != null) module.startPanel.SetActive(false);
 
-        // 2. 左侧生成轨道头 (自动排列)
         if (headerArea != null && headerPrefab != null)
         {
             GameObject newHeader = Instantiate(headerPrefab, headerArea);
             TextMeshProUGUI txt = newHeader.GetComponentInChildren<TextMeshProUGUI>();
             if (txt != null) txt.text = module.moduleName;
+            Destroy(newHeader);
         }
 
-        // 3. 右侧时间轴生成蓝色方块 (通知 Timeline 全自动扩容)
-        if (timeline != null)
-        {
-            timeline.AddDynamicTrack(module.moduleName, module.defaultDuration);
-        }
+        if (timeline != null) timeline.AddDynamicTrack(module.moduleName, module.defaultDuration);
 
-        // 4. 切换右侧的 Inspector 面板
-        // 先关掉默认控制台和所有其他的控制台
-        if (defaultInspector != null) defaultInspector.SetActive(false);
+        ShowInspector(module.moduleName);
+    }
+
+    // ==========================================
+    // 【核心同步】：告诉 Tab 管理器去切换按钮和面板！
+    // ==========================================
+    public void ShowInspector(string moduleName)
+    {
         foreach (var m in allModules)
         {
-            if (m.targetInspector != null) m.targetInspector.SetActive(false);
+            if (m.moduleName == moduleName)
+            {
+                // 一句话解决同步问题：直接调用你的 Tab 系统！
+                if (tabManager != null) tabManager.SwitchTab(m.tabIndex);
+                break;
+            }
         }
+    }
 
-        // 单独打开属于这一个模块的控制台！
-        if (module.targetInspector != null) module.targetInspector.SetActive(true);
+    public void ShowDefaultInspector()
+    {
+        // 废弃之前的瞎隐藏逻辑，保持当前 Tab 状态即可
+    }
+
+    public void RestoreCover(string moduleName)
+    {
+        foreach (var m in allModules)
+        {
+            if (m.moduleName == moduleName)
+            {
+                if (m.startPanel != null) m.startPanel.SetActive(true); // 盖子盖上
+            }
+        }
     }
 }

@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using System.Collections.Generic;
 using UnityEngine.Timeline;
+using UnityEngine.InputSystem;
 
 [System.Serializable]
 public class TimelineEventData
@@ -11,6 +13,8 @@ public class TimelineEventData
     public int trackIndex;
     public float startTime;
     public float duration;
+    public GameObject clipObject;   // 记录生成的蓝色方块
+    public GameObject headerObject; // 记录生成的左侧名字
 }
 
 public class TimelineManager : MonoBehaviour
@@ -18,6 +22,14 @@ public class TimelineManager : MonoBehaviour
     [Header("=== 数据控制中心 ===")]
     public Animator characterAnimator;
     public List<TimelineEventData> allEvents = new List<TimelineEventData>();
+
+    [Header("=== 对接你的模块系统 ===")]
+    public DynamicModuleSystem moduleSystem; // 【必须】：把挂着DynamicModuleSystem的物体拖给它！
+
+    private int selectedTrackIndex = -1;
+    private Color originalHeaderColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+    private Color originalClipColor = new Color(0f, 1f, 1f, 1f);
+    private Color highlightColor = new Color(0.2f, 0.5f, 0.8f, 1f);
 
     [Header("=== 核心组件 ===")]
     public AudioSource musicSource;
@@ -94,23 +106,18 @@ public class TimelineManager : MonoBehaviour
         contentParent.anchorMin = new Vector2(0, 1);
         contentParent.anchorMax = new Vector2(0, 1);
 
-        // ==========================================
-        // 【核心大招】：自动生成带遮罩的相框 (Viewport) 和 画布 (Container)
-        // ==========================================
         if (trackViewport == null)
         {
-            // 1. 创建固定的相框，顶部被强制压到标尺(rulerHeight)的下方！
             GameObject tv = new GameObject("TrackViewport");
             trackViewport = tv.AddComponent<RectTransform>();
             trackViewport.SetParent(contentParent, false);
             trackViewport.anchorMin = new Vector2(0, 0);
             trackViewport.anchorMax = new Vector2(1, 1);
             trackViewport.offsetMin = Vector2.zero;
-            trackViewport.offsetMax = new Vector2(0, -rulerHeight); // 核心：空出顶部的标尺区域
-            tv.AddComponent<RectMask2D>(); // 给相框加上绝对遮罩
+            trackViewport.offsetMax = new Vector2(0, -rulerHeight);
+            tv.AddComponent<RectMask2D>();
             trackViewport.SetSiblingIndex(0);
 
-            // 2. 创建真正上下滑动的画布，放在相框内部
             GameObject tc = new GameObject("TrackContainer");
             trackContainer = tc.AddComponent<RectTransform>();
             trackContainer.SetParent(trackViewport, false);
@@ -137,6 +144,7 @@ public class TimelineManager : MonoBehaviour
         }
 
         BakeRootMotion(danceName, totalDuration);
+        DeselectTrack();
     }
 
     public void AddDynamicTrack(string name, float duration)
@@ -155,6 +163,131 @@ public class TimelineManager : MonoBehaviour
         }
     }
 
+    // ==========================================
+    // 【核心焦点控制】：选中、取消选中、删除
+    // ==========================================
+    public void SelectTrack(int index)
+    {
+        if (index <= 0) return; // 保护Music轨
+
+        // 【核心修改】：如果点的是已经选中的轨道，直接 return！绝对不允许变为空！
+        if (selectedTrackIndex == index) return;
+
+        DeselectTrack();
+
+        selectedTrackIndex = index;
+        TimelineEventData trackData = allEvents.Find(e => e.trackIndex == index);
+        if (trackData == null) return;
+
+        if (trackData.headerObject != null)
+        {
+            Image headerImg = trackData.headerObject.GetComponent<Image>();
+            if (headerImg != null) { originalHeaderColor = headerImg.color; headerImg.color = highlightColor; }
+        }
+        if (trackData.clipObject != null)
+        {
+            Image clipImg = trackData.clipObject.GetComponent<Image>();
+            if (clipImg != null) { originalClipColor = clipImg.color; clipImg.color = highlightColor; }
+        }
+
+        if (moduleSystem != null) moduleSystem.ShowInspector(trackData.eventName);
+
+        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+    }
+
+    public void DeselectTrack()
+    {
+        if (selectedTrackIndex > 0)
+        {
+            TimelineEventData oldTrack = allEvents.Find(e => e.trackIndex == selectedTrackIndex);
+            if (oldTrack != null)
+            {
+                if (oldTrack.headerObject != null)
+                {
+                    Image headerImg = oldTrack.headerObject.GetComponent<Image>();
+                    if (headerImg != null) headerImg.color = originalHeaderColor;
+                }
+                if (oldTrack.clipObject != null)
+                {
+                    Image clipImg = oldTrack.clipObject.GetComponent<Image>();
+                    if (clipImg != null) clipImg.color = originalClipColor;
+                }
+            }
+        }
+        selectedTrackIndex = -1;
+        if (moduleSystem != null) moduleSystem.ShowDefaultInspector();
+    }
+
+    public void DeleteSelectedTrack()
+    {
+        if (selectedTrackIndex <= 0) return;
+
+        int indexToDelete = selectedTrackIndex;
+        TimelineEventData trackData = allEvents.Find(e => e.trackIndex == indexToDelete);
+
+        if (trackData != null)
+        {
+            if (moduleSystem != null) moduleSystem.RestoreCover(trackData.eventName);
+
+            if (trackData.clipObject != null) Destroy(trackData.clipObject);
+            if (trackData.headerObject != null) Destroy(trackData.headerObject);
+            allEvents.Remove(trackData);
+        }
+
+        trackCount--;
+        foreach (var evt in allEvents)
+        {
+            if (evt.trackIndex > indexToDelete)
+            {
+                evt.trackIndex--;
+                if (evt.headerObject != null)
+                {
+                    Button btn = evt.headerObject.GetComponent<Button>();
+                    if (btn != null)
+                    {
+                        btn.onClick.RemoveAllListeners();
+                        int newIndex = evt.trackIndex;
+                        btn.onClick.AddListener(() => SelectTrack(newIndex));
+                    }
+                }
+            }
+        }
+
+        DeselectTrack();
+        RefreshClipPositions();
+        ResizeContent();
+
+        // 【核心新增】：自动防空逻辑！
+        if (allEvents.Count > 1)
+        {
+            // 如果还有其他轨道，自动选中列表中剩下的最后一个轨道！
+            SelectTrack(allEvents[allEvents.Count - 1].trackIndex);
+        }
+        else
+        {
+            // 如果全都删光了，命令 Tab 管理器强制切回第一个 Tab (Light)
+            // 此时 Light 的绿盖子已经盖上，完美显示 "Add New Module"
+            if (moduleSystem != null && moduleSystem.tabManager != null)
+            {
+                moduleSystem.tabManager.SwitchTab(0);
+            }
+        }
+    }
+
+    void RefreshClipPositions()
+    {
+        foreach (var evt in allEvents)
+        {
+            if (evt.clipObject != null)
+            {
+                RectTransform rt = evt.clipObject.GetComponent<RectTransform>();
+                float offset = -5f + (evt.trackIndex * 10f);
+                float yPos = -(evt.trackIndex * (baseTrackHeight + trackSpacing)) - (baseTrackHeight / 2f) + offset;
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, yPos);
+            }
+        }
+    }
+
     void ResizeContent()
     {
         float totalWidth = totalDuration * pixelsPerSecond;
@@ -164,11 +297,9 @@ public class TimelineManager : MonoBehaviour
     void GenerateGridLines()
     {
         ClearOldObjects("Divider_Template");
-
         float tracksStartY = -rulerHeight;
 
         GameObject line = Instantiate(dividerPrefab, contentParent);
-
         RectTransform rt = line.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0, 1);
         rt.anchorMax = new Vector2(0, 1);
@@ -176,7 +307,6 @@ public class TimelineManager : MonoBehaviour
         rt.anchoredPosition = new Vector2(0, tracksStartY);
         rt.sizeDelta = new Vector2(contentParent.sizeDelta.x, 2f);
 
-        // 【核心修改】：把 First 改成 Last，让它排在最后渲染，稳稳地压在所有方块的上面！
         line.transform.SetAsLastSibling();
     }
 
@@ -216,17 +346,46 @@ public class TimelineManager : MonoBehaviour
 
     public void CreateClip(string name, int trackIndex, float startTime, float duration)
     {
+        GameObject newClip = Instantiate(clipPrefab, trackContainer);
+        RectTransform rt = newClip.GetComponent<RectTransform>();
+
+        // 自动克隆表头并接管按钮点击事件
+        GameObject newHeader = null;
+        if (trackIndex == 0)
+        {
+            if (headerArea != null && headerArea.childCount > 0) newHeader = headerArea.GetChild(0).gameObject;
+        }
+        else
+        {
+            if (headerArea != null && headerArea.childCount > 0)
+            {
+                newHeader = Instantiate(headerArea.GetChild(0).gameObject, headerArea);
+                newHeader.name = "Header_" + name;
+                newHeader.SetActive(true);
+
+                TextMeshProUGUI headerText = newHeader.GetComponentInChildren<TextMeshProUGUI>();
+                if (headerText != null) headerText.text = name;
+
+                Button btn = newHeader.GetComponent<Button>();
+                if (btn == null) btn = newHeader.AddComponent<Button>();
+                btn.transition = Selectable.Transition.None;
+
+                int boundIndex = trackIndex;
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() => SelectTrack(boundIndex));
+            }
+        }
+
         TimelineEventData newEvent = new TimelineEventData
         {
             eventName = name,
             trackIndex = trackIndex,
             startTime = startTime,
-            duration = duration
+            duration = duration,
+            clipObject = newClip,
+            headerObject = newHeader
         };
         allEvents.Add(newEvent);
-
-        GameObject newClip = Instantiate(clipPrefab, trackContainer);
-        RectTransform rt = newClip.GetComponent<RectTransform>();
 
         TimelineClipUI clipUI = newClip.AddComponent<TimelineClipUI>();
         clipUI.manager = this;
@@ -234,8 +393,6 @@ public class TimelineManager : MonoBehaviour
 
         float xPos = startTime * pixelsPerSecond;
         float offset = -5f + (trackIndex * 10f);
-
-        // 因为放入了相框内部，去掉了 -rulerHeight 的额外计算
         float yPos = -(trackIndex * (baseTrackHeight + trackSpacing)) - (baseTrackHeight / 2f) + offset;
 
         rt.anchorMin = new Vector2(0, 1);
@@ -303,6 +460,12 @@ public class TimelineManager : MonoBehaviour
 
     void Update()
     {
+        // 【关键】：换成了全新 Input System 的检测方式！
+        if (Keyboard.current != null && (Keyboard.current.deleteKey.wasPressedThisFrame || Keyboard.current.backspaceKey.wasPressedThisFrame))
+        {
+            DeleteSelectedTrack();
+        }
+
         SyncVerticalScroll();
 
         if (musicSource == null || musicSource.clip == null) return;

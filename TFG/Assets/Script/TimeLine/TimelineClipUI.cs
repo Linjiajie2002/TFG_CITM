@@ -92,6 +92,9 @@ public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
     {
         isDraggingBody = true;
         RecordOriginalData(data);
+
+        // 【新增】：点击方块主体时，通知系统选中！
+        if (manager != null && eventData != null) manager.SelectTrack(eventData.trackIndex);
     }
 
     public void OnDrag(PointerEventData data)
@@ -115,6 +118,9 @@ public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
     {
         isDraggingBody = false; // 标记现在绝不是在拖主体
         RecordOriginalData(data);
+
+        // 【新增】：点击方块边缘把手时，也通知系统选中！
+        if (manager != null && eventData != null) manager.SelectTrack(eventData.trackIndex);
     }
 
     public void OnHandleDrag(bool isLeft, PointerEventData data)

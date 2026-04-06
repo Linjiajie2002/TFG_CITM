@@ -21,7 +21,7 @@ public class TimelineManager : MonoBehaviour
     [Header("=== 核心组件 ===")]
     public AudioSource musicSource;
     public RectTransform contentParent;
-    public Slider playheadSlider; // 你的完美Handle，绝对不动它的内部结构
+    public Slider playheadSlider;
     public TextMeshProUGUI timeDisplayText;
     public TextMeshProUGUI playPauseButtonText;
 
@@ -32,8 +32,9 @@ public class TimelineManager : MonoBehaviour
 
     [Header("=== 现代排版配置 ===")]
     public float pixelsPerSecond = 100f;
-    public int trackCount = 3;             // 轨道数量
-    public float baseTrackHeight = 60f;    // 每条轨道固定高度，防止方块无限膨胀
+    public int trackCount = 1;
+    public float baseTrackHeight = 60f;
+    public float trackSpacing = 5f;        // 【新增】：轨道之间的间距！填入你在 Vertical Layout Group 里设置的 Spacing 值
     public float rulerInterval = 5.0f;
     public float rulerHeight = 30f;
 
@@ -51,7 +52,7 @@ public class TimelineManager : MonoBehaviour
         if (playheadSlider != null)
             playheadSlider.onValueChanged.AddListener(OnSliderDrag);
 
-        if (!isInitialized && musicSource != null && musicSource.clip != null)
+        if (!isInitialized)
         {
             SetupDynamicTimeline(characterAnimator, musicSource, "UI_Test_Dance");
         }
@@ -70,8 +71,8 @@ public class TimelineManager : MonoBehaviour
             totalDuration = 60f;
 
         allEvents.Clear();
+        trackCount = 1;
 
-        // 强行锁死 Content 为左上角原点
         contentParent.pivot = new Vector2(0, 1);
         contentParent.anchorMin = new Vector2(0, 1);
         contentParent.anchorMax = new Vector2(0, 1);
@@ -80,21 +81,14 @@ public class TimelineManager : MonoBehaviour
         GenerateGridLines();
         GenerateRuler();
 
-        // 默认生成在最后一条轨道
-        int bottomTrackIndex = trackCount - 1;
-        if (bottomTrackIndex < 0) bottomTrackIndex = 0;
-        CreateClip(danceName, bottomTrackIndex, 0f, totalDuration);
+        CreateClip("Music Track", 0, 0f, totalDuration);
 
         if (playPauseButtonText != null)
             playPauseButtonText.text = "▶";
 
-        // 保证 Handle 在最上层，并且强行拉长覆盖全区域！
         if (playheadSlider != null)
         {
             playheadSlider.transform.SetAsLastSibling();
-
-            // 【终极修复：光剑向下延伸】
-            // 无论父物体多短，强行把 Slider 底部往下拽 2000 像素，完美覆盖蓝框！
             RectTransform sliderRt = playheadSlider.GetComponent<RectTransform>();
             sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f);
         }
@@ -102,23 +96,33 @@ public class TimelineManager : MonoBehaviour
         BakeRootMotion(danceName, totalDuration);
     }
 
-    // ==========================================
-    // 视觉排版引擎 (固定高度，图3风格)
-    // ==========================================
+    public void AddDynamicTrack(string name, float duration)
+    {
+        int newTrackIndex = trackCount;
+        trackCount++;
+
+        ResizeContent();
+        CreateClip(name, newTrackIndex, 0f, duration);
+
+        if (playheadSlider != null)
+        {
+            playheadSlider.transform.SetAsLastSibling();
+            RectTransform sliderRt = playheadSlider.GetComponent<RectTransform>();
+            sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f);
+        }
+    }
 
     void ResizeContent()
     {
-        // 根据时间和轨道数量，精确计算 Content 的宽和高
         float totalWidth = totalDuration * pixelsPerSecond;
-        float totalHeight = rulerHeight + (trackCount * baseTrackHeight);
+        // 【核心修复1】：画布的总高度 = 标尺高度 + 所有轨道的高度 + 所有间距的高度！
+        float totalHeight = rulerHeight + (trackCount * baseTrackHeight) + (Mathf.Max(0, trackCount - 1) * trackSpacing);
         contentParent.sizeDelta = new Vector2(totalWidth, totalHeight);
     }
 
     void GenerateGridLines()
     {
         ClearOldObjects("Divider_Template");
-
-        // 只在刻度尺的正下方生成一条长长的白线
         float tracksStartY = -rulerHeight;
 
         GameObject line = Instantiate(dividerPrefab, contentParent);
@@ -142,7 +146,6 @@ public class TimelineManager : MonoBehaviour
             float xPos = time * pixelsPerSecond;
             RectTransform rt = tick.GetComponent<RectTransform>();
 
-            // 短刻度线：立在白线上，高度10像素
             rt.anchorMin = new Vector2(0, 1);
             rt.anchorMax = new Vector2(0, 1);
             rt.pivot = new Vector2(0.5f, 0f);
@@ -155,7 +158,6 @@ public class TimelineManager : MonoBehaviour
                 txt.text = FormatTime(time);
                 txt.alignment = TextAlignmentOptions.BottomLeft;
 
-                // 数字：贴在横线上，稍微靠右
                 RectTransform txtRt = txt.GetComponent<RectTransform>();
                 txtRt.anchorMin = new Vector2(0, 0);
                 txtRt.anchorMax = new Vector2(0, 0);
@@ -169,8 +171,6 @@ public class TimelineManager : MonoBehaviour
 
     public void CreateClip(string name, int trackIndex, float startTime, float duration)
     {
-        if (trackIndex >= trackCount) return;
-
         TimelineEventData newEvent = new TimelineEventData
         {
             eventName = name,
@@ -183,27 +183,25 @@ public class TimelineManager : MonoBehaviour
         GameObject newClip = Instantiate(clipPrefab, contentParent);
         RectTransform rt = newClip.GetComponent<RectTransform>();
 
-        // 精确计算方块位置 (原点左上角)
         float xPos = startTime * pixelsPerSecond;
-        float yPos = -rulerHeight - (trackIndex * baseTrackHeight) - (baseTrackHeight / 2f);
 
-        // 强行锁死左侧中心
+        // 【终极数学公式】：完美实现 0轨-5, 1轨5, 2轨15, 3轨25... 每层递增10像素
+        float offset = -5f + (trackIndex * 10f);
+
+        float yPos = -rulerHeight - (trackIndex * (baseTrackHeight + trackSpacing)) - (baseTrackHeight / 2f) + offset;
+
         rt.anchorMin = new Vector2(0, 1);
         rt.anchorMax = new Vector2(0, 1);
         rt.pivot = new Vector2(0, 0.5f);
         rt.anchoredPosition = new Vector2(xPos, yPos);
 
-        // 留出空隙：高度为轨道高度的 80%
+        // 保持 0.8f，维持你想要的方块丰满度
         float clipHeight = baseTrackHeight * 0.8f;
         rt.sizeDelta = new Vector2(duration * pixelsPerSecond, clipHeight);
 
         TextMeshProUGUI text = newClip.GetComponentInChildren<TextMeshProUGUI>();
         if (text != null) text.text = name;
     }
-
-    // ==========================================
-    // 底层引擎与控制逻辑 (完全保留，不碰你的Handle内部)
-    // ==========================================
 
     void BakeRootMotion(string stateName, float duration)
     {
@@ -260,7 +258,7 @@ public class TimelineManager : MonoBehaviour
         {
             if (currentTime >= evt.startTime && currentTime <= (evt.startTime + evt.duration))
             {
-                if (evt.trackIndex == trackCount - 1 && characterAnimator != null)
+                if (evt.trackIndex == 0 && characterAnimator != null)
                 {
                     float localTime = currentTime - evt.startTime;
                     float normalizedTime = localTime / evt.duration;

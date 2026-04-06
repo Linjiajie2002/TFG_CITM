@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using UnityEngine.Timeline;
 
 [System.Serializable]
 public class TimelineEventData
@@ -34,7 +35,7 @@ public class TimelineManager : MonoBehaviour
     public float pixelsPerSecond = 100f;
     public int trackCount = 1;
     public float baseTrackHeight = 60f;
-    public float trackSpacing = 5f;        // 【新增】：轨道之间的间距！填入你在 Vertical Layout Group 里设置的 Spacing 值
+    public float trackSpacing = 5f;
     public float rulerInterval = 5.0f;
     public float rulerHeight = 30f;
 
@@ -115,7 +116,6 @@ public class TimelineManager : MonoBehaviour
     void ResizeContent()
     {
         float totalWidth = totalDuration * pixelsPerSecond;
-        // 【核心修复1】：画布的总高度 = 标尺高度 + 所有轨道的高度 + 所有间距的高度！
         float totalHeight = rulerHeight + (trackCount * baseTrackHeight) + (Mathf.Max(0, trackCount - 1) * trackSpacing);
         contentParent.sizeDelta = new Vector2(totalWidth, totalHeight);
     }
@@ -183,11 +183,16 @@ public class TimelineManager : MonoBehaviour
         GameObject newClip = Instantiate(clipPrefab, contentParent);
         RectTransform rt = newClip.GetComponent<RectTransform>();
 
+        // ==========================================
+        // 【关键注入】：给新生成的方块赋予感知鼠标并拖拽的能力！
+        // ==========================================
+        TimelineClipUI clipUI = newClip.AddComponent<TimelineClipUI>();
+        clipUI.manager = this;
+        clipUI.eventData = newEvent;
+        // ==========================================
+
         float xPos = startTime * pixelsPerSecond;
-
-        // 【终极数学公式】：完美实现 0轨-5, 1轨5, 2轨15, 3轨25... 每层递增10像素
         float offset = -5f + (trackIndex * 10f);
-
         float yPos = -rulerHeight - (trackIndex * (baseTrackHeight + trackSpacing)) - (baseTrackHeight / 2f) + offset;
 
         rt.anchorMin = new Vector2(0, 1);
@@ -195,7 +200,6 @@ public class TimelineManager : MonoBehaviour
         rt.pivot = new Vector2(0, 0.5f);
         rt.anchoredPosition = new Vector2(xPos, yPos);
 
-        // 保持 0.8f，维持你想要的方块丰满度
         float clipHeight = baseTrackHeight * 0.8f;
         rt.sizeDelta = new Vector2(duration * pixelsPerSecond, clipHeight);
 

@@ -460,10 +460,32 @@ public class TimelineManager : MonoBehaviour
 
     void Update()
     {
-        // 【关键】：换成了全新 Input System 的检测方式！
+        // 1. 监听 Delete 键删除轨道
         if (Keyboard.current != null && (Keyboard.current.deleteKey.wasPressedThisFrame || Keyboard.current.backspaceKey.wasPressedThisFrame))
         {
             DeleteSelectedTrack();
+        }
+
+        // ==========================================
+        // 【新增】：鼠标滚轮全自动接管！
+        // ==========================================
+        if (Mouse.current != null && verticalScrollbar != null && verticalScrollbar.gameObject.activeSelf)
+        {
+            // 读取鼠标滚轮的上下滚动值
+            float scrollDelta = Mouse.current.scroll.ReadValue().y;
+
+            if (Mathf.Abs(scrollDelta) > 0.1f)
+            {
+                // 灵敏度：Unity新输入系统的滚轮值比较大(通常是120或-120)，所以乘一个很小的系数
+                // 💡 如果你觉得滚得太快，就把 0.001f 改小(比如 0.0005f)
+                // 💡 如果觉得滚得太慢，就把 0.001f 改大(比如 0.003f)
+                float sensitivity = 0.2f;
+
+                verticalScrollbar.value += scrollDelta * sensitivity;
+
+                // 限制把手永远不超出 0(最底) 到 1(最顶) 的范围
+                verticalScrollbar.value = Mathf.Clamp01(verticalScrollbar.value);
+            }
         }
 
         SyncVerticalScroll();

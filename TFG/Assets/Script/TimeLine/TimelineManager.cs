@@ -49,7 +49,7 @@ public class TimelineManager : MonoBehaviour
 
     [Header("=== 现代排版配置 ===")]
     public float pixelsPerSecond = 100f;
-    public int trackCount = 0; // 【修改】：初始轨道数为 0，干干净净！
+    public int trackCount = 0;
     public float baseTrackHeight = 60f;
     public float trackSpacing = 5f;
     public float rulerInterval = 5.0f;
@@ -71,6 +71,9 @@ public class TimelineManager : MonoBehaviour
     private bool wasPlaying = false;
     private bool requiresInitialSync = true;
 
+    // 【终极武器】：记录上一帧的时间，用于精确侦测拖拽或点击！
+    private float lastEvaluatedTime = -1f;
+
     private RectTransform trackViewport;
     private RectTransform trackContainer;
     private float originalHeaderY;
@@ -81,7 +84,7 @@ public class TimelineManager : MonoBehaviour
         if (musicSource != null)
         {
             musicSource.playOnAwake = false;
-            musicSource.Stop();
+            musicSource.Pause();
         }
         if (characterAnimator != null)
         {
@@ -129,21 +132,23 @@ public class TimelineManager : MonoBehaviour
         currentDanceName = danceName;
         wasPlaying = false;
         requiresInitialSync = true;
+        lastEvaluatedTime = -1f;
 
         if (spawnedAnimator != null) characterAnimator = spawnedAnimator;
         if (assignedAudio != null) musicSource = assignedAudio;
 
         if (musicSource != null)
         {
+            musicSource.playOnAwake = false;
+            musicSource.Pause();
             musicSource.time = 0f;
             if (musicSource.clip != null) totalDuration = musicSource.clip.length;
             else totalDuration = 60f;
         }
 
         allEvents.Clear();
-        trackCount = 0; // 重置为 0
+        trackCount = 0;
 
-        // 【安全隐藏模板】：把左侧第一个 Track 的 Header 隐藏起来作为无限复制的模板
         if (headerArea != null && headerArea.childCount > 0)
         {
             headerArea.GetChild(0).gameObject.SetActive(false);
@@ -178,8 +183,6 @@ public class TimelineManager : MonoBehaviour
         GenerateGridLines();
         GenerateRuler();
 
-        // 彻底移除了 CreateClip("Music Track")
-
         if (playPauseButtonText != null) playPauseButtonText.text = "▶";
 
         if (playheadSlider != null)
@@ -193,16 +196,7 @@ public class TimelineManager : MonoBehaviour
         DeselectTrack();
     }
 
-    public void AddDynamicTrack(string name, float duration)
-    {
-        int newTrackIndex = trackCount;
-        trackCount++;
-        ResizeContent();
-        CreateClip(name, newTrackIndex, 0f, duration);
-        if (playheadSlider != null) { playheadSlider.transform.SetAsLastSibling(); RectTransform sliderRt = playheadSlider.GetComponent<RectTransform>(); sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f); }
-    }
-
-    // 【权限解禁】：现在允许选中、删除第 0 轨了！因为第 0 轨现在是玩家自己加的模块！
+    public void AddDynamicTrack(string name, float duration) { int newTrackIndex = trackCount; trackCount++; ResizeContent(); CreateClip(name, newTrackIndex, 0f, duration); if (playheadSlider != null) { playheadSlider.transform.SetAsLastSibling(); RectTransform sliderRt = playheadSlider.GetComponent<RectTransform>(); sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f); } }
     public void SelectTrack(int index) { if (index < 0) return; if (selectedTrackIndex == index) return; DeselectTrack(); selectedTrackIndex = index; TimelineEventData trackData = allEvents.Find(e => e.trackIndex == index); if (trackData == null) return; if (trackData.headerObject != null) { Image headerImg = trackData.headerObject.GetComponent<Image>(); if (headerImg != null) { originalHeaderColor = headerImg.color; headerImg.color = highlightColor; } } if (trackData.clipObject != null) { Image clipImg = trackData.clipObject.GetComponent<Image>(); if (clipImg != null) { originalClipColor = clipImg.color; clipImg.color = highlightColor; } } if (moduleSystem != null) moduleSystem.ShowInspector(trackData.eventName); if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null); }
     public void DeselectTrack() { if (selectedTrackIndex >= 0) { TimelineEventData oldTrack = allEvents.Find(e => e.trackIndex == selectedTrackIndex); if (oldTrack != null) { if (oldTrack.headerObject != null) { Image headerImg = oldTrack.headerObject.GetComponent<Image>(); if (headerImg != null) headerImg.color = originalHeaderColor; } if (oldTrack.clipObject != null) { Image clipImg = oldTrack.clipObject.GetComponent<Image>(); if (clipImg != null) clipImg.color = originalClipColor; } } } selectedTrackIndex = -1; if (moduleSystem != null) moduleSystem.ShowDefaultInspector(); }
     public void DeleteSelectedTrack() { if (selectedTrackIndex < 0) return; int indexToDelete = selectedTrackIndex; TimelineEventData trackData = allEvents.Find(e => e.trackIndex == indexToDelete); if (trackData != null) { if (moduleSystem != null) moduleSystem.RestoreCover(trackData.eventName); if (trackData.clipObject != null) Destroy(trackData.clipObject); if (trackData.headerObject != null) Destroy(trackData.headerObject); allEvents.Remove(trackData); } trackCount--; foreach (var evt in allEvents) { if (evt.trackIndex > indexToDelete) { evt.trackIndex--; if (evt.headerObject != null) { Button btn = evt.headerObject.GetComponent<Button>(); if (btn != null) { btn.onClick.RemoveAllListeners(); int newIndex = evt.trackIndex; btn.onClick.AddListener(() => SelectTrack(newIndex)); } } } } DeselectTrack(); RefreshClipPositions(); ResizeContent(); if (allEvents.Count > 0) { SelectTrack(allEvents[allEvents.Count - 1].trackIndex); } else { if (moduleSystem != null && moduleSystem.tabManager != null) { moduleSystem.tabManager.SwitchTab(0); } } }
@@ -212,7 +206,6 @@ public class TimelineManager : MonoBehaviour
     void GenerateGridLines() { ClearOldObjects("Divider_Template"); float tracksStartY = -rulerHeight; GameObject line = Instantiate(dividerPrefab, contentParent); RectTransform rt = line.GetComponent<RectTransform>(); rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, 1); rt.anchoredPosition = new Vector2(0, tracksStartY); rt.sizeDelta = new Vector2(contentParent.sizeDelta.x, 2f); line.transform.SetAsLastSibling(); }
     void GenerateRuler() { ClearOldObjects("Tick_Template"); float tracksStartY = -rulerHeight; for (float time = 0; time <= totalDuration; time += rulerInterval) { GameObject tick = Instantiate(tickPrefab, contentParent); float xPos = time * pixelsPerSecond; RectTransform rt = tick.GetComponent<RectTransform>(); rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0.5f, 0f); rt.sizeDelta = new Vector2(2f, 10f); rt.anchoredPosition = new Vector2(xPos, tracksStartY); TextMeshProUGUI txt = tick.GetComponentInChildren<TextMeshProUGUI>(); if (txt != null) { txt.text = FormatTime(time); txt.alignment = TextAlignmentOptions.BottomLeft; RectTransform txtRt = txt.GetComponent<RectTransform>(); txtRt.anchorMin = new Vector2(0, 0); txtRt.anchorMax = new Vector2(0, 0); txtRt.pivot = new Vector2(0f, 0f); txtRt.anchoredPosition = new Vector2(5f, 0f); } tick.transform.SetAsLastSibling(); } }
 
-    // 【模板机制修复】：所有添加的轨道现在都安全的从隐藏的模板进行克隆，互不干扰！
     public void CreateClip(string name, int trackIndex, float startTime, float duration)
     {
         GameObject newClip = Instantiate(clipPrefab, trackContainer);
@@ -322,28 +315,50 @@ public class TimelineManager : MonoBehaviour
         SyncVerticalScroll();
 
         float currentTime = 0f;
-        if (isDraggingSlider && playheadSlider != null)
+        if (musicSource != null && musicSource.clip != null)
         {
-            currentTime = playheadSlider.value * totalDuration;
-        }
-        else if (musicSource != null && musicSource.clip != null)
-        {
-            currentTime = musicSource.time;
+            if (musicSource.isPlaying)
+            {
+                // 【状态 1：播放中】音乐说了算！
+                currentTime = musicSource.time;
 
-            if (musicSource.isPlaying && currentTime >= totalDuration - 0.05f)
-            {
-                musicSource.Stop();
-                musicSource.time = 0f;
-                currentTime = 0f;
-            }
-            else if (!musicSource.isPlaying && wasPlaying && currentTime < 0.05f)
-            {
-                currentTime = 0f;
-            }
+                if (currentTime >= totalDuration - 0.05f)
+                {
+                    musicSource.Pause();
+                    musicSource.time = 0f;
+                    currentTime = 0f;
+                }
 
-            if (playheadSlider != null && !isDraggingSlider)
+                if (playheadSlider != null && !isDraggingSlider)
+                {
+                    playheadSlider.SetValueWithoutNotify(currentTime / totalDuration);
+                }
+            }
+            else
             {
-                playheadSlider.SetValueWithoutNotify(currentTime / totalDuration);
+                // 【状态 2：暂停中】滑块说了算！完美绕开 Unity 引擎谎报时间 0 的世纪难题！
+                if (playheadSlider != null)
+                {
+                    float rawTime = playheadSlider.value * totalDuration;
+                    int targetFrame = Mathf.RoundToInt(rawTime * bakeFPS);
+                    currentTime = targetFrame / bakeFPS;
+
+                    // 即使没在拖拽，也确保滑块牢牢吸附在精确的帧位置上，绝不回弹！
+                    if (!isDraggingSlider)
+                    {
+                        playheadSlider.SetValueWithoutNotify(currentTime / totalDuration);
+                    }
+                }
+                else
+                {
+                    currentTime = musicSource.time;
+                }
+
+                // 反向强塞给音频系统，等待下一次播放！
+                if (Mathf.Abs(musicSource.time - currentTime) > 0.001f)
+                {
+                    musicSource.time = currentTime;
+                }
             }
         }
 
@@ -351,9 +366,7 @@ public class TimelineManager : MonoBehaviour
             timeDisplayText.text = $"{FormatTime(currentTime)} / {FormatTime(totalDuration)}";
 
         if (playPauseButtonText != null)
-        {
             playPauseButtonText.text = (musicSource != null && musicSource.isPlaying) ? "❚❚" : "▶";
-        }
 
         bool forceUpdate = requiresInitialSync;
         if (requiresInitialSync) requiresInitialSync = false;
@@ -369,7 +382,10 @@ public class TimelineManager : MonoBehaviour
         bool stateChanged = (isPlaying != wasPlaying);
         wasPlaying = isPlaying;
 
-        // 【核心架构大升级】：舞蹈动画与位移彻底脱离 UI 方块，直接与全局时间轴绑定！
+        // 【终极武器 2】：无论你怎么点、怎么拉，只要时间发生了变化，立刻刷新姿势！
+        bool timeChanged = Mathf.Abs(currentTime - lastEvaluatedTime) > 0.001f;
+        lastEvaluatedTime = currentTime;
+
         if (characterAnimator != null)
         {
             float normalizedTime = (currentTime % bakedAnimationLength) / bakedAnimationLength;
@@ -385,7 +401,8 @@ public class TimelineManager : MonoBehaviour
             }
             else
             {
-                if (stateChanged || isDraggingSlider || forceSync)
+                // 加入 timeChanged 后，就算是极其微小的一次单击滑动，也能瞬间精确捕捉，拒绝滞后！
+                if (stateChanged || isDraggingSlider || timeChanged || forceSync)
                 {
                     characterAnimator.Play(currentDanceName, 0, normalizedTime);
                     characterAnimator.Update(0f);
@@ -393,15 +410,6 @@ public class TimelineManager : MonoBehaviour
                 }
 
                 if (characterAnimator.speed != 0f) characterAnimator.speed = 0f;
-            }
-        }
-
-        // 下方的方块现在纯粹作为“触发器”等待调用（Camera, Light 等等）
-        foreach (var evt in allEvents)
-        {
-            if (currentTime >= evt.startTime && currentTime <= (evt.startTime + evt.duration))
-            {
-                // 未来把特效、灯光触发写在这里
             }
         }
     }
@@ -427,8 +435,6 @@ public class TimelineManager : MonoBehaviour
         if (Mathf.Abs(musicSource.time - targetTime) > 0.001f)
         {
             musicSource.time = targetTime;
-            if (characterAnimator != null) characterAnimator.speed = 0f;
-            SyncTimelineEvents(targetTime);
         }
     }
 

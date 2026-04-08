@@ -49,7 +49,7 @@ public class TimelineManager : MonoBehaviour
 
     [Header("=== 现代排版配置 ===")]
     public float pixelsPerSecond = 100f;
-    public int trackCount = 1;
+    public int trackCount = 0; // 【修改】：初始轨道数为 0，干干净净！
     public float baseTrackHeight = 60f;
     public float trackSpacing = 5f;
     public float rulerInterval = 5.0f;
@@ -141,7 +141,13 @@ public class TimelineManager : MonoBehaviour
         }
 
         allEvents.Clear();
-        trackCount = 1;
+        trackCount = 0; // 重置为 0
+
+        // 【安全隐藏模板】：把左侧第一个 Track 的 Header 隐藏起来作为无限复制的模板
+        if (headerArea != null && headerArea.childCount > 0)
+        {
+            headerArea.GetChild(0).gameObject.SetActive(false);
+        }
 
         contentParent.pivot = new Vector2(0, 1);
         contentParent.anchorMin = new Vector2(0, 1);
@@ -172,7 +178,7 @@ public class TimelineManager : MonoBehaviour
         GenerateGridLines();
         GenerateRuler();
 
-        CreateClip("Music Track", 0, 0f, totalDuration);
+        // 彻底移除了 CreateClip("Music Track")
 
         if (playPauseButtonText != null) playPauseButtonText.text = "▶";
 
@@ -187,16 +193,63 @@ public class TimelineManager : MonoBehaviour
         DeselectTrack();
     }
 
-    public void AddDynamicTrack(string name, float duration) { int newTrackIndex = trackCount; trackCount++; ResizeContent(); CreateClip(name, newTrackIndex, 0f, duration); if (playheadSlider != null) { playheadSlider.transform.SetAsLastSibling(); RectTransform sliderRt = playheadSlider.GetComponent<RectTransform>(); sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f); } }
-    public void SelectTrack(int index) { if (index <= 0) return; if (selectedTrackIndex == index) return; DeselectTrack(); selectedTrackIndex = index; TimelineEventData trackData = allEvents.Find(e => e.trackIndex == index); if (trackData == null) return; if (trackData.headerObject != null) { Image headerImg = trackData.headerObject.GetComponent<Image>(); if (headerImg != null) { originalHeaderColor = headerImg.color; headerImg.color = highlightColor; } } if (trackData.clipObject != null) { Image clipImg = trackData.clipObject.GetComponent<Image>(); if (clipImg != null) { originalClipColor = clipImg.color; clipImg.color = highlightColor; } } if (moduleSystem != null) moduleSystem.ShowInspector(trackData.eventName); if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null); }
-    public void DeselectTrack() { if (selectedTrackIndex > 0) { TimelineEventData oldTrack = allEvents.Find(e => e.trackIndex == selectedTrackIndex); if (oldTrack != null) { if (oldTrack.headerObject != null) { Image headerImg = oldTrack.headerObject.GetComponent<Image>(); if (headerImg != null) headerImg.color = originalHeaderColor; } if (oldTrack.clipObject != null) { Image clipImg = oldTrack.clipObject.GetComponent<Image>(); if (clipImg != null) clipImg.color = originalClipColor; } } } selectedTrackIndex = -1; if (moduleSystem != null) moduleSystem.ShowDefaultInspector(); }
-    public void DeleteSelectedTrack() { if (selectedTrackIndex <= 0) return; int indexToDelete = selectedTrackIndex; TimelineEventData trackData = allEvents.Find(e => e.trackIndex == indexToDelete); if (trackData != null) { if (moduleSystem != null) moduleSystem.RestoreCover(trackData.eventName); if (trackData.clipObject != null) Destroy(trackData.clipObject); if (trackData.headerObject != null) Destroy(trackData.headerObject); allEvents.Remove(trackData); } trackCount--; foreach (var evt in allEvents) { if (evt.trackIndex > indexToDelete) { evt.trackIndex--; if (evt.headerObject != null) { Button btn = evt.headerObject.GetComponent<Button>(); if (btn != null) { btn.onClick.RemoveAllListeners(); int newIndex = evt.trackIndex; btn.onClick.AddListener(() => SelectTrack(newIndex)); } } } } DeselectTrack(); RefreshClipPositions(); ResizeContent(); if (allEvents.Count > 1) { SelectTrack(allEvents[allEvents.Count - 1].trackIndex); } else { if (moduleSystem != null && moduleSystem.tabManager != null) { moduleSystem.tabManager.SwitchTab(0); } } }
+    public void AddDynamicTrack(string name, float duration)
+    {
+        int newTrackIndex = trackCount;
+        trackCount++;
+        ResizeContent();
+        CreateClip(name, newTrackIndex, 0f, duration);
+        if (playheadSlider != null) { playheadSlider.transform.SetAsLastSibling(); RectTransform sliderRt = playheadSlider.GetComponent<RectTransform>(); sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f); }
+    }
+
+    // 【权限解禁】：现在允许选中、删除第 0 轨了！因为第 0 轨现在是玩家自己加的模块！
+    public void SelectTrack(int index) { if (index < 0) return; if (selectedTrackIndex == index) return; DeselectTrack(); selectedTrackIndex = index; TimelineEventData trackData = allEvents.Find(e => e.trackIndex == index); if (trackData == null) return; if (trackData.headerObject != null) { Image headerImg = trackData.headerObject.GetComponent<Image>(); if (headerImg != null) { originalHeaderColor = headerImg.color; headerImg.color = highlightColor; } } if (trackData.clipObject != null) { Image clipImg = trackData.clipObject.GetComponent<Image>(); if (clipImg != null) { originalClipColor = clipImg.color; clipImg.color = highlightColor; } } if (moduleSystem != null) moduleSystem.ShowInspector(trackData.eventName); if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null); }
+    public void DeselectTrack() { if (selectedTrackIndex >= 0) { TimelineEventData oldTrack = allEvents.Find(e => e.trackIndex == selectedTrackIndex); if (oldTrack != null) { if (oldTrack.headerObject != null) { Image headerImg = oldTrack.headerObject.GetComponent<Image>(); if (headerImg != null) headerImg.color = originalHeaderColor; } if (oldTrack.clipObject != null) { Image clipImg = oldTrack.clipObject.GetComponent<Image>(); if (clipImg != null) clipImg.color = originalClipColor; } } } selectedTrackIndex = -1; if (moduleSystem != null) moduleSystem.ShowDefaultInspector(); }
+    public void DeleteSelectedTrack() { if (selectedTrackIndex < 0) return; int indexToDelete = selectedTrackIndex; TimelineEventData trackData = allEvents.Find(e => e.trackIndex == indexToDelete); if (trackData != null) { if (moduleSystem != null) moduleSystem.RestoreCover(trackData.eventName); if (trackData.clipObject != null) Destroy(trackData.clipObject); if (trackData.headerObject != null) Destroy(trackData.headerObject); allEvents.Remove(trackData); } trackCount--; foreach (var evt in allEvents) { if (evt.trackIndex > indexToDelete) { evt.trackIndex--; if (evt.headerObject != null) { Button btn = evt.headerObject.GetComponent<Button>(); if (btn != null) { btn.onClick.RemoveAllListeners(); int newIndex = evt.trackIndex; btn.onClick.AddListener(() => SelectTrack(newIndex)); } } } } DeselectTrack(); RefreshClipPositions(); ResizeContent(); if (allEvents.Count > 0) { SelectTrack(allEvents[allEvents.Count - 1].trackIndex); } else { if (moduleSystem != null && moduleSystem.tabManager != null) { moduleSystem.tabManager.SwitchTab(0); } } }
 
     void RefreshClipPositions() { foreach (var evt in allEvents) { if (evt.clipObject != null) { RectTransform rt = evt.clipObject.GetComponent<RectTransform>(); float offset = -5f + (evt.trackIndex * 10f); float yPos = -(evt.trackIndex * (baseTrackHeight + trackSpacing)) - (baseTrackHeight / 2f) + offset; rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, yPos); } } }
     void ResizeContent() { float totalWidth = totalDuration * pixelsPerSecond; contentParent.sizeDelta = new Vector2(totalWidth, contentParent.sizeDelta.y); }
     void GenerateGridLines() { ClearOldObjects("Divider_Template"); float tracksStartY = -rulerHeight; GameObject line = Instantiate(dividerPrefab, contentParent); RectTransform rt = line.GetComponent<RectTransform>(); rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, 1); rt.anchoredPosition = new Vector2(0, tracksStartY); rt.sizeDelta = new Vector2(contentParent.sizeDelta.x, 2f); line.transform.SetAsLastSibling(); }
     void GenerateRuler() { ClearOldObjects("Tick_Template"); float tracksStartY = -rulerHeight; for (float time = 0; time <= totalDuration; time += rulerInterval) { GameObject tick = Instantiate(tickPrefab, contentParent); float xPos = time * pixelsPerSecond; RectTransform rt = tick.GetComponent<RectTransform>(); rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0.5f, 0f); rt.sizeDelta = new Vector2(2f, 10f); rt.anchoredPosition = new Vector2(xPos, tracksStartY); TextMeshProUGUI txt = tick.GetComponentInChildren<TextMeshProUGUI>(); if (txt != null) { txt.text = FormatTime(time); txt.alignment = TextAlignmentOptions.BottomLeft; RectTransform txtRt = txt.GetComponent<RectTransform>(); txtRt.anchorMin = new Vector2(0, 0); txtRt.anchorMax = new Vector2(0, 0); txtRt.pivot = new Vector2(0f, 0f); txtRt.anchoredPosition = new Vector2(5f, 0f); } tick.transform.SetAsLastSibling(); } }
-    public void CreateClip(string name, int trackIndex, float startTime, float duration) { GameObject newClip = Instantiate(clipPrefab, trackContainer); RectTransform rt = newClip.GetComponent<RectTransform>(); GameObject newHeader = null; if (trackIndex == 0) { if (headerArea != null && headerArea.childCount > 0) newHeader = headerArea.GetChild(0).gameObject; } else { if (headerArea != null && headerArea.childCount > 0) { newHeader = Instantiate(headerArea.GetChild(0).gameObject, headerArea); newHeader.name = "Header_" + name; newHeader.SetActive(true); TextMeshProUGUI headerText = newHeader.GetComponentInChildren<TextMeshProUGUI>(); if (headerText != null) headerText.text = name; Button btn = newHeader.GetComponent<Button>(); if (btn == null) btn = newHeader.AddComponent<Button>(); btn.transition = Selectable.Transition.None; int boundIndex = trackIndex; btn.onClick.RemoveAllListeners(); btn.onClick.AddListener(() => SelectTrack(boundIndex)); } } TimelineEventData newEvent = new TimelineEventData { eventName = name, trackIndex = trackIndex, startTime = startTime, duration = duration, clipObject = newClip, headerObject = newHeader }; allEvents.Add(newEvent); TimelineClipUI clipUI = newClip.AddComponent<TimelineClipUI>(); clipUI.manager = this; clipUI.eventData = newEvent; float xPos = startTime * pixelsPerSecond; float offset = -5f + (trackIndex * 10f); float yPos = -(trackIndex * (baseTrackHeight + trackSpacing)) - (baseTrackHeight / 2f) + offset; rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, 0.5f); rt.anchoredPosition = new Vector2(xPos, yPos); float clipHeight = baseTrackHeight * 0.8f; rt.sizeDelta = new Vector2(duration * pixelsPerSecond, clipHeight); TextMeshProUGUI text = newClip.GetComponentInChildren<TextMeshProUGUI>(); if (text != null) text.text = name; }
+
+    // 【模板机制修复】：所有添加的轨道现在都安全的从隐藏的模板进行克隆，互不干扰！
+    public void CreateClip(string name, int trackIndex, float startTime, float duration)
+    {
+        GameObject newClip = Instantiate(clipPrefab, trackContainer);
+        RectTransform rt = newClip.GetComponent<RectTransform>();
+        GameObject newHeader = null;
+
+        if (headerArea != null && headerArea.childCount > 0)
+        {
+            newHeader = Instantiate(headerArea.GetChild(0).gameObject, headerArea);
+            newHeader.name = "Header_" + name;
+            newHeader.SetActive(true);
+            TextMeshProUGUI headerText = newHeader.GetComponentInChildren<TextMeshProUGUI>();
+            if (headerText != null) headerText.text = name;
+            Button btn = newHeader.GetComponent<Button>();
+            if (btn == null) btn = newHeader.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            int boundIndex = trackIndex;
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(() => SelectTrack(boundIndex));
+        }
+
+        TimelineEventData newEvent = new TimelineEventData { eventName = name, trackIndex = trackIndex, startTime = startTime, duration = duration, clipObject = newClip, headerObject = newHeader };
+        allEvents.Add(newEvent);
+        TimelineClipUI clipUI = newClip.AddComponent<TimelineClipUI>();
+        clipUI.manager = this; clipUI.eventData = newEvent;
+        float xPos = startTime * pixelsPerSecond;
+        float offset = -5f + (trackIndex * 10f);
+        float yPos = -(trackIndex * (baseTrackHeight + trackSpacing)) - (baseTrackHeight / 2f) + offset;
+        rt.anchorMin = new Vector2(0, 1);
+        rt.anchorMax = new Vector2(0, 1);
+        rt.pivot = new Vector2(0, 0.5f);
+        rt.anchoredPosition = new Vector2(xPos, yPos);
+        float clipHeight = baseTrackHeight * 0.8f;
+        rt.sizeDelta = new Vector2(duration * pixelsPerSecond, clipHeight);
+        TextMeshProUGUI text = newClip.GetComponentInChildren<TextMeshProUGUI>();
+        if (text != null) text.text = name;
+    }
 
     void BakeRootMotion(string stateName, float duration)
     {
@@ -277,17 +330,14 @@ public class TimelineManager : MonoBehaviour
         {
             currentTime = musicSource.time;
 
-            // 【终极收尾魔法：到达终点自动重置回 0 帧！】
-            // 如果音乐正在播并且极其接近结尾，或者被 Unity 底层自动结束归零了
             if (musicSource.isPlaying && currentTime >= totalDuration - 0.05f)
             {
-                musicSource.Stop();    // 强行停止
-                musicSource.time = 0f; // 音乐时间归零
-                currentTime = 0f;      // 逻辑时间归零
+                musicSource.Stop();
+                musicSource.time = 0f;
+                currentTime = 0f;
             }
             else if (!musicSource.isPlaying && wasPlaying && currentTime < 0.05f)
             {
-                // 接住自然停播的状态
                 currentTime = 0f;
             }
 
@@ -319,36 +369,39 @@ public class TimelineManager : MonoBehaviour
         bool stateChanged = (isPlaying != wasPlaying);
         wasPlaying = isPlaying;
 
+        // 【核心架构大升级】：舞蹈动画与位移彻底脱离 UI 方块，直接与全局时间轴绑定！
+        if (characterAnimator != null)
+        {
+            float normalizedTime = (currentTime % bakedAnimationLength) / bakedAnimationLength;
+
+            if (isPlaying)
+            {
+                if (characterAnimator.speed == 0f || stateChanged || forceSync)
+                {
+                    characterAnimator.Play(currentDanceName, 0, normalizedTime);
+                    characterAnimator.speed = originalAnimatorSpeed;
+                    ApplyBakedRootMotion(currentTime);
+                }
+            }
+            else
+            {
+                if (stateChanged || isDraggingSlider || forceSync)
+                {
+                    characterAnimator.Play(currentDanceName, 0, normalizedTime);
+                    characterAnimator.Update(0f);
+                    ApplyBakedRootMotion(currentTime);
+                }
+
+                if (characterAnimator.speed != 0f) characterAnimator.speed = 0f;
+            }
+        }
+
+        // 下方的方块现在纯粹作为“触发器”等待调用（Camera, Light 等等）
         foreach (var evt in allEvents)
         {
             if (currentTime >= evt.startTime && currentTime <= (evt.startTime + evt.duration))
             {
-                if (evt.trackIndex == 0 && characterAnimator != null)
-                {
-                    float localTime = currentTime - evt.startTime;
-                    float normalizedTime = (localTime % bakedAnimationLength) / bakedAnimationLength;
-
-                    if (isPlaying)
-                    {
-                        if (characterAnimator.speed == 0f || stateChanged || forceSync)
-                        {
-                            characterAnimator.Play(currentDanceName, 0, normalizedTime);
-                            characterAnimator.speed = originalAnimatorSpeed;
-                            ApplyBakedRootMotion(localTime);
-                        }
-                    }
-                    else
-                    {
-                        if (stateChanged || isDraggingSlider || forceSync)
-                        {
-                            characterAnimator.Play(currentDanceName, 0, normalizedTime);
-                            characterAnimator.Update(0f);
-                            ApplyBakedRootMotion(localTime);
-                        }
-
-                        if (characterAnimator.speed != 0f) characterAnimator.speed = 0f;
-                    }
-                }
+                // 未来把特效、灯光触发写在这里
             }
         }
     }

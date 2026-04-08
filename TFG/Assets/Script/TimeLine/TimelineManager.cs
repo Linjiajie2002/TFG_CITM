@@ -38,6 +38,9 @@ public class TimelineManager : MonoBehaviour
     public TextMeshProUGUI timeDisplayText;
     public TextMeshProUGUI playPauseButtonText;
 
+    [Header("=== 新功能：时间输入框 ===")]
+    public TMP_InputField timeInputField;
+
     [Header("=== 垂直滚动条配置 ===")]
     public Scrollbar verticalScrollbar;
     public RectTransform headerArea;
@@ -58,7 +61,9 @@ public class TimelineManager : MonoBehaviour
     [Header("=== 引擎数据 ===")]
     private Vector3[] bakedPositions;
     private Quaternion[] bakedRotations;
-    private float bakeFPS = 30f;
+
+    // 【终极形态】：锁定工业级 60 帧标准！
+    private float bakeFPS = 60f;
 
     private float bakedAnimationLength = 1f;
     private float originalAnimatorSpeed = 1f;
@@ -70,8 +75,6 @@ public class TimelineManager : MonoBehaviour
 
     private bool wasPlaying = false;
     private bool requiresInitialSync = true;
-
-    // 【终极武器】：记录上一帧的时间，用于精确侦测拖拽或点击！
     private float lastEvaluatedTime = -1f;
 
     private RectTransform trackViewport;
@@ -115,12 +118,14 @@ public class TimelineManager : MonoBehaviour
             EventTrigger.Entry entryUp = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
             entryUp.callback.AddListener((data) => {
                 isDraggingSlider = false;
-                OnSliderDrag(playheadSlider.value);
             });
             trigger.triggers.Add(entryUp);
+        }
 
-            playheadSlider.onValueChanged.RemoveAllListeners();
-            playheadSlider.onValueChanged.AddListener(OnSliderDrag);
+        if (timeInputField != null)
+        {
+            timeInputField.onValueChanged.AddListener(OnTimeInputValueChanged);
+            timeInputField.onEndEdit.AddListener(OnTimeInputSubmit);
         }
 
         if (!isInitialized) SetupDynamicTimeline(characterAnimator, musicSource, "UI_Test_Dance");
@@ -230,7 +235,8 @@ public class TimelineManager : MonoBehaviour
         TimelineEventData newEvent = new TimelineEventData { eventName = name, trackIndex = trackIndex, startTime = startTime, duration = duration, clipObject = newClip, headerObject = newHeader };
         allEvents.Add(newEvent);
         TimelineClipUI clipUI = newClip.AddComponent<TimelineClipUI>();
-        clipUI.manager = this; clipUI.eventData = newEvent;
+        clipUI.manager = this;
+        clipUI.eventData = newEvent;
         float xPos = startTime * pixelsPerSecond;
         float offset = -5f + (trackIndex * 10f);
         float yPos = -(trackIndex * (baseTrackHeight + trackSpacing)) - (baseTrackHeight / 2f) + offset;
@@ -247,31 +253,24 @@ public class TimelineManager : MonoBehaviour
     void BakeRootMotion(string stateName, float duration)
     {
         if (characterAnimator == null) return;
-
         int totalFrames = Mathf.CeilToInt(duration * bakeFPS);
         bakedPositions = new Vector3[totalFrames];
         bakedRotations = new Quaternion[totalFrames];
-
         Vector3 initialSpawnPos = characterAnimator.transform.position;
         Quaternion initialSpawnRot = characterAnimator.transform.rotation;
-
         characterAnimator.transform.position = initialSpawnPos;
         characterAnimator.transform.rotation = initialSpawnRot;
-
         characterAnimator.Play(stateName, 0, 0f);
         characterAnimator.Update(0f);
-
         AnimatorStateInfo stateInfo = characterAnimator.GetCurrentAnimatorStateInfo(0);
         bakedAnimationLength = stateInfo.length;
         if (bakedAnimationLength <= 0.1f) bakedAnimationLength = 1f;
-
         for (int i = 0; i < totalFrames; i++)
         {
             bakedPositions[i] = characterAnimator.transform.position;
             bakedRotations[i] = characterAnimator.transform.rotation;
             characterAnimator.Update(1f / bakeFPS);
         }
-
         characterAnimator.transform.position = initialSpawnPos;
         characterAnimator.transform.rotation = initialSpawnRot;
         characterAnimator.Play(stateName, 0, 0f);
@@ -282,14 +281,11 @@ public class TimelineManager : MonoBehaviour
     void ApplyBakedRootMotion(float time)
     {
         if (bakedPositions == null || bakedPositions.Length == 0 || characterAnimator == null) return;
-
         float frameF = time * bakeFPS;
         int frame1 = Mathf.FloorToInt(frameF);
         int frame2 = Mathf.CeilToInt(frameF);
-
         frame1 = Mathf.Clamp(frame1, 0, bakedPositions.Length - 1);
         frame2 = Mathf.Clamp(frame2, 0, bakedPositions.Length - 1);
-
         float t = frameF - frame1;
         characterAnimator.transform.position = Vector3.Lerp(bakedPositions[frame1], bakedPositions[frame2], t);
         characterAnimator.transform.rotation = Quaternion.Slerp(bakedRotations[frame1], bakedRotations[frame2], t);
@@ -300,6 +296,31 @@ public class TimelineManager : MonoBehaviour
     void Update()
     {
         if (Keyboard.current != null && (Keyboard.current.deleteKey.wasPressedThisFrame || Keyboard.current.backspaceKey.wasPressedThisFrame)) DeleteSelectedTrack();
+
+        // J 键悬停跳跃 (指哪打哪，绝对不动屏幕视野)
+        if (Keyboard.current != null && Keyboard.current.jKey.wasPressedThisFrame)
+        {
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            if (contentParent != null && contentParent.parent != null)
+            {
+                RectTransform mainViewport = contentParent.parent.GetComponent<RectTransform>();
+                if (RectTransformUtility.RectangleContainsScreenPoint(mainViewport, mousePos))
+                {
+                    if (RectTransformUtility.ScreenPointToLocalPointInRectangle(contentParent, mousePos, null, out Vector2 localMousePos))
+                    {
+                        float targetTime = Mathf.Clamp(localMousePos.x / pixelsPerSecond, 0, totalDuration);
+                        int targetFrame = Mathf.RoundToInt(targetTime * bakeFPS);
+                        targetTime = targetFrame / bakeFPS;
+
+                        if (musicSource != null) musicSource.time = targetTime;
+                        if (characterAnimator != null && (musicSource == null || !musicSource.isPlaying)) characterAnimator.speed = 0f;
+                        if (playheadSlider != null) playheadSlider.SetValueWithoutNotify(targetTime / totalDuration);
+
+                        SyncTimelineEvents(targetTime, true);
+                    }
+                }
+            }
+        }
 
         if (Mouse.current != null && verticalScrollbar != null && verticalScrollbar.gameObject.activeSelf)
         {
@@ -315,11 +336,26 @@ public class TimelineManager : MonoBehaviour
         SyncVerticalScroll();
 
         float currentTime = 0f;
-        if (musicSource != null && musicSource.clip != null)
+
+        if (isDraggingSlider)
+        {
+            if (playheadSlider != null)
+            {
+                float rawTime = playheadSlider.value * totalDuration;
+                int targetFrame = Mathf.RoundToInt(rawTime * bakeFPS);
+                currentTime = targetFrame / bakeFPS;
+
+                if (musicSource != null && Mathf.Abs(musicSource.time - currentTime) > 0.035f)
+                {
+                    musicSource.time = currentTime;
+                }
+            }
+            DoEdgeScroll();
+        }
+        else if (musicSource != null && musicSource.clip != null)
         {
             if (musicSource.isPlaying)
             {
-                // 【状态 1：播放中】音乐说了算！
                 currentTime = musicSource.time;
 
                 if (currentTime >= totalDuration - 0.05f)
@@ -329,33 +365,24 @@ public class TimelineManager : MonoBehaviour
                     currentTime = 0f;
                 }
 
-                if (playheadSlider != null && !isDraggingSlider)
+                if (playheadSlider != null)
                 {
                     playheadSlider.SetValueWithoutNotify(currentTime / totalDuration);
                 }
+
+                AutoScrollToPlayhead(currentTime);
             }
             else
             {
-                // 【状态 2：暂停中】滑块说了算！完美绕开 Unity 引擎谎报时间 0 的世纪难题！
                 if (playheadSlider != null)
                 {
                     float rawTime = playheadSlider.value * totalDuration;
                     int targetFrame = Mathf.RoundToInt(rawTime * bakeFPS);
                     currentTime = targetFrame / bakeFPS;
-
-                    // 即使没在拖拽，也确保滑块牢牢吸附在精确的帧位置上，绝不回弹！
-                    if (!isDraggingSlider)
-                    {
-                        playheadSlider.SetValueWithoutNotify(currentTime / totalDuration);
-                    }
                 }
-                else
-                {
-                    currentTime = musicSource.time;
-                }
+                else { currentTime = musicSource.time; }
 
-                // 反向强塞给音频系统，等待下一次播放！
-                if (Mathf.Abs(musicSource.time - currentTime) > 0.001f)
+                if (Mathf.Abs(musicSource.time - currentTime) > 0.035f)
                 {
                     musicSource.time = currentTime;
                 }
@@ -364,6 +391,11 @@ public class TimelineManager : MonoBehaviour
 
         if (timeDisplayText != null)
             timeDisplayText.text = $"{FormatTime(currentTime)} / {FormatTime(totalDuration)}";
+
+        if (timeInputField != null && !timeInputField.isFocused)
+        {
+            timeInputField.SetTextWithoutNotify(FormatTime(currentTime));
+        }
 
         if (playPauseButtonText != null)
             playPauseButtonText.text = (musicSource != null && musicSource.isPlaying) ? "❚❚" : "▶";
@@ -374,6 +406,121 @@ public class TimelineManager : MonoBehaviour
         SyncTimelineEvents(currentTime, forceUpdate);
     }
 
+    void AutoScrollToPlayhead(float currentTime)
+    {
+        if (contentParent == null || contentParent.parent == null) return;
+        RectTransform mainViewport = contentParent.parent.GetComponent<RectTransform>();
+        float visibleWidth = mainViewport.rect.width;
+        if (visibleWidth < 10f) return;
+
+        float playheadX = currentTime * pixelsPerSecond;
+        float currentViewStartX = -contentParent.anchoredPosition.x;
+        float currentViewEndX = currentViewStartX + visibleWidth;
+        float maxScrollX = Mathf.Max(0, contentParent.rect.width - visibleWidth);
+
+        if (playheadX > currentViewEndX || playheadX < currentViewStartX)
+        {
+            float newX = -playheadX;
+            newX = Mathf.Clamp(newX, -maxScrollX, 0);
+            contentParent.anchoredPosition = new Vector2(newX, contentParent.anchoredPosition.y);
+
+            ScrollRect sr = contentParent.GetComponentInParent<ScrollRect>();
+            if (sr != null && sr.horizontal && maxScrollX > 0) sr.horizontalNormalizedPosition = Mathf.Clamp01(-newX / maxScrollX);
+        }
+    }
+
+    void FocusOnTime(float targetTime)
+    {
+        if (contentParent == null || contentParent.parent == null) return;
+        RectTransform mainViewport = contentParent.parent.GetComponent<RectTransform>();
+        float visibleWidth = mainViewport.rect.width;
+
+        float targetX = targetTime * pixelsPerSecond;
+        float maxScrollX = Mathf.Max(0, contentParent.rect.width - visibleWidth);
+
+        float newX = -(targetX - visibleWidth / 2f);
+        newX = Mathf.Clamp(newX, -maxScrollX, 0);
+        contentParent.anchoredPosition = new Vector2(newX, contentParent.anchoredPosition.y);
+
+        ScrollRect scrollRect = contentParent.GetComponentInParent<ScrollRect>();
+        if (scrollRect != null && scrollRect.horizontal && maxScrollX > 0)
+        {
+            scrollRect.horizontalNormalizedPosition = Mathf.Clamp01(-newX / maxScrollX);
+        }
+    }
+
+    void DoEdgeScroll()
+    {
+        if (contentParent == null || contentParent.parent == null) return;
+        RectTransform mainViewport = contentParent.parent.GetComponent<RectTransform>();
+        Vector2 mousePos = Mouse.current.position.ReadValue();
+
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(mainViewport, mousePos, null, out Vector2 localMouse))
+        {
+            float scrollSpeed = 1500f * Time.deltaTime;
+            float scrollDelta = 0f;
+            float normalizedX = (localMouse.x - mainViewport.rect.xMin) / mainViewport.rect.width;
+
+            if (normalizedX > 0.95f) scrollDelta = -scrollSpeed;
+            else if (normalizedX < 0.05f) scrollDelta = scrollSpeed;
+
+            if (scrollDelta != 0f)
+            {
+                float visibleWidth = mainViewport.rect.width;
+                float maxScrollX = Mathf.Max(0, contentParent.rect.width - visibleWidth);
+                float newX = contentParent.anchoredPosition.x + scrollDelta;
+                newX = Mathf.Clamp(newX, -maxScrollX, 0);
+                contentParent.anchoredPosition = new Vector2(newX, contentParent.anchoredPosition.y);
+
+                ScrollRect sr = contentParent.GetComponentInParent<ScrollRect>();
+                if (sr != null && sr.horizontal && maxScrollX > 0) sr.horizontalNormalizedPosition = Mathf.Clamp01(-newX / maxScrollX);
+            }
+        }
+    }
+
+    public void OnTimeInputValueChanged(string rawStr)
+    {
+        string digits = "";
+        for (int i = 0; i < rawStr.Length; i++)
+        {
+            if (char.IsDigit(rawStr[i])) digits += rawStr[i];
+        }
+
+        if (string.IsNullOrEmpty(digits)) digits = "000000";
+
+        if (digits.Length > 6) digits = digits.Substring(digits.Length - 6);
+        else digits = digits.PadLeft(6, '0');
+
+        string formatted = $"{digits.Substring(0, 2)}:{digits.Substring(2, 2)}:{digits.Substring(4, 2)}";
+
+        timeInputField.SetTextWithoutNotify(formatted);
+        timeInputField.caretPosition = formatted.Length;
+    }
+
+    public void OnTimeInputSubmit(string input)
+    {
+        string[] parts = input.Split(':');
+        if (parts.Length == 3)
+        {
+            int.TryParse(parts[0], out int m);
+            int.TryParse(parts[1], out int s);
+            int.TryParse(parts[2], out int f);
+
+            // 严格防溢出：秒数上限59，帧数上限59
+            s = Mathf.Clamp(s, 0, 59);
+            f = Mathf.Clamp(f, 0, Mathf.FloorToInt(bakeFPS - 1));
+
+            float targetTime = (m * 60f) + s + (f / bakeFPS);
+            targetTime = Mathf.Clamp(targetTime, 0, totalDuration);
+
+            // 输入完成只跳动下方的轨道视角，坚决不动红线进度
+            FocusOnTime(targetTime);
+        }
+
+        if (timeInputField != null) timeInputField.SetTextWithoutNotify(FormatTime(musicSource != null ? musicSource.time : 0f));
+        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+    }
+
     void SyncVerticalScroll() { if (verticalScrollbar != null && headerArea != null && trackContainer != null) { float visibleHeight = contentParent.rect.height; if (visibleHeight < 10f) return; float totalTracksHeight = trackCount * (baseTrackHeight + trackSpacing); float maxScroll = Mathf.Max(0, totalTracksHeight - visibleHeight + rulerHeight + 20f); bool needsScroll = maxScroll > 0.1f; if (verticalScrollbar.gameObject.activeSelf != needsScroll) { verticalScrollbar.gameObject.SetActive(needsScroll); } if (!needsScroll) { trackContainer.anchoredPosition = Vector2.zero; if (isHeaderYStored) headerArea.anchoredPosition = new Vector2(headerArea.anchoredPosition.x, originalHeaderY); return; } float sizeRatio = visibleHeight / (totalTracksHeight + rulerHeight); verticalScrollbar.size = Mathf.Clamp(sizeRatio, 0.05f, 1f); float scrollOffset = (1f - verticalScrollbar.value) * maxScroll; trackContainer.anchoredPosition = new Vector2(0, scrollOffset); if (!isHeaderYStored) { originalHeaderY = headerArea.anchoredPosition.y; isHeaderYStored = true; } headerArea.anchoredPosition = new Vector2(headerArea.anchoredPosition.x, originalHeaderY + scrollOffset); } }
 
     void SyncTimelineEvents(float currentTime, bool forceSync = false)
@@ -382,7 +529,6 @@ public class TimelineManager : MonoBehaviour
         bool stateChanged = (isPlaying != wasPlaying);
         wasPlaying = isPlaying;
 
-        // 【终极武器 2】：无论你怎么点、怎么拉，只要时间发生了变化，立刻刷新姿势！
         bool timeChanged = Mathf.Abs(currentTime - lastEvaluatedTime) > 0.001f;
         lastEvaluatedTime = currentTime;
 
@@ -401,7 +547,6 @@ public class TimelineManager : MonoBehaviour
             }
             else
             {
-                // 加入 timeChanged 后，就算是极其微小的一次单击滑动，也能瞬间精确捕捉，拒绝滞后！
                 if (stateChanged || isDraggingSlider || timeChanged || forceSync)
                 {
                     characterAnimator.Play(currentDanceName, 0, normalizedTime);
@@ -419,36 +564,21 @@ public class TimelineManager : MonoBehaviour
         int m = Mathf.FloorToInt(t / 60F);
         int s = Mathf.FloorToInt(t % 60F);
         int f = Mathf.FloorToInt((t % 1f) * bakeFPS);
+        if (f >= bakeFPS) f = Mathf.FloorToInt(bakeFPS - 1); // 防止浮点误差
+
         return string.Format("{0:00}:{1:00}:{2:00}", m, s, f);
     }
 
     public void OnSliderDrag(float value)
     {
-        if (!isDraggingSlider) return;
-
-        if (musicSource == null || musicSource.clip == null) return;
-        float targetTime = value * totalDuration;
-
-        int targetFrame = Mathf.RoundToInt(targetTime * bakeFPS);
-        targetTime = targetFrame / bakeFPS;
-
-        if (Mathf.Abs(musicSource.time - targetTime) > 0.001f)
-        {
-            musicSource.time = targetTime;
-        }
+        // 留空，全权由 Update 智能接管
     }
 
     public void TogglePlayPause()
     {
         if (musicSource == null || musicSource.clip == null) return;
 
-        if (musicSource.isPlaying)
-        {
-            musicSource.Pause();
-        }
-        else
-        {
-            musicSource.Play();
-        }
+        if (musicSource.isPlaying) musicSource.Pause();
+        else musicSource.Play();
     }
 }

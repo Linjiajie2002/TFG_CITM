@@ -87,7 +87,7 @@ public class TimelineManager : MonoBehaviour
         {
             originalAnimatorSpeed = characterAnimator.speed;
             if (originalAnimatorSpeed <= 0.01f) originalAnimatorSpeed = 1f;
-            characterAnimator.speed = 0f; // 开局强行冰冻！
+            characterAnimator.speed = 0f;
         }
     }
 
@@ -277,6 +277,20 @@ public class TimelineManager : MonoBehaviour
         {
             currentTime = musicSource.time;
 
+            // 【终极收尾魔法：到达终点自动重置回 0 帧！】
+            // 如果音乐正在播并且极其接近结尾，或者被 Unity 底层自动结束归零了
+            if (musicSource.isPlaying && currentTime >= totalDuration - 0.05f)
+            {
+                musicSource.Stop();    // 强行停止
+                musicSource.time = 0f; // 音乐时间归零
+                currentTime = 0f;      // 逻辑时间归零
+            }
+            else if (!musicSource.isPlaying && wasPlaying && currentTime < 0.05f)
+            {
+                // 接住自然停播的状态
+                currentTime = 0f;
+            }
+
             if (playheadSlider != null && !isDraggingSlider)
             {
                 playheadSlider.SetValueWithoutNotify(currentTime / totalDuration);
@@ -286,7 +300,6 @@ public class TimelineManager : MonoBehaviour
         if (timeDisplayText != null)
             timeDisplayText.text = $"{FormatTime(currentTime)} / {FormatTime(totalDuration)}";
 
-        // 【新增自动 UI 联动】：无论你点哪个按钮，只要音乐状态变了，图标自动跟着变！
         if (playPauseButtonText != null)
         {
             playPauseButtonText.text = (musicSource != null && musicSource.isPlaying) ? "❚❚" : "▶";
@@ -302,7 +315,6 @@ public class TimelineManager : MonoBehaviour
 
     void SyncTimelineEvents(float currentTime, bool forceSync = false)
     {
-        // 彻底移除了授权锁，现在只需要判断音乐是否在播，你场景里的 Start 按钮彻底自由了！
         bool isPlaying = (musicSource != null && musicSource.isPlaying);
         bool stateChanged = (isPlaying != wasPlaying);
         wasPlaying = isPlaying;
@@ -334,7 +346,6 @@ public class TimelineManager : MonoBehaviour
                             ApplyBakedRootMotion(localTime);
                         }
 
-                        // 【最完美的防抖底线】：只要没在播放，永远强制锁死速度 0
                         if (characterAnimator.speed != 0f) characterAnimator.speed = 0f;
                     }
                 }
@@ -372,7 +383,6 @@ public class TimelineManager : MonoBehaviour
     {
         if (musicSource == null || musicSource.clip == null) return;
 
-        // 这里的文本切换逻辑我移到了 Update 里自动处理，你不再需要手动点它来授权了
         if (musicSource.isPlaying)
         {
             musicSource.Pause();

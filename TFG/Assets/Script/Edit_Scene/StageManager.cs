@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class StageManager : MonoBehaviour
@@ -53,37 +53,33 @@ public class StageManager : MonoBehaviour
                 currentDance = GameManager.Instance.danceStateNames[musicIndex];
             }
 
-            Debug.Log($"¡¾StageManager¡¿ÕıÔÚÏòÊ±¼äÖá·¢ËÍÊı¾İ... Îèµ¸: {currentDance}");
+            Debug.Log($"ã€StageManagerã€‘æ­£åœ¨å‘æ—¶é—´è½´å‘é€æ•°æ®... èˆè¹ˆ: {currentDance}");
             timelineManager.SetupDynamicTimeline(charAnimator, musicPlayer, currentDance);
         }
         else
         {
-            Debug.LogError("¡¾ÑÏÖØ´íÎó¡¿StageManager ÉÏµÄ Timeline Manager ²ÛÎ»ÊÇ¿ÕµÄ£¡");
+            Debug.LogError("ã€ä¸¥é‡é”™è¯¯ã€‘StageManager ä¸Šçš„ Timeline Manager æ§½ä½æ˜¯ç©ºçš„ï¼");
         }
     }
 
     public void EnterCustomizationMode()
     {
-        // ¡¾ĞŞ¸Äµã1¡¿Òş²Ø/ÏÔÊ¾UIÊ±£¬ÓÅÏÈ¿ª¹Ø Canvas ×é¼ş£¬¶ø²»ÊÇ SetActive
-        // ÕâÑù¿ÉÒÔ±£Ö¤ UI ¿´²»¼û£¬µ«ÊÇ±³ºóµÄ TimelineManager ½Å±¾ÒÀÈ»´æ»î²¢ÔÚ¹¤×÷£¡
         if (customizationCanvas != null)
         {
             Canvas canvas = customizationCanvas.GetComponent<Canvas>();
             if (canvas != null) canvas.enabled = true;
-            else customizationCanvas.SetActive(true); // ¼æÈİ±¸ÓÃ
+            else customizationCanvas.SetActive(true);
         }
 
         if (concertCanvas != null) concertCanvas.SetActive(false);
         if (editorCamera != null) editorCamera.gameObject.SetActive(true);
         if (audienceCamera != null) audienceCamera.gameObject.SetActive(false);
 
-        // ¡¾ĞŞ¸Äµã2¡¿´ÓÑİ³öÇĞ»Ø±à¼­Ê±£¬ÓÃ Pause ÔİÍ£¶ø²»ÊÇ Stop£¬·ÀÖ¹ÆÆ»µ×´Ì¬
         if (musicPlayer != null) musicPlayer.Pause();
     }
 
     public void StartConcert()
     {
-        // Í¬Ñù£¬Ö»¹Ø±ÕäÖÈ¾£¬±£Áô TimelineManager µÄ´óÄÔ¼ÌĞøÔË×÷
         if (customizationCanvas != null)
         {
             Canvas canvas = customizationCanvas.GetComponent<Canvas>();
@@ -97,27 +93,15 @@ public class StageManager : MonoBehaviour
 
         if (musicPlayer != null && musicPlayer.clip != null)
         {
-            // ¡¾ºËĞÄĞŞ¸´ A¡¿Ç¿ÖÆ½«ÒôÀÖ½ø¶È¹éÁã£¡È·±£Ò»ÇĞ´ÓÍ·¿ªÊ¼
             musicPlayer.time = 0f;
             musicPlayer.Play();
 
-            // ¡¾ºËĞÄĞŞ¸´ B¡¿Æ­¹ıÊ±¼äÖá£ºÇ¿ÖÆ°Ñ¶¯»­ËÙ¶ÈÉèÎª0
-            // ÕâÑùÊ±¼äÖáÔÚÏÂÒ»Ö¡·¢ÏÖ¡°ß×£¬²¥·ÅÖĞµ«ËÙ¶ÈÊÇ0¡±£¬¾Í»áÁ¢¿Ì´¥·¢Ò»´ÎÍêÃÀµÄ´ÓÁãÍ¬²½£¡
             if (charAnimator != null) charAnimator.speed = 0f;
 
-            float songDuration = musicPlayer.clip.length;
-            Invoke("BackToMainMenu", songDuration);
-            Debug.Log($"Concert Duration: {songDuration}");
+            // ğŸ”ª å·²ç»å½»åº•åˆ é™¤äº† Invoke("BackToMainMenu", songDuration); 
+            // ç°åœ¨çš„ç»“å±€ç”± PerformanceEndManager å…¨æƒæ¥ç®¡ï¼
+            Debug.Log($"Concert Duration: {musicPlayer.clip.length} - æ­£åœ¨æ’­æ”¾...");
         }
-
-        // ¡¾ºËĞÄĞŞ¸´ C¡¿³¹µ×É¾³ıÁË PlaySelectedDance() µÄµ÷ÓÃ£¡
-        // ÎªÊ²Ã´£¿ÒòÎªÎÒÃÇÒªÇó¡°Ñİ³öÄ£Ê½ºÍ±à¼­Ä£Ê½ÍêÈ«Ò»Ñù¡±£¡
-        // ËùÒÔÎÒÃÇ·ÅÈ¨¸øÒş²ØÔÚÄ»ºóµÄ TimelineManager£¬ÓÉËüÀ´¿ØÖÆËùÓĞµÄ¶¯»­£¡
     }
 
-    public void BackToMainMenu()
-    {
-        CancelInvoke();
-        SceneManager.LoadScene(0);
-    }
 }

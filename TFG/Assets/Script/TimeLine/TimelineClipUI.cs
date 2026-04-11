@@ -65,31 +65,40 @@ public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
     }
 
     // ==========================================
-    // 点击 Clip 主体 → 选中该 Clip（不是选轨道）
+    // 点击 Clip 主体 → 选中该 Clip
     // ==========================================
     public void OnPointerDown(PointerEventData data)
     {
         isDraggingBody = true;
         RecordOriginalData(data);
 
-        // 【改动】：选中 Clip，而非选轨道
         if (manager != null && eventData != null)
             manager.SelectClip(eventData);
     }
 
+    // ==========================================
+    // 拖拽 Clip 主体 → 防穿模逻辑恢复！
+    // ==========================================
     public void OnDrag(PointerEventData data)
     {
         if (!isDraggingBody || manager == null || eventData == null) return;
 
-        float deltaTime = GetDeltaX(data) / manager.pixelsPerSecond;
-        float newStartTime = Mathf.Max(0f, originalStartTime + deltaTime);
+        float deltaX = GetDeltaX(data);
+        float deltaTime = deltaX / manager.pixelsPerSecond;
+        float newStartTime = originalStartTime + deltaTime;
+
+        // 【关键恢复】：向大管家询问物理墙壁的位置！
+        manager.GetAllowedTimeRange(eventData, originalStartTime, out float minTime, out float maxTime);
+
+        // 死死卡在墙壁中间，不能越界！
+        newStartTime = Mathf.Clamp(newStartTime, minTime, maxTime - originalDuration);
 
         eventData.startTime = newStartTime;
         rectTransform.anchoredPosition = new Vector2(newStartTime * manager.pixelsPerSecond, originalPosition.y);
     }
 
     // ==========================================
-    // 手柄按下 → 也选中该 Clip
+    // 手柄按下 → 选中该 Clip
     // ==========================================
     public void OnHandlePointerDown(bool isLeft, PointerEventData data)
     {
@@ -100,25 +109,49 @@ public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
             manager.SelectClip(eventData);
     }
 
+    // ==========================================
+    // 拖拽边缘手柄 → 防穿模逻辑恢复！
+    // ==========================================
     public void OnHandleDrag(bool isLeft, PointerEventData data)
     {
         if (manager == null || eventData == null) return;
 
-        float deltaTime = GetDeltaX(data) / manager.pixelsPerSecond;
+        float deltaX = GetDeltaX(data);
+        float deltaTime = deltaX / manager.pixelsPerSecond;
         float minDur = 0.5f;
+
+        // 【关键恢复】：向大管家询问物理墙壁的位置！
+        manager.GetAllowedTimeRange(eventData, originalStartTime, out float minTime, out float maxTime);
 
         if (!isLeft) // 右手柄：改时长
         {
-            eventData.duration = Mathf.Max(minDur, originalDuration + deltaTime);
-            rectTransform.sizeDelta = new Vector2(eventData.duration * manager.pixelsPerSecond, rectTransform.sizeDelta.y);
+            float newDuration = originalDuration + deltaTime;
+            float maxAllowedDuration = maxTime - originalStartTime; // 向右拉不能超过右边方块的开头
+
+            // 夹在最小长度和最大允许长度之间
+            newDuration = Mathf.Clamp(newDuration, minDur, maxAllowedDuration);
+
+            eventData.duration = newDuration;
+            rectTransform.sizeDelta = new Vector2(newDuration * manager.pixelsPerSecond, rectTransform.sizeDelta.y);
         }
         else // 左手柄：改起始时间 + 时长
         {
             float newStart = originalStartTime + deltaTime;
             float newDur = originalDuration - deltaTime;
 
-            if (newDur < minDur) { newDur = minDur; newStart = originalStartTime + (originalDuration - minDur); }
-            if (newStart < 0f) { newStart = 0f; newDur = originalStartTime + originalDuration; }
+            // 向左拉撞到了墙壁（如0秒，或左侧的其他方块）
+            if (newStart < minTime)
+            {
+                newStart = minTime;
+                newDur = originalStartTime + originalDuration - minTime;
+            }
+
+            // 撞到了自己的最小长度
+            if (newDur < minDur)
+            {
+                newDur = minDur;
+                newStart = originalStartTime + (originalDuration - minDur);
+            }
 
             eventData.startTime = newStart;
             eventData.duration = newDur;

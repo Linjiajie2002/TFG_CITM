@@ -3,27 +3,19 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 // ==========================================
-// 【新增黑科技】：独立的把手感应器！
-// 它专门负责挂在黄色色块上，100% 拦截鼠标拖拽，绝不会误判为中间！
+// 左右拉伸手柄
 // ==========================================
 public class TimelineClipHandle : MonoBehaviour, IPointerDownHandler, IDragHandler
 {
     public bool isLeftHandle;
     public TimelineClipUI parentClip;
 
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        parentClip.OnHandlePointerDown(isLeftHandle, eventData);
-    }
-
-    public void OnDrag(PointerEventData eventData)
-    {
-        parentClip.OnHandleDrag(isLeftHandle, eventData);
-    }
+    public void OnPointerDown(PointerEventData eventData) { parentClip.OnHandlePointerDown(isLeftHandle, eventData); }
+    public void OnDrag(PointerEventData eventData) { parentClip.OnHandleDrag(isLeftHandle, eventData); }
 }
 
 // ==========================================
-// 原本的方块大脑
+// Clip 方块 UI 行为
 // ==========================================
 public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
 {
@@ -31,8 +23,6 @@ public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
     [HideInInspector] public TimelineEventData eventData;
 
     private RectTransform rectTransform;
-
-    // 状态标记
     private bool isDraggingBody = false;
     private float originalPointerX;
     private float originalStartTime;
@@ -42,139 +32,106 @@ public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
     void Start()
     {
         rectTransform = GetComponent<RectTransform>();
-
-        // 生成自带“物理防弹衣”的真实把手！
-        CreateRealHandle("Handle_Left", true);
-        CreateRealHandle("Handle_Right", false);
+        CreateHandle("Handle_Left", true);
+        CreateHandle("Handle_Right", false);
     }
 
-    // 纯代码生成带触发器的黄色把手
-    void CreateRealHandle(string name, bool isLeft)
+    void CreateHandle(string name, bool isLeft)
     {
-        GameObject handleObj = new GameObject(name);
-        handleObj.transform.SetParent(this.transform, false);
+        GameObject obj = new GameObject(name);
+        obj.transform.SetParent(this.transform, false);
 
-        Image img = handleObj.AddComponent<Image>();
+        Image img = obj.AddComponent<Image>();
         img.color = new Color(1f, 0.9f, 0f, 0.6f);
-
-        // 【极度关键】：设为 true！让黄色色块变成真实的实体，拦截鼠标！
         img.raycastTarget = true;
 
-        RectTransform rt = handleObj.GetComponent<RectTransform>();
+        RectTransform rt = obj.GetComponent<RectTransform>();
         if (isLeft)
         {
-            rt.anchorMin = new Vector2(0, 0);
-            rt.anchorMax = new Vector2(0, 1);
+            rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(0, 1);
             rt.pivot = new Vector2(0, 0.5f);
         }
         else
         {
-            rt.anchorMin = new Vector2(1, 0);
-            rt.anchorMax = new Vector2(1, 1);
+            rt.anchorMin = new Vector2(1, 0); rt.anchorMax = new Vector2(1, 1);
             rt.pivot = new Vector2(1, 0.5f);
         }
-
         rt.anchoredPosition = Vector2.zero;
-
-        // 把手加宽到 25 像素，闭着眼睛都能点到！
         rt.sizeDelta = new Vector2(25f, 0);
 
-        // 将刚刚写好的专属感应器挂给它
-        TimelineClipHandle handleScript = handleObj.AddComponent<TimelineClipHandle>();
-        handleScript.isLeftHandle = isLeft;
-        handleScript.parentClip = this;
+        TimelineClipHandle h = obj.AddComponent<TimelineClipHandle>();
+        h.isLeftHandle = isLeft;
+        h.parentClip = this;
     }
 
-    // ===================================
-    // 模式一：你点击了中间的蓝色区域（平移）
-    // ===================================
+    // ==========================================
+    // 点击 Clip 主体 → 选中该 Clip（不是选轨道）
+    // ==========================================
     public void OnPointerDown(PointerEventData data)
     {
         isDraggingBody = true;
         RecordOriginalData(data);
 
-        // 【新增】：点击方块主体时，通知系统选中！
-        if (manager != null && eventData != null) manager.SelectTrack(eventData.trackIndex);
+        // 【改动】：选中 Clip，而非选轨道
+        if (manager != null && eventData != null)
+            manager.SelectClip(eventData);
     }
 
     public void OnDrag(PointerEventData data)
     {
         if (!isDraggingBody || manager == null || eventData == null) return;
 
-        float deltaX = GetDeltaX(data);
-        float deltaTime = deltaX / manager.pixelsPerSecond;
-
-        float newStartTime = originalStartTime + deltaTime;
-        if (newStartTime < 0f) newStartTime = 0f;
+        float deltaTime = GetDeltaX(data) / manager.pixelsPerSecond;
+        float newStartTime = Mathf.Max(0f, originalStartTime + deltaTime);
 
         eventData.startTime = newStartTime;
         rectTransform.anchoredPosition = new Vector2(newStartTime * manager.pixelsPerSecond, originalPosition.y);
     }
 
-    // ===================================
-    // 模式二：你点击了黄色的把手（由 TimelineClipHandle 触发）
-    // ===================================
+    // ==========================================
+    // 手柄按下 → 也选中该 Clip
+    // ==========================================
     public void OnHandlePointerDown(bool isLeft, PointerEventData data)
     {
-        isDraggingBody = false; // 标记现在绝不是在拖主体
+        isDraggingBody = false;
         RecordOriginalData(data);
 
-        // 【新增】：点击方块边缘把手时，也通知系统选中！
-        if (manager != null && eventData != null) manager.SelectTrack(eventData.trackIndex);
+        if (manager != null && eventData != null)
+            manager.SelectClip(eventData);
     }
 
     public void OnHandleDrag(bool isLeft, PointerEventData data)
     {
         if (manager == null || eventData == null) return;
 
-        float deltaX = GetDeltaX(data);
-        float deltaTime = deltaX / manager.pixelsPerSecond;
-        float minDuration = 0.5f;
+        float deltaTime = GetDeltaX(data) / manager.pixelsPerSecond;
+        float minDur = 0.5f;
 
-        if (!isLeft) // 拉右边的黄条
+        if (!isLeft) // 右手柄：改时长
         {
-            float newDuration = originalDuration + deltaTime;
-            if (newDuration < minDuration) newDuration = minDuration;
-
-            eventData.duration = newDuration;
-            rectTransform.sizeDelta = new Vector2(newDuration * manager.pixelsPerSecond, rectTransform.sizeDelta.y);
+            eventData.duration = Mathf.Max(minDur, originalDuration + deltaTime);
+            rectTransform.sizeDelta = new Vector2(eventData.duration * manager.pixelsPerSecond, rectTransform.sizeDelta.y);
         }
-        else // 拉左边的黄条
+        else // 左手柄：改起始时间 + 时长
         {
-            float newStartTime = originalStartTime + deltaTime;
-            float newDuration = originalDuration - deltaTime;
+            float newStart = originalStartTime + deltaTime;
+            float newDur = originalDuration - deltaTime;
 
-            if (newDuration < minDuration)
-            {
-                newDuration = minDuration;
-                newStartTime = originalStartTime + (originalDuration - minDuration);
-            }
-            if (newStartTime < 0f)
-            {
-                newStartTime = 0f;
-                newDuration = originalStartTime + originalDuration;
-            }
+            if (newDur < minDur) { newDur = minDur; newStart = originalStartTime + (originalDuration - minDur); }
+            if (newStart < 0f) { newStart = 0f; newDur = originalStartTime + originalDuration; }
 
-            eventData.startTime = newStartTime;
-            eventData.duration = newDuration;
-
-            rectTransform.anchoredPosition = new Vector2(newStartTime * manager.pixelsPerSecond, originalPosition.y);
-            rectTransform.sizeDelta = new Vector2(newDuration * manager.pixelsPerSecond, rectTransform.sizeDelta.y);
+            eventData.startTime = newStart;
+            eventData.duration = newDur;
+            rectTransform.anchoredPosition = new Vector2(newStart * manager.pixelsPerSecond, originalPosition.y);
+            rectTransform.sizeDelta = new Vector2(newDur * manager.pixelsPerSecond, rectTransform.sizeDelta.y);
         }
     }
 
-    // ===================================
-    // 内部计算工具
-    // ===================================
     private void RecordOriginalData(PointerEventData data)
     {
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            rectTransform.parent as RectTransform,
-            data.position,
-            data.pressEventCamera,
-            out Vector2 parentLocalClickPos);
-
-        originalPointerX = parentLocalClickPos.x;
+            rectTransform.parent as RectTransform, data.position, data.pressEventCamera, out Vector2 p);
+        originalPointerX = p.x;
         originalStartTime = eventData.startTime;
         originalDuration = eventData.duration;
         originalPosition = rectTransform.anchoredPosition;
@@ -183,11 +140,7 @@ public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
     private float GetDeltaX(PointerEventData data)
     {
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            rectTransform.parent as RectTransform,
-            data.position,
-            data.pressEventCamera,
-            out Vector2 parentLocalClickPos);
-
-        return parentLocalClickPos.x - originalPointerX;
+            rectTransform.parent as RectTransform, data.position, data.pressEventCamera, out Vector2 p);
+        return p.x - originalPointerX;
     }
 }

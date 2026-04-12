@@ -15,6 +15,7 @@ public class TimelineEventData
     public GameObject clipObject;
     public GameObject headerObject;
     public GameObject inspectorPanel;
+    public object customData;
 }
 
 [System.Serializable]
@@ -232,8 +233,15 @@ public class TimelineManager : MonoBehaviour
         }
     }
 
-    public float GetCurrentTime() { if (playheadSlider != null) return playheadSlider.value * totalDuration; if (musicSource != null && musicSource.clip != null) return musicSource.time; return 0f; }
-
+    public float GetCurrentTime()
+    {
+        // 播放中：读音乐真实进度（否则 CameraPlaybackSystem 会读到旧的 slider 值）
+        if (musicSource != null && musicSource.isPlaying) return musicSource.time;
+        // 停止/scrub：读 slider
+        if (playheadSlider != null) return playheadSlider.value * totalDuration;
+        if (musicSource != null) return musicSource.time;
+        return 0f;
+    }
     private void CreateTrackHeader(string name, int trackIndex, bool allowOverlap)
     {
         GameObject newHeader = null;
@@ -294,7 +302,35 @@ public class TimelineManager : MonoBehaviour
     public void OnTimeInputValueChanged(string rawStr) { string d = ""; foreach (char c in rawStr) if (char.IsDigit(c)) d += c; if (string.IsNullOrEmpty(d)) d = "000000"; if (d.Length > 6) d = d.Substring(d.Length - 6); else d = d.PadLeft(6, '0'); string f = $"{d.Substring(0, 2)}:{d.Substring(2, 2)}:{d.Substring(4, 2)}"; timeInputField.SetTextWithoutNotify(f); timeInputField.caretPosition = f.Length; }
     public void OnTimeInputSubmit(string input) { string[] p = input.Split(':'); if (p.Length == 3 && int.TryParse(p[0], out int m) && int.TryParse(p[1], out int s) && int.TryParse(p[2], out int fr)) { float t = Mathf.Clamp((m * 60f) + Mathf.Clamp(s, 0, 59) + (Mathf.Clamp(fr, 0, Mathf.FloorToInt(bakeFPS - 1)) / bakeFPS), 0, totalDuration); FocusOnTime(t); } if (timeInputField != null) timeInputField.SetTextWithoutNotify(FormatTime(musicSource != null ? musicSource.time : 0f)); if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null); }
     void SyncVerticalScroll() { if (verticalScrollbar == null || headerArea == null || trackContainer == null) return; float vh = contentParent.rect.height; if (vh < 10f) return; float th = trackCount * (baseTrackHeight + trackSpacing), max = Mathf.Max(0, th - vh + rulerHeight + 20f); bool need = max > 0.1f; if (verticalScrollbar.gameObject.activeSelf != need) verticalScrollbar.gameObject.SetActive(need); if (!need) { trackContainer.anchoredPosition = Vector2.zero; if (isHeaderYStored) headerArea.anchoredPosition = new Vector2(headerArea.anchoredPosition.x, originalHeaderY); return; } verticalScrollbar.size = Mathf.Clamp(vh / (th + rulerHeight), 0.05f, 1f); float off = (1f - verticalScrollbar.value) * max; trackContainer.anchoredPosition = new Vector2(0, off); if (!isHeaderYStored) { originalHeaderY = headerArea.anchoredPosition.y; isHeaderYStored = true; } headerArea.anchoredPosition = new Vector2(headerArea.anchoredPosition.x, originalHeaderY + off); }
-    void SyncTimelineEvents(float currentTime, bool forceSync = false) { bool playing = (musicSource != null && musicSource.isPlaying), changed = (playing != wasPlaying); wasPlaying = playing; bool timeMoved = Mathf.Abs(currentTime - lastEvaluatedTime) > 0.001f; lastEvaluatedTime = currentTime; if (characterAnimator == null) return; float norm = (currentTime % bakedAnimationLength) / bakedAnimationLength; if (playing) { if (characterAnimator.speed == 0f || changed || forceSync) { characterAnimator.Play(currentDanceName, 0, norm); characterAnimator.speed = originalAnimatorSpeed; ApplyBakedRootMotion(currentTime); } } else { if (changed || isDraggingSlider || timeMoved || forceSync) { characterAnimator.Play(currentDanceName, 0, norm); characterAnimator.Update(0f); ApplyBakedRootMotion(currentTime); } if (characterAnimator.speed != 0f) characterAnimator.speed = 0f; } }
+    void SyncTimelineEvents(float currentTime, bool forceSync = false)
+    {
+        bool playing = (musicSource != null && musicSource.isPlaying);
+        bool changed = (playing != wasPlaying);
+        wasPlaying = playing;
+        lastEvaluatedTime = currentTime;
+
+        if (characterAnimator == null) return;
+        float norm = (currentTime % bakedAnimationLength) / bakedAnimationLength;
+
+        if (playing)
+        {
+            // 播放中：正常播放；但拖动进度条时强制重新对齐动画帧
+            if (characterAnimator.speed == 0f || changed || forceSync || isDraggingSlider)
+            {
+                characterAnimator.Play(currentDanceName, 0, norm);
+                characterAnimator.speed = originalAnimatorSpeed;
+                ApplyBakedRootMotion(currentTime);
+            }
+        }
+        else
+        {
+            // 非播放状态：无条件每帧刷新 → click / 拖动 / 无操作都能响应
+            characterAnimator.Play(currentDanceName, 0, norm);
+            characterAnimator.Update(0f);
+            ApplyBakedRootMotion(currentTime);
+            if (characterAnimator.speed != 0f) characterAnimator.speed = 0f;
+        }
+    }
     string FormatTime(float t) { int m = Mathf.FloorToInt(t / 60f), s = Mathf.FloorToInt(t % 60f), f = Mathf.Min(Mathf.FloorToInt((t % 1f) * bakeFPS), Mathf.FloorToInt(bakeFPS - 1)); return string.Format("{0:00}:{1:00}:{2:00}", m, s, f); }
     public void OnSliderDrag(float value) { }
     public void TogglePlayPause() { if (musicSource == null || musicSource.clip == null) return; if (musicSource.isPlaying) musicSource.Pause(); else musicSource.Play(); }

@@ -89,7 +89,14 @@ public class StageManager : MonoBehaviour
 
         if (concertCanvas != null) concertCanvas.SetActive(true);
         if (editorCamera != null) editorCamera.gameObject.SetActive(false);
-        if (audienceCamera != null) audienceCamera.gameObject.SetActive(true);
+
+        // 开启观众相机
+        if (audienceCamera != null)
+        {
+            audienceCamera.gameObject.SetActive(true);
+            // 【核心新增】：强制清空 Output Texture，确保画面输出到全屏！
+            audienceCamera.targetTexture = null;
+        }
 
         if (musicPlayer != null && musicPlayer.clip != null)
         {
@@ -98,8 +105,6 @@ public class StageManager : MonoBehaviour
 
             if (charAnimator != null) charAnimator.speed = 0f;
 
-            // 🔪 已经彻底删除了 Invoke("BackToMainMenu", songDuration); 
-            // 现在的结局由 PerformanceEndManager 全权接管！
             Debug.Log($"Concert Duration: {musicPlayer.clip.length} - 正在播放...");
         }
     }

@@ -1527,7 +1527,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 139062932}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -11.297971}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1557,19 +1557,19 @@ MonoBehaviour:
   rightButton: {fileID: 1747203658}
   waypoints:
   - pointName: "\u673A\u4F4D"
-    position: {x: 0.13498303, y: 1.8574281, z: -5.004781}
-    eulerAngles: {x: 6.0521917, y: 180.898, z: 0.016877754}
+    position: {x: 0, y: 0, z: 0}
+    eulerAngles: {x: 0, y: 0, z: 0}
   - pointName: "\u673A\u4F4D"
-    position: {x: 6.8050303, y: 2.5426164, z: -11.60336}
-    eulerAngles: {x: 10.693155, y: 271.82764, z: 0.01606351}
+    position: {x: 0, y: 0, z: 0}
+    eulerAngles: {x: 0, y: 0, z: 0}
   - pointName: "\u673A\u4F4D"
-    position: {x: 0.2781517, y: 2.14909, z: -16.813889}
-    eulerAngles: {x: 12.24018, y: 359.4909, z: 0.017393857}
+    position: {x: 0, y: 0, z: 0}
+    eulerAngles: {x: 0, y: 0, z: 0}
   - pointName: "\u673A\u4F4D"
-    position: {x: -7.2190948, y: 2.46305, z: -11.531261}
-    eulerAngles: {x: 7.427339, y: 91.27762, z: 0.019594157}
+    position: {x: 0, y: 0, z: 0}
+    eulerAngles: {x: 0, y: 0, z: 0}
   lerpSpeed: 3
-  autoPlay: 1
+  autoPlay: 0
   autoPlayInterval: 5
 --- !u!1 &139529949
 GameObject:
@@ -3634,8 +3634,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 279623692}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.045408107, y: -0.71343744, z: 0.04618806, w: -0.697719}
-  m_LocalPosition: {x: -7.2190948, y: 2.46305, z: -11.531261}
+  m_LocalRotation: {x: -0.10356704, y: 0.99052054, z: -0.08949634, w: -0.011546606}
+  m_LocalPosition: {x: -0.27, y: 1.982, z: -5.152}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11482,7 +11482,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1165372178}
   m_Direction: 0
   m_Value: 0.9999939
-  m_Size: 0.0000061035157
+  m_Size: 0.99418604
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

@@ -141,7 +141,14 @@ public class ColorPickerPanel : MonoBehaviour,
     {
         isOpen = !isOpen;
         if (pickerPanel != null) pickerPanel.SetActive(isOpen);
-        if (isOpen) oldColor = CurrentColor();
+
+        if (isOpen)
+        {
+            // 记下当前的颜色作为“旧颜色”
+            oldColor = CurrentColor();
+            // 【核心修复】：把这个颜色立刻涂到左边的 Preview Old 图片上！
+            if (previewOld != null) previewOld.color = oldColor;
+        }
     }
 
     void ClosePicker()

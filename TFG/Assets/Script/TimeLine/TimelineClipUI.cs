@@ -3,27 +3,36 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 // ==========================================
-// 左右拉伸手柄
+// 左右拉伸手柄（新增 IPointerUpHandler 监听松开）
 // ==========================================
-public class TimelineClipHandle : MonoBehaviour, IPointerDownHandler, IDragHandler
+public class TimelineClipHandle : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
     public bool isLeftHandle;
     public TimelineClipUI parentClip;
 
     public void OnPointerDown(PointerEventData eventData) { parentClip.OnHandlePointerDown(isLeftHandle, eventData); }
     public void OnDrag(PointerEventData eventData) { parentClip.OnHandleDrag(isLeftHandle, eventData); }
+    public void OnPointerUp(PointerEventData eventData) { parentClip.OnPointerUp(eventData); }
 }
 
 // ==========================================
-// Clip 方块 UI 行为
+// Clip 方块 UI 行为（新增边缘滚动 & Update 循环）
 // ==========================================
-public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
+public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
     [HideInInspector] public TimelineManager manager;
     [HideInInspector] public TimelineEventData eventData;
 
     private RectTransform rectTransform;
+
+    // --- 拖拽与滚动状态 ---
+    private bool isDragging = false;
     private bool isDraggingBody = false;
+    private bool isHandleDragging = false;
+    private bool isLeftHandleDragging = false;
+    private PointerEventData currentPointerData;
+
+    // --- 原始数据 ---
     private float originalPointerX;
     private float originalStartTime;
     private float originalDuration;
@@ -65,88 +74,116 @@ public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
     }
 
     // ==========================================
-    // 点击 Clip 主体 → 选中该 Clip
+    // Update 循环：负责在鼠标按住静止时，持续滚动时间轴并更新 Clip 位置
+    // ==========================================
+    void Update()
+    {
+        if (isDragging && currentPointerData != null && manager != null && manager.contentParent != null)
+        {
+            // 1. 探测屏幕边缘并让大背景滚动
+            DoEdgeScroll();
+
+            // 2. 背景滚动会导致本地坐标变化，强制重新计算防穿模
+            if (isDraggingBody) ProcessBodyDrag();
+            else if (isHandleDragging) ProcessHandleDrag(isLeftHandleDragging);
+        }
+    }
+
+    // ==========================================
+    // 鼠标输入事件响应
     // ==========================================
     public void OnPointerDown(PointerEventData data)
     {
         isDraggingBody = true;
+        isDragging = true;
+        currentPointerData = data;
         RecordOriginalData(data);
 
         if (manager != null && eventData != null)
             manager.SelectClip(eventData);
     }
 
-    // ==========================================
-    // 拖拽 Clip 主体 → 防穿模逻辑恢复！
-    // ==========================================
+    public void OnHandlePointerDown(bool isLeft, PointerEventData data)
+    {
+        isDraggingBody = false;
+        isHandleDragging = true;
+        isLeftHandleDragging = isLeft;
+        isDragging = true;
+        currentPointerData = data;
+        RecordOriginalData(data);
+
+        if (manager != null && eventData != null)
+            manager.SelectClip(eventData);
+    }
+
+    public void OnPointerUp(PointerEventData data)
+    {
+        isDragging = false;
+        isDraggingBody = false;
+        isHandleDragging = false;
+        currentPointerData = null;
+    }
+
     public void OnDrag(PointerEventData data)
     {
-        if (!isDraggingBody || manager == null || eventData == null) return;
+        currentPointerData = data;
+        ProcessBodyDrag();
+    }
 
-        float deltaX = GetDeltaX(data);
+    public void OnHandleDrag(bool isLeft, PointerEventData data)
+    {
+        currentPointerData = data;
+        ProcessHandleDrag(isLeft);
+    }
+
+    // ==========================================
+    // 核心物理与拖拽逻辑
+    // ==========================================
+    private void ProcessBodyDrag()
+    {
+        if (!isDraggingBody || manager == null || eventData == null || currentPointerData == null) return;
+
+        float deltaX = GetDeltaX(currentPointerData);
         float deltaTime = deltaX / manager.pixelsPerSecond;
         float newStartTime = originalStartTime + deltaTime;
 
-        // 【关键恢复】：向大管家询问物理墙壁的位置！
+        // 向大管家询问当前的碰撞墙壁边界
         manager.GetAllowedTimeRange(eventData, originalStartTime, out float minTime, out float maxTime);
-
-        // 死死卡在墙壁中间，不能越界！
         newStartTime = Mathf.Clamp(newStartTime, minTime, maxTime - originalDuration);
 
         eventData.startTime = newStartTime;
         rectTransform.anchoredPosition = new Vector2(newStartTime * manager.pixelsPerSecond, originalPosition.y);
     }
 
-    // ==========================================
-    // 手柄按下 → 选中该 Clip
-    // ==========================================
-    public void OnHandlePointerDown(bool isLeft, PointerEventData data)
+    private void ProcessHandleDrag(bool isLeft)
     {
-        isDraggingBody = false;
-        RecordOriginalData(data);
+        if (manager == null || eventData == null || currentPointerData == null) return;
 
-        if (manager != null && eventData != null)
-            manager.SelectClip(eventData);
-    }
-
-    // ==========================================
-    // 拖拽边缘手柄 → 防穿模逻辑恢复！
-    // ==========================================
-    public void OnHandleDrag(bool isLeft, PointerEventData data)
-    {
-        if (manager == null || eventData == null) return;
-
-        float deltaX = GetDeltaX(data);
+        float deltaX = GetDeltaX(currentPointerData);
         float deltaTime = deltaX / manager.pixelsPerSecond;
         float minDur = 0.5f;
 
-        // 【关键恢复】：向大管家询问物理墙壁的位置！
         manager.GetAllowedTimeRange(eventData, originalStartTime, out float minTime, out float maxTime);
 
-        if (!isLeft) // 右手柄：改时长
+        if (!isLeft) // 右手柄
         {
             float newDuration = originalDuration + deltaTime;
-            float maxAllowedDuration = maxTime - originalStartTime; // 向右拉不能超过右边方块的开头
-
-            // 夹在最小长度和最大允许长度之间
+            float maxAllowedDuration = maxTime - originalStartTime;
             newDuration = Mathf.Clamp(newDuration, minDur, maxAllowedDuration);
 
             eventData.duration = newDuration;
             rectTransform.sizeDelta = new Vector2(newDuration * manager.pixelsPerSecond, rectTransform.sizeDelta.y);
         }
-        else // 左手柄：改起始时间 + 时长
+        else // 左手柄
         {
             float newStart = originalStartTime + deltaTime;
             float newDur = originalDuration - deltaTime;
 
-            // 向左拉撞到了墙壁（如0秒，或左侧的其他方块）
             if (newStart < minTime)
             {
                 newStart = minTime;
                 newDur = originalStartTime + originalDuration - minTime;
             }
-
-            // 撞到了自己的最小长度
             if (newDur < minDur)
             {
                 newDur = minDur;
@@ -157,6 +194,40 @@ public class TimelineClipUI : MonoBehaviour, IPointerDownHandler, IDragHandler
             eventData.duration = newDur;
             rectTransform.anchoredPosition = new Vector2(newStart * manager.pixelsPerSecond, originalPosition.y);
             rectTransform.sizeDelta = new Vector2(newDur * manager.pixelsPerSecond, rectTransform.sizeDelta.y);
+        }
+    }
+
+    // ==========================================
+    // 边缘滚动算法 (完美兼容 InputSystem 和传统鼠标/触摸屏)
+    // ==========================================
+    private void DoEdgeScroll()
+    {
+        var vp = manager.contentParent.parent.GetComponent<RectTransform>();
+        if (vp == null) return;
+
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(vp, currentPointerData.position, currentPointerData.pressEventCamera, out Vector2 lm))
+        {
+            float speed = 1500f * Time.deltaTime;
+            float delta = 0f;
+
+            // 计算鼠标在显示视口内的相对横向比例 (0 = 最左，1 = 最右)
+            float nx2 = (lm.x - vp.rect.xMin) / vp.rect.width;
+
+            // 触发区域：左右最边缘的 5%
+            if (nx2 > 0.95f) delta = -speed;
+            else if (nx2 < 0.05f) delta = speed;
+
+            if (delta != 0f)
+            {
+                float max = Mathf.Max(0, manager.contentParent.rect.width - vp.rect.width);
+                float nx = Mathf.Clamp(manager.contentParent.anchoredPosition.x + delta, -max, 0);
+                manager.contentParent.anchoredPosition = new Vector2(nx, manager.contentParent.anchoredPosition.y);
+
+                // 同步下方底部的滚动条位置
+                var sr = manager.contentParent.GetComponentInParent<ScrollRect>();
+                if (sr != null && sr.horizontal && max > 0)
+                    sr.horizontalNormalizedPosition = Mathf.Clamp01(-nx / max);
+            }
         }
     }
 

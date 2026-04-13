@@ -115,7 +115,13 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
         // 颜色选择器
         if (colorPicker != null)
         {
+            // 【核心修复】：先清空之前的监听器，防止多点几次后发生事件叠加
+            colorPicker.onColorChanged.RemoveAllListeners();
+
+            // 把当前方块的数据传给拾色器
             colorPicker.SetColor(lightData.color, notify: false);
+
+            // 重新绑定监听
             colorPicker.onColorChanged.AddListener(OnColorChanged);
         }
 

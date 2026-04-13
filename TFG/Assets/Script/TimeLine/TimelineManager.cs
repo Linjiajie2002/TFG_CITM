@@ -116,7 +116,19 @@ public class TimelineManager : MonoBehaviour
     }
 
     // ==========================================
+    // 容量管理配置中心 (新增)
+    // ==========================================
+    public int GetCapacityLimit(string trackName)
+    {
+        // 只要是名字带 Light 的轨道，最多允许 3 个方块在同一时间叠加
+        if (trackName.Contains("Light")) return 3;
+        return -1; // -1 代表无限制，遵循普通的 allowOverlap 规则
+    }
+    // ==========================================
     // 【核心升级】：自动寻找空位生成方块！
+    // ==========================================
+    // ==========================================
+    // 替换 1：添加方块核心逻辑
     // ==========================================
     public TimelineEventData AddClipToTrack(int trackIndex, string featureName, float defaultDuration = 5f)
     {
@@ -124,22 +136,24 @@ public class TimelineManager : MonoBehaviour
         float startTime = GetCurrentTime();
 
         TrackData track = allTracks.Find(t => t.trackIndex == trackIndex);
-        if (track != null && !track.allowOverlap)
+        bool trackNeedsCheck = (track != null && !track.allowOverlap);
+        int capacityLimit = track != null ? GetCapacityLimit(track.trackName) : -1;
+
+        if (trackNeedsCheck || capacityLimit > 0)
         {
-            if (IsOverlapping(trackIndex, startTime, defaultDuration))
+            if (IsOverlappingOrOverCapacity(trackIndex, startTime, defaultDuration, trackNeedsCheck, capacityLimit))
             {
-                // 如果发现撞车，启动空间探测雷达寻找最近的可用空隙！
-                float autoFitTime = FindNearestAvailableTime(trackIndex, startTime, defaultDuration);
+                float autoFitTime = FindNearestAvailableTimeWithCapacity(trackIndex, startTime, defaultDuration, trackNeedsCheck, capacityLimit);
 
                 if (autoFitTime < 0f)
                 {
-                    Debug.LogWarning($"[{featureName}] 轨道太满啦！实在找不到 {defaultDuration} 秒的空隙了。");
-                    return null; // 满得连一点缝隙都没有了，只能拒绝生成
+                    Debug.LogWarning($"[{featureName}] 空间严重不足！实在挤不下 {defaultDuration} 秒的方块了。");
+                    return null;
                 }
                 else
                 {
-                    Debug.Log($"[{featureName}] 红线处有碰撞，自动吸附到最近可用时间：{autoFitTime}");
-                    startTime = autoFitTime; // 强制把生成时间改成找好的空隙时间！
+                    Debug.Log($"[{featureName}] 触发容量限制！已自动吸附到最近空位：{autoFitTime}");
+                    startTime = autoFitTime;
                 }
             }
         }
@@ -150,87 +164,116 @@ public class TimelineManager : MonoBehaviour
     }
 
     // ==========================================
-    // 【新增雷达算法】：扫描全轨道，找到离目标时间最近的合适空隙
+    // 替换 2：容量墙碰撞检测
     // ==========================================
-    private float FindNearestAvailableTime(int trackIndex, float desiredStart, float duration)
+    private bool IsOverlappingOrOverCapacity(int trackIndex, float start, float duration, bool checkTrackOverlap, int capacityLimit)
     {
-        // 1. 抓取这条轨道上的所有实体方块，并按时间先后顺序排好队
-        List<TimelineEventData> trackClips = allEvents.FindAll(e => e.trackIndex == trackIndex && e.clipObject != null);
-        trackClips.Sort((a, b) => a.startTime.CompareTo(b.startTime));
-
-        // 2. 统计出所有的“空隙（Slots）”
-        List<Vector2> emptySlots = new List<Vector2>();
-        float currentStart = 0f;
-
-        foreach (var clip in trackClips)
+        float step = 0.05f;
+        for (float t = start; t < start + duration; t += step)
         {
-            if (clip.startTime > currentStart)
-            {
-                emptySlots.Add(new Vector2(currentStart, clip.startTime)); // 记录一段空隙
-            }
-            currentStart = Mathf.Max(currentStart, clip.startTime + clip.duration);
-        }
-        // 加上最后一个方块到时间轴尽头的空隙
-        if (currentStart < totalDuration)
-        {
-            emptySlots.Add(new Vector2(currentStart, totalDuration));
-        }
-
-        // 3. 在所有空隙中，挑选一个既能塞下方块，又离红线最近的！
-        float bestTime = -1f;
-        float minDistance = float.MaxValue;
-
-        foreach (var slot in emptySlots)
-        {
-            float slotStart = slot.x;
-            float slotEnd = slot.y;
-
-            // 如果这个空隙的长度足够塞下我们新来的方块
-            if (slotEnd - slotStart >= duration)
-            {
-                // 计算在这个空隙里，方块最理想的停靠点
-                // (如果红线在这个空隙里，就贴着红线；如果红线在外面，就贴着空隙的边缘)
-                float optimalTimeInSlot = Mathf.Clamp(desiredStart, slotStart, slotEnd - duration);
-
-                // 计算这个停靠点离我们原来想放的位置（红线）有多远
-                float distance = Mathf.Abs(optimalTimeInSlot - desiredStart);
-
-                // 永远只保留离红线最近的那个位置
-                if (distance < minDistance)
-                {
-                    minDistance = distance;
-                    bestTime = optimalTimeInSlot;
-                }
-            }
-        }
-
-        return bestTime;
-    }
-
-    private bool IsOverlapping(int trackIndex, float start, float duration, TimelineEventData ignoreClip = null)
-    {
-        float end = start + duration;
-        foreach (var evt in allEvents)
-        {
-            if (evt.trackIndex != trackIndex || evt == ignoreClip || evt.clipObject == null) continue;
-            float eEnd = evt.startTime + evt.duration;
-            if (start < eEnd && end > evt.startTime) return true;
+            if (IsPointBlocked(t, null, trackIndex, checkTrackOverlap, capacityLimit))
+                return true;
         }
         return false;
     }
 
+    // ==========================================
+    // 替换 3：精确判断某个时间点是否被堵死
+    // ==========================================
+    private bool IsPointBlocked(float t, TimelineEventData ignoreClip, int trackIndex, bool checkTrackOverlap, int capacityLimit)
+    {
+        int countAtTime = 0;
+        foreach (var evt in allEvents)
+        {
+            if (evt == ignoreClip || evt.clipObject == null || evt.trackIndex != trackIndex) continue;
+
+            // 只要有一点点重合就计数 (扣除0.01f的浮点误差防止边缘误判)
+            if (t > evt.startTime + 0.01f && t < evt.startTime + evt.duration - 0.01f)
+            {
+                countAtTime++;
+            }
+        }
+
+        if (checkTrackOverlap && countAtTime > 0) return true; // 如果轨道设置了不许重叠，1个就堵死
+        if (capacityLimit > 0 && countAtTime >= capacityLimit) return true; // 达到了咱们设置的上限（3个），堵死
+
+        return false;
+    }
+
+    // ==========================================
+    // 替换 4：带容量判断的雷达寻路
+    // ==========================================
+    private float FindNearestAvailableTimeWithCapacity(int trackIndex, float desiredStart, float duration, bool checkTrackOverlap, int capacityLimit)
+    {
+        List<float> candidates = new List<float> { 0f, totalDuration - duration };
+        foreach (var evt in allEvents)
+        {
+            if (evt.trackIndex == trackIndex && evt.clipObject != null)
+            {
+                candidates.Add(evt.startTime + evt.duration); // 试着贴在屁股后面
+                candidates.Add(evt.startTime - duration);     // 试着贴在头前面
+            }
+        }
+
+        float bestTime = -1f;
+        float minDistance = float.MaxValue;
+
+        foreach (float startTest in candidates)
+        {
+            if (startTest < 0f || startTest > totalDuration - duration + 0.001f) continue;
+
+            if (!IsOverlappingOrOverCapacity(trackIndex, startTest, duration, checkTrackOverlap, capacityLimit))
+            {
+                float distance = Mathf.Abs(startTest - desiredStart);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    bestTime = startTest;
+                }
+            }
+        }
+        return bestTime;
+    }
+
+    // ==========================================
+    // 替换 5：拖拽时的物理墙壁雷达
+    // ==========================================
     public void GetAllowedTimeRange(TimelineEventData clip, float originalStart, out float minTime, out float maxTime)
     {
         minTime = 0f; maxTime = totalDuration;
-        TrackData track = allTracks.Find(t => t.trackIndex == clip.trackIndex);
-        if (track == null || track.allowOverlap) return;
 
-        foreach (var evt in allEvents)
+        TrackData track = allTracks.Find(t => t.trackIndex == clip.trackIndex);
+        bool checkTrackOverlap = (track != null && !track.allowOverlap);
+        int capacityLimit = track != null ? GetCapacityLimit(track.trackName) : -1;
+
+        if (!checkTrackOverlap && capacityLimit <= 0) return; // 没限制随便拖
+
+        float step = 0.05f;
+
+        // 向左扫描找墙壁
+        float capMin = 0f;
+        for (float t = originalStart; t >= 0f; t -= step)
         {
-            if (evt == clip || evt.trackIndex != clip.trackIndex || evt.clipObject == null) continue;
-            if (evt.startTime < originalStart) minTime = Mathf.Max(minTime, evt.startTime + evt.duration);
-            else if (evt.startTime > originalStart) maxTime = Mathf.Min(maxTime, evt.startTime);
+            if (IsPointBlocked(t, clip, clip.trackIndex, checkTrackOverlap, capacityLimit))
+            {
+                capMin = t + step;
+                break;
+            }
         }
+
+        // 向右扫描找墙壁
+        float capMax = totalDuration;
+        for (float t = originalStart; t <= totalDuration; t += step)
+        {
+            if (IsPointBlocked(t, clip, clip.trackIndex, checkTrackOverlap, capacityLimit))
+            {
+                capMax = t;
+                break;
+            }
+        }
+
+        minTime = Mathf.Max(minTime, capMin);
+        maxTime = Mathf.Min(maxTime, capMax);
     }
 
     public float GetCurrentTime()

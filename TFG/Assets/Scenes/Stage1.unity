@@ -2105,18 +2105,18 @@ MonoBehaviour:
   leftButton: {fileID: 55752364}
   rightButton: {fileID: 1747203658}
   waypoints:
-  - pointName: "\u673A\u4F4D"
-    position: {x: 0.13498303, y: 1.8574281, z: -5.004781}
-    eulerAngles: {x: 6.0521917, y: 180.898, z: 0.016877754}
-  - pointName: "\u673A\u4F4D"
-    position: {x: 6.8050303, y: 2.5426164, z: -11.60336}
-    eulerAngles: {x: 10.693155, y: 271.82764, z: 0.01606351}
-  - pointName: "\u673A\u4F4D"
-    position: {x: 0.2781517, y: 2.14909, z: -16.813889}
-    eulerAngles: {x: 12.24018, y: 359.4909, z: 0.017393857}
-  - pointName: "\u673A\u4F4D"
-    position: {x: -7.2190948, y: 2.46305, z: -11.531261}
-    eulerAngles: {x: 7.427339, y: 91.27762, z: 0.019594157}
+  - pointName: 
+    position: {x: 0, y: 2, z: -6}
+    eulerAngles: {x: -0, y: 0, z: 0}
+  - pointName: 
+    position: {x: -7, y: 2, z: 0.1}
+    eulerAngles: {x: -0, y: 90, z: -0}
+  - pointName: 
+    position: {x: 0, y: 2, z: 6}
+    eulerAngles: {x: -0, y: 180, z: -0}
+  - pointName: 
+    position: {x: 7, y: 2, z: 0.1}
+    eulerAngles: {x: 0, y: 270, z: 0}
   lerpSpeed: 3
 --- !u!1 &139529949
 GameObject:
@@ -3263,8 +3263,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraPlaybackSystem
   editCamera: {fileID: 279623693}
   playCamera: {fileID: 479811859}
-  defaultPosition: {x: -0.27, y: 0.895, z: -6.876}
-  defaultRotation: {x: 1.552, y: 171.679, z: 0}
+  defaultPosition: {x: 0, y: 1, z: -6}
+  defaultRotation: {x: 0, y: 0, z: 0}
   timeline: {fileID: 389238167}
   cameraTrackName: Camera
   previewOnEditCamera: 0
@@ -4500,13 +4500,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 279623692}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.045408107, y: -0.71343744, z: 0.04618806, w: -0.697719}
-  m_LocalPosition: {x: -7.2190948, y: 2.46305, z: -11.531261}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: -0, w: -0.7071068}
+  m_LocalPosition: {x: 7, y: 2, z: 0.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1944301600}
-  m_LocalEulerAnglesHint: {x: 10.352, y: 180.253, z: -11.915}
+  m_LocalEulerAnglesHint: {x: 0, y: 270, z: 0}
 --- !u!1 &281383212
 GameObject:
   m_ObjectHideFlags: 0
@@ -6324,7 +6324,6 @@ MonoBehaviour:
   endTimeText: {fileID: 707365625}
   deleteButton: {fileID: 1051143487}
   backButton: {fileID: 432694685}
-  invertXAxis: 1
   cameraDummyPrefab: {fileID: 906260502}
   selectedColor: {r: 1, g: 0.5, b: 0, a: 1}
   sliderPosX: {fileID: 391452499}
@@ -6333,12 +6332,12 @@ MonoBehaviour:
   posXValueText: {fileID: 1591814196}
   posYValueText: {fileID: 291637806}
   posZValueText: {fileID: 101577523}
-  posXMin: -3.6
-  posXMax: 3.6
+  posXMin: -4
+  posXMax: 4
   posYMin: 0.6
   posYMax: 3.6
-  posZMin: -17.5
-  posZMax: -4
+  posZMin: -3.6
+  posZMax: 3.6
   sliderRotX: {fileID: 274156138}
   sliderRotY: {fileID: 767100929}
   sliderRotZ: {fileID: 93992142}
@@ -6846,13 +6845,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 479811856}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0009825793, y: 0.9972733, z: -0.0135076605, w: 0.07254402}
-  m_LocalPosition: {x: -0.27, y: 0.895, z: -6.876}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: -6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1944301600}
-  m_LocalEulerAnglesHint: {x: 1.552, y: 171.679, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &479841366
 GameObject:
   m_ObjectHideFlags: 0
@@ -13476,7 +13475,7 @@ Transform:
   m_GameObject: {fileID: 1061785642}
   serializedVersion: 2
   m_LocalRotation: {x: 0.018937375, y: 0.9762786, z: 0.095630325, w: -0.19332956}
-  m_LocalPosition: {x: 2.5399992, y: 0.433, z: -6.8759985}
+  m_LocalPosition: {x: 2.5399992, y: 0.433, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -17514,13 +17513,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1310876013}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.007, y: 0.503, z: -11.316}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: 0.007, y: 0.503, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1944301600}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1 &1318389937
 GameObject:
   m_ObjectHideFlags: 0
@@ -24205,7 +24204,7 @@ Transform:
   m_GameObject: {fileID: 1855373577}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.6482, y: -0, z: -5.61074}
+  m_LocalPosition: {x: 6.6482, y: 0, z: 6.809258}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -28830,11 +28829,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428393115156616661, guid: 0ee18d70d64b367408fe7f92cb272a16, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -11.26
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6428393115156616661, guid: 0ee18d70d64b367408fe7f92cb272a16, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6428393115156616661, guid: 0ee18d70d64b367408fe7f92cb272a16, type: 3}
       propertyPath: m_LocalRotation.x
@@ -28842,7 +28841,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428393115156616661, guid: 0ee18d70d64b367408fe7f92cb272a16, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6428393115156616661, guid: 0ee18d70d64b367408fe7f92cb272a16, type: 3}
       propertyPath: m_LocalRotation.z
@@ -28854,7 +28853,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6428393115156616661, guid: 0ee18d70d64b367408fe7f92cb272a16, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: 180
       objectReference: {fileID: 0}
     - target: {fileID: 6428393115156616661, guid: 0ee18d70d64b367408fe7f92cb272a16, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z

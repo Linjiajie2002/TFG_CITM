@@ -1,28 +1,21 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 // ==========================================
-// Ó²ÇĞÉãÏñÍ·µÄ×¨Êô Inspector Ãæ°å (Õæ 3D Æì½¢°æ)
-// °üº¬¹¦ÄÜ£ºUX·À´ô·´×ª¡¢×Ô¶¯¿ËÂ¡»úÎ»ÌæÉí¡¢Ñ¡ÖĞ±äÉ«·´À¡¡¢×Ô¶¯À¬»ø»ØÊÕ
+// ç¡¬åˆ‡æ‘„åƒå¤´çš„ä¸“å± Inspector é¢æ¿ (çº¯å‡€å›å½’ç‰ˆ)
+// å·²ç§»é™¤æ‰€æœ‰åå‘ä¿®æ­£ï¼Œå›å½’æ ‡å‡†ä¸–ç•Œåæ ‡é€»è¾‘
 // ==========================================
 public class CameraClipInspectorPanel : ClipInspectorPanel
 {
-    [Header("=== UX ĞŞÕı (½â¾ö·´Ïò»¬¿éÎÊÌâ) ===")]
-    [Tooltip("¹´Ñ¡ºó£¬´úÂë»á×Ô¶¯°ïÄã°ÑXÖá»¬¿é·´×ª£¬»¬¿éÏòÓÒ = ÊÓ¾õÏòÓÒ")]
-    public bool invertXAxis = true;
-
-    [Header("=== »úÎ»Ä£ĞÍ¹ÜÀí (3DÌæÉí) ===")]
-    [Tooltip("ÕâÀïÇëÍÏÈëÄãµÄ 3D Ïà»úÄ£ĞÍ¡¾Ô¤ÖÆÌå¡¿")]
+    [Header("=== æœºä½æ¨¡å‹ç®¡ç† (3Dæ›¿èº«) ===")]
     public GameObject cameraDummyPrefab;
-
-    // ÄÚ²¿¹ÜÀíµÄ×¨Êô¿ËÂ¡Ìå
     private GameObject myDummyInstance;
     private MeshRenderer dummyRenderer;
     private Color originalColor;
-    public Color selectedColor = new Color(1f, 0.5f, 0f, 1f); // Ñ¡ÖĞÊ±µÄéÙÉ«
+    public Color selectedColor = new Color(1f, 0.5f, 0f, 1f);
 
-    [Header("=== Î»ÖÃ Sliders ===")]
+    [Header("=== ä½ç½® Sliders ===")]
     public Slider sliderPosX;
     public Slider sliderPosY;
     public Slider sliderPosZ;
@@ -30,12 +23,12 @@ public class CameraClipInspectorPanel : ClipInspectorPanel
     public TextMeshProUGUI posYValueText;
     public TextMeshProUGUI posZValueText;
 
-    [Header("=== Î»ÖÃ Slider ·¶Î§ ===")]
-    public float posXMin = -3.6f; public float posXMax = 3.6f;
-    public float posYMin = 0f; public float posYMax = 15f;
-    public float posZMin = -20f; public float posZMax = 5f;
+    [Header("=== é»˜è®¤èŒƒå›´ (å¯æ ¹æ®åœºæ™¯å¤§å°è°ƒæ•´) ===")]
+    public float posXMin = -10f; public float posXMax = 10f;
+    public float posYMin = 0f; public float posYMax = 10f;
+    public float posZMin = -20f; public float posZMax = 10f;
 
-    [Header("=== Ğı×ª Sliders ===")]
+    [Header("=== æ—‹è½¬ Sliders ===")]
     public Slider sliderRotX;
     public Slider sliderRotY;
     public Slider sliderRotZ;
@@ -43,61 +36,45 @@ public class CameraClipInspectorPanel : ClipInspectorPanel
     public TextMeshProUGUI rotYValueText;
     public TextMeshProUGUI rotZValueText;
 
-    [Header("=== ÕæÊµÔ¤ÀÀÏà»ú ===")]
-    [Tooltip("Ñİ³öÊ±ÓÃÓÚÔ¤ÀÀµÄÕæÊµÉãÏñÍ· EditCamera / PreviewCamera")]
+    [Header("=== çœŸå®é¢„è§ˆç›¸æœº ===")]
     public Camera previewCamera;
 
-    // ±¾µØ»º´æÊı¾İ
     private CameraClipData camData;
     private bool isReady = false;
 
-    // ==========================================
-    // ÉúÃüÖÜÆÚ£ºUI Ãæ°å¿ª¹ØÊ±µÄÑÕÉ«·´À¡
-    // ==========================================
     private void OnEnable()
     {
-        // Ãæ°å´ò¿ª£¨·½¿é±»Ñ¡ÖĞ£©Ê±£¬ÌæÉí±äéÙÉ«
-        if (dummyRenderer != null)
-            dummyRenderer.material.color = selectedColor;
-
-        // Ã¿´Îµã¿ªÃæ°å£¬Ò²ÈÃÖ÷Ô¤ÀÀÏà»úË²¼ä¹éÎ»
+        if (dummyRenderer != null) dummyRenderer.material.color = selectedColor;
+        // é€‰ä¸­æ—¶ï¼Œç›¸æœºç«‹åˆ»è·³åˆ°è¯¥æ–¹å—ä¿å­˜çš„ä½ç½®
         UpdatePreviewCamera();
     }
 
     private void OnDisable()
     {
-        // Ãæ°å¹Ø±Õ£¨·½¿éÈ¡ÏûÑ¡ÖĞ£©Ê±£¬ÌæÉí±ä»ØÔ­É«
-        if (dummyRenderer != null)
-            dummyRenderer.material.color = originalColor;
-    }
-
-    protected override void Awake()
-    {
-        base.Awake();
+        if (dummyRenderer != null) dummyRenderer.material.color = originalColor;
     }
 
     // ==========================================
-    // ºËĞÄ°ó¶¨Âß¼­
+    // ç»‘å®šé€»è¾‘
     // ==========================================
     public override void BindClip(TimelineEventData clip, TimelineManager mgr)
     {
         base.BindClip(clip, mgr);
 
-        // 1. Êı¾İ×°ÔØ (¶ÁÈ¡»òĞÂ½¨)
         if (clip.customData is CameraClipData existing)
         {
             camData = existing;
-            SyncRangesToData();
         }
         else
         {
+            // ä½¿ç”¨ä½ æä¾›çš„æ–°åæ ‡ä½œä¸ºé»˜è®¤å€¼
             camData = new CameraClipData
             {
-                posX = -0.3f,
-                posY = 0.9f,
-                posZ = -6.9f,
-                rotX = 1.5f,
-                rotY = 171.7f,
+                posX = 0.0f,
+                posY = 1.0f,
+                posZ = -4.8f,
+                rotX = 0f,
+                rotY = 0f,
                 rotZ = 0f,
                 posXMin = posXMin,
                 posXMax = posXMax,
@@ -109,35 +86,22 @@ public class CameraClipInspectorPanel : ClipInspectorPanel
             clip.customData = camData;
         }
 
-        // 2. ÌæÉíÄ£ĞÍ¹ÜÀí£º×Ô¶¯¿ËÂ¡×¨Êô 3D Ïà»úÄ£ĞÍ
+        // åˆå§‹åŒ–æ‰€æœ‰ Sliderï¼Œç›´æ¥å¯¹åº”åŸå§‹æ•°å€¼
+        SetupSlider(sliderPosX, posXMin, posXMax, camData.posX);
+        SetupSlider(sliderPosY, posYMin, posYMax, camData.posY);
+        SetupSlider(sliderPosZ, posZMin, posZMax, camData.posZ);
+        SetupSlider(sliderRotX, -180f, 180f, camData.rotX);
+        SetupSlider(sliderRotY, -180f, 180f, camData.rotY);
+        SetupSlider(sliderRotZ, -180f, 180f, camData.rotZ);
+
+        // å…‹éš† 3D æ›¿èº«
         if (myDummyInstance == null && cameraDummyPrefab != null)
         {
             myDummyInstance = Instantiate(cameraDummyPrefab);
-            myDummyInstance.name = $"Dummy_Camera_{clip.startTime:F2}s";
-
-            // »ñÈ¡²ÄÖÊÓÃÓÚ±äÉ«
             dummyRenderer = myDummyInstance.GetComponentInChildren<MeshRenderer>();
             if (dummyRenderer != null) originalColor = dummyRenderer.material.color;
-
-            // ¶ª½ø EditorOnly Í¼²ã£¬·ÀÖ¹Ñİ³öÊ±´©°ï£¡
             SetLayerRecursively(myDummyInstance, LayerMask.NameToLayer("EditorOnly"));
-
-            // ÒòÎªÔÚ Bind µÄÊ±ºòÃæ°åÍ¨³£ÊÇ´ò¿ª×´Ì¬£¬ËùÒÔÁ¢¿ÌÈ¾³ÉéÙÉ«
-            if (dummyRenderer != null && gameObject.activeInHierarchy)
-                dummyRenderer.material.color = selectedColor;
         }
-
-        // 3. ³õÊ¼»¯ Slider (°üº¬ X Öá·´ÏòµÄÊÓ¾õĞŞÕı)
-        float currentX = invertXAxis ? -camData.posX : camData.posX;
-        float minX = invertXAxis ? -posXMax : posXMin;
-        float maxX = invertXAxis ? -posXMin : posXMax;
-
-        SetupSlider(sliderPosX, minX, maxX, currentX);
-        SetupSlider(sliderPosY, posYMin, posYMax, camData.posY);
-        SetupSlider(sliderPosZ, posZMin, posZMax, camData.posZ);
-        SetupSlider(sliderRotX, 0f, 359f, camData.rotX);
-        SetupSlider(sliderRotY, 0f, 359f, camData.rotY);
-        SetupSlider(sliderRotZ, 0f, 359f, camData.rotZ);
 
         isReady = true;
         RegisterListeners();
@@ -145,29 +109,10 @@ public class CameraClipInspectorPanel : ClipInspectorPanel
         UpdateVisuals();
     }
 
-    public override void RefreshDisplay()
-    {
-        base.RefreshDisplay();
-        if (!isReady || camData == null) return;
-        UpdateValueLabels();
-    }
-
-    // ==========================================
-    // Slider Óë¼àÌıÆ÷
-    // ==========================================
-    private void SetupSlider(Slider s, float min, float max, float value)
-    {
-        if (s == null) return;
-        s.onValueChanged.RemoveAllListeners();
-        s.minValue = min;
-        s.maxValue = max;
-        s.value = Mathf.Clamp(value, min, max);
-    }
-
     private void RegisterListeners()
     {
-        // Ğ´ÈëÊı¾İÊ±£ºÈç¹û X Öá·´ÏòÁË£¬´æ»ØÊı¾İÊ±Òª·­×ªÎª¸ºÊı
-        if (sliderPosX != null) sliderPosX.onValueChanged.AddListener(v => { camData.posX = invertXAxis ? -v : v; OnDataChanged(); });
+        // çº¯å‡€ç»‘å®šï¼šæ»‘å—æ˜¯ä»€ä¹ˆï¼Œæ•°æ®å°±æ˜¯ä»€ä¹ˆ
+        if (sliderPosX != null) sliderPosX.onValueChanged.AddListener(v => { camData.posX = v; OnDataChanged(); });
         if (sliderPosY != null) sliderPosY.onValueChanged.AddListener(v => { camData.posY = v; OnDataChanged(); });
         if (sliderPosZ != null) sliderPosZ.onValueChanged.AddListener(v => { camData.posZ = v; OnDataChanged(); });
         if (sliderRotX != null) sliderRotX.onValueChanged.AddListener(v => { camData.rotX = v; OnDataChanged(); });
@@ -179,30 +124,22 @@ public class CameraClipInspectorPanel : ClipInspectorPanel
     {
         UpdateValueLabels();
         UpdateVisuals();
-        UpdatePreviewCamera();
+        UpdatePreviewCamera(); // è¿™å°±æ˜¯ä¸ºä»€ä¹ˆç›¸æœºè¢«â€œå›ºå®šâ€çš„åŸå› ï¼šæ»‘å—åœ¨æ§è½´
     }
 
     private void UpdateValueLabels()
     {
         if (camData == null) return;
-
-        // ÏÔÊ¾Êı×Ö¸øÓÃ»§¿´Ê±Ò²ÒªÆ­¹ıÈ¥
-        float displayX = invertXAxis ? -camData.posX : camData.posX;
-
-        if (posXValueText != null) posXValueText.text = $"{displayX:F1}";
+        if (posXValueText != null) posXValueText.text = $"{camData.posX:F1}";
         if (posYValueText != null) posYValueText.text = $"{camData.posY:F1}";
         if (posZValueText != null) posZValueText.text = $"{camData.posZ:F1}";
-        if (rotXValueText != null) rotXValueText.text = $"{camData.rotX:F0}¡ã";
-        if (rotYValueText != null) rotYValueText.text = $"{camData.rotY:F0}¡ã";
-        if (rotZValueText != null) rotZValueText.text = $"{camData.rotZ:F0}¡ã";
+        if (rotXValueText != null) rotXValueText.text = $"{camData.rotX:F0}Â°";
+        if (rotYValueText != null) rotYValueText.text = $"{camData.rotY:F0}Â°";
+        if (rotZValueText != null) rotZValueText.text = $"{camData.rotZ:F0}Â°";
     }
 
-    // ==========================================
-    // ÊÓ¾õË¢ĞÂÍ¬²½
-    // ==========================================
     private void UpdateVisuals()
     {
-        // ÈÃ³¡¾°ÀïµÄ 3D Ğ¡Ïà»úÌæÉíÒÆ¶¯
         if (myDummyInstance != null && camData != null)
         {
             myDummyInstance.transform.position = camData.Position;
@@ -212,7 +149,6 @@ public class CameraClipInspectorPanel : ClipInspectorPanel
 
     private void UpdatePreviewCamera()
     {
-        // ÈÃÕæÕıµÄÔ¤ÀÀ»­Ãæ¸úËæÒÆ¶¯
         if (previewCamera != null && camData != null)
         {
             previewCamera.transform.position = camData.Position;
@@ -220,33 +156,53 @@ public class CameraClipInspectorPanel : ClipInspectorPanel
         }
     }
 
-    private void SyncRangesToData()
+    private void SetupSlider(Slider s, float min, float max, float value)
     {
-        if (camData == null) return;
-        camData.posXMin = posXMin; camData.posXMax = posXMax;
-        camData.posYMin = posYMin; camData.posYMax = posYMax;
-        camData.posZMin = posZMin; camData.posZMax = posZMax;
+        if (s == null) return;
+        s.onValueChanged.RemoveAllListeners();
+        s.minValue = min;
+        s.maxValue = max;
+        s.value = value;
     }
 
-    // ==========================================
-    // À¬»ø»ØÊÕ£ºÈç¹û·½¿é±»É¾µô£¬Ä£ĞÍÒ²±ØĞëÏú»Ù
-    // ==========================================
-    private void OnDestroy()
-    {
-        if (myDummyInstance != null)
-        {
-            Destroy(myDummyInstance);
-        }
-    }
+    private void OnDestroy() { if (myDummyInstance != null) Destroy(myDummyInstance); }
 
-    // ¹¤¾ß£ºµİ¹éÉèÖÃÎïÌåµÄ Layer£¨´¦ÀíÔ¤ÖÆÌåÀïÓĞ¶à²ã×ÓÎïÌåµÄÇé¿ö£©
     private void SetLayerRecursively(GameObject obj, int newLayer)
     {
         if (obj == null) return;
         obj.layer = newLayer;
-        foreach (Transform child in obj.transform)
-        {
-            SetLayerRecursively(child.gameObject, newLayer);
-        }
+        foreach (Transform child in obj.transform) SetLayerRecursively(child.gameObject, newLayer);
+    }
+
+    // ==========================================
+    // ğŸ’¡ ç»™ä½ çš„é¢å¤–ç¤¼ç‰©ï¼šå³é”®ç‚¹å‡»ç»„ä»¶ï¼Œå¯ä»¥æŠŠåœºæ™¯é‡Œçš„ç›¸æœºä½ç½®â€œå¸â€è¿›æ•°æ®é‡Œ
+    // è¿™æ ·ä½ å°±ä¸ç”¨æ‰‹åŠ¨è°ƒæ»‘å—äº†ï¼Œåœ¨åœºæ™¯é‡Œæ‘†å¥½ç›¸æœºï¼Œç‚¹ä¸€ä¸‹å°±è¡Œ
+    // ==========================================
+    [ContextMenu("å°†å½“å‰é¢„è§ˆç›¸æœºä½ç½®åŒæ­¥åˆ°æ–¹å—")]
+    public void SyncFromSceneCamera()
+    {
+        if (previewCamera == null || camData == null) return;
+
+        camData.posX = previewCamera.transform.position.x;
+        camData.posY = previewCamera.transform.position.y;
+        camData.posZ = previewCamera.transform.position.z;
+
+        Vector3 rot = previewCamera.transform.eulerAngles;
+        // è§„èŒƒåŒ–è§’åº¦åˆ° -180~180
+        camData.rotX = (rot.x > 180) ? rot.x - 360 : rot.x;
+        camData.rotY = (rot.y > 180) ? rot.y - 360 : rot.y;
+        camData.rotZ = (rot.z > 180) ? rot.z - 360 : rot.z;
+
+        // åˆ·æ–°ä¸€ä¸‹ UI æ˜¾ç¤º
+        isReady = false; // æš‚æ—¶å…³é—­ç›‘å¬é˜²æ­¢å¹²æ‰°
+        SetupSlider(sliderPosX, posXMin, posXMax, camData.posX);
+        SetupSlider(sliderPosY, posYMin, posYMax, camData.posY);
+        SetupSlider(sliderPosZ, posZMin, posZMax, camData.posZ);
+        SetupSlider(sliderRotX, -180f, 180f, camData.rotX);
+        SetupSlider(sliderRotY, -180f, 180f, camData.rotY);
+        SetupSlider(sliderRotZ, -180f, 180f, camData.rotZ);
+        isReady = true;
+        RegisterListeners();
+        OnDataChanged();
     }
 }

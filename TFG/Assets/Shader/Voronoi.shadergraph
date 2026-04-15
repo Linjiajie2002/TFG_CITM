@@ -4,9 +4,6 @@
     "m_ObjectId": "28864965bcfb4133ab81cf6c0740cdf4",
     "m_Properties": [
         {
-            "m_Id": "482bfd373302458f82e82a96f4afd678"
-        },
-        {
             "m_Id": "0ae1f9edb17d48e6948bbf786fe89802"
         },
         {
@@ -779,7 +776,7 @@
     "m_DefaultRefNameVersion": 1,
     "m_RefNameGeneratedByDisplayName": "FullscreenIntensity",
     "m_DefaultReferenceName": "_FullscreenIntensity",
-    "m_OverrideReferenceName": "",
+    "m_OverrideReferenceName": "_FullIntensity",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
     "m_CustomSlotLabel": "",
@@ -1010,7 +1007,7 @@
     "m_DefaultRefNameVersion": 1,
     "m_RefNameGeneratedByDisplayName": "VignetteRadiusPower",
     "m_DefaultReferenceName": "_VignetteRadiusPower",
-    "m_OverrideReferenceName": "",
+    "m_OverrideReferenceName": "_VignetteRadius",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
     "m_CustomSlotLabel": "",
@@ -1613,42 +1610,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Internal.Texture2DShaderProperty",
-    "m_ObjectId": "482bfd373302458f82e82a96f4afd678",
-    "m_Guid": {
-        "m_GuidSerialized": "38027523-62a0-4cfa-ba06-906900a9559b"
-    },
-    "promotedFromAssetID": "",
-    "promotedFromCategoryName": "",
-    "promotedOrdering": -1,
-    "m_Name": "MainTex",
-    "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "MainTex",
-    "m_DefaultReferenceName": "_MainTex",
-    "m_OverrideReferenceName": "",
-    "m_GeneratePropertyBlock": true,
-    "m_UseCustomSlotLabel": false,
-    "m_CustomSlotLabel": "",
-    "m_DismissedVersion": 0,
-    "m_Precision": 0,
-    "overrideHLSLDeclaration": false,
-    "hlslDeclarationOverride": 0,
-    "m_Hidden": false,
-    "m_PerRendererData": false,
-    "m_customAttributes": [],
-    "m_Value": {
-        "m_SerializedTexture": "",
-        "m_Guid": ""
-    },
-    "isMainTexture": false,
-    "useTilingAndOffset": false,
-    "useTexelSize": true,
-    "m_Modifiable": true,
-    "m_DefaultType": 0
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
     "m_ObjectId": "4b38849caa3644fd960ce794ccc1f40d",
     "m_Group": {
@@ -1818,9 +1779,6 @@
     "m_ChildObjectList": [
         {
             "m_Id": "438ec62e841e4e518d6d7323ff495797"
-        },
-        {
-            "m_Id": "482bfd373302458f82e82a96f4afd678"
         },
         {
             "m_Id": "0ae1f9edb17d48e6948bbf786fe89802"

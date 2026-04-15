@@ -3,27 +3,18 @@ using UnityEngine.UI;
 using TMPro;
 
 // ==========================================
-// Shader Clip Inspector 面板 — 基类
+// Shader Clip Inspector 面板 — 基类（修复版）
 //
-// 【扩展方式】：
-//   继承本类，重写三个虚方法：
-//     protected virtual void OnBindShaderExtra()        → 绑定子类 Slider
-//     protected virtual void OnShaderDataChangedExtra() → 数据变化后子类处理
-//     protected virtual void OnRefreshShaderExtra()     → RefreshDisplay 时子类刷新
-//
-// 预制体结构（ClipPanel_Shader_Base）：
-//   ├── Header (clipNameText + deleteButton + backButton)
-//   ├── TimeInfo (startTimeText + durationText + endTimeText)
-//   ├── Section_Fade
-//   │   ├── Row_FadeIn  → Label "渐入" + Slider(sliderFadeIn)  + Text(fadeInText)
-//   │   └── Row_FadeOut → Label "渐出" + Slider(sliderFadeOut) + Text(fadeOutText)
-//   └── Extra_Content ← 子类面板在这里追加专属 Slider
+// 修复：删除 RefreshDisplay 里的 PushToMaterial(1f)
+//   原来每帧都以 alpha=1f 写入 material，完全绕过了渐变计算。
+//   现在材质完全由 ShaderPlaybackSystem 的 CalculateAlpha 控制。
+//   Inspector 面板只负责修改数据，不直接操控材质强度。
 // ==========================================
 public class ShaderClipInspectorPanel : ClipInspectorPanel
 {
     [Header("=== 渐入渐出 Sliders ===")]
-    public Slider          sliderFadeIn;
-    public Slider          sliderFadeOut;
+    public Slider sliderFadeIn;
+    public Slider sliderFadeOut;
     public TextMeshProUGUI fadeInText;
     public TextMeshProUGUI fadeOutText;
 
@@ -32,9 +23,8 @@ public class ShaderClipInspectorPanel : ClipInspectorPanel
     public float fadeMax = 3f;
 
     protected ShaderClipData shaderData;
-    private   bool           isReady = false;
+    private bool isReady = false;
 
-    // ==========================================
     protected override void Awake() { base.Awake(); }
 
     public override void BindClip(TimelineEventData clip, TimelineManager mgr)
@@ -47,11 +37,19 @@ public class ShaderClipInspectorPanel : ClipInspectorPanel
         shaderData.fadeMin = fadeMin;
         shaderData.fadeMax = fadeMax;
 
-        InitSlider(sliderFadeIn,  fadeMin, fadeMax, shaderData.fadeInDuration);
+        InitSlider(sliderFadeIn, fadeMin, fadeMax, shaderData.fadeInDuration);
         InitSlider(sliderFadeOut, fadeMin, fadeMax, shaderData.fadeOutDuration);
 
-        if (sliderFadeIn  != null) sliderFadeIn.onValueChanged.AddListener(v  => { shaderData.fadeInDuration  = v; OnDataChanged(); });
-        if (sliderFadeOut != null) sliderFadeOut.onValueChanged.AddListener(v => { shaderData.fadeOutDuration = v; OnDataChanged(); });
+        if (sliderFadeIn != null) sliderFadeIn.onValueChanged.AddListener(v =>
+        {
+            shaderData.fadeInDuration = v;
+            UpdateFadeLabels();
+        });
+        if (sliderFadeOut != null) sliderFadeOut.onValueChanged.AddListener(v =>
+        {
+            shaderData.fadeOutDuration = v;
+            UpdateFadeLabels();
+        });
 
         isReady = true;
         OnBindShaderExtra();
@@ -63,33 +61,34 @@ public class ShaderClipInspectorPanel : ClipInspectorPanel
         base.RefreshDisplay();
         if (!isReady || shaderData == null) return;
 
-        if (fadeInText  != null) fadeInText.text  = $"{shaderData.fadeInDuration:F2}s";
-        if (fadeOutText != null) fadeOutText.text = $"{shaderData.fadeOutDuration:F2}s";
-
+        UpdateFadeLabels();
         OnRefreshShaderExtra();
-        PushToMaterial();
+
+        // 【修复2】：不再调用 PushToMaterial(1f)
+        // 材质由 ShaderPlaybackSystem 根据时间计算 alpha 后统一写入
+        // 这里只刷新 UI 显示，不直接操控材质
+    }
+
+    private void UpdateFadeLabels()
+    {
+        if (fadeInText != null) fadeInText.text = $"{shaderData.fadeInDuration:F2}s";
+        if (fadeOutText != null) fadeOutText.text = $"{shaderData.fadeOutDuration:F2}s";
     }
 
     // ==========================================
     // 子类重写区域
     // ==========================================
-    protected virtual ShaderClipData CreateShaderData()    => new ShaderClipData();
-    protected virtual void OnBindShaderExtra()             { }
-    protected virtual void OnShaderDataChangedExtra()      { }
-    protected virtual void OnRefreshShaderExtra()          { }
+    protected virtual ShaderClipData CreateShaderData() => new ShaderClipData();
+    protected virtual void OnBindShaderExtra() { }
+    protected virtual void OnShaderDataChangedExtra() { }
+    protected virtual void OnRefreshShaderExtra() { }
 
-    // ==========================================
     protected void OnDataChanged()
     {
-        RefreshDisplay();
+        UpdateFadeLabels();
+        OnRefreshShaderExtra();
         OnShaderDataChangedExtra();
-    }
-
-    // 把数据推给运行时 Material（Edit 模式实时预览）
-    protected void PushToMaterial()
-    {
-        if (shaderData?.runtimeMaterial == null) return;
-        shaderData.ApplyToMaterial(shaderData.runtimeMaterial, 1f); // 编辑时用完整强度预览
+        // 【修复2】：不写材质，由 ShaderPlaybackSystem 负责
     }
 
     // ==========================================
@@ -99,7 +98,7 @@ public class ShaderClipInspectorPanel : ClipInspectorPanel
         s.onValueChanged.RemoveAllListeners();
         s.minValue = min;
         s.maxValue = max;
-        s.value    = Mathf.Clamp(val, min, max);
+        s.value = Mathf.Clamp(val, min, max);
     }
 
     protected void SetLabel(TextMeshProUGUI t, string text) { if (t != null) t.text = text; }

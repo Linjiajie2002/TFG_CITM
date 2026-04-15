@@ -5581,7 +5581,7 @@ MonoBehaviour:
   shaderEntries:
   - trackName: Shader
     material: {fileID: 2100000, guid: 9d5839ccd1fdc21409a1908709eb0df4, type: 2}
-    allowBlend: 0
+    allowBlend: 1
 --- !u!1 &213968914
 GameObject:
   m_ObjectHideFlags: 0

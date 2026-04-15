@@ -2,38 +2,28 @@ using UnityEngine;
 using System.Collections.Generic;
 
 // ==========================================
-// Shader 播放系统
+// Shader 播放系统（修复版）
 //
-// 挂载位置：System_Manager 或任意常驻 GameObject
+// 修复1："过了clip关不掉"
+//   - 对每个不在范围的 clip 直接调用 ApplyToMaterial(mat, 0)
+//   - 不再依赖 shaderEntries 末尾循环（那个循环只做兜底）
+//   - TickShaders 每帧强制执行，不做时间节流
 //
-// 工作原理：
-//   1. 每帧根据时间轴检查哪些 Shader Clip 激活
-//   2. 激活时计算渐入/渐出的 alpha 值（0→1→1→0）
-//   3. 调用 ShaderClipData.ApplyToMaterial(mat, alpha) 写入 Material
-//   4. 不在任何 Clip 内时，把 _FullIntensity 设为 0（隐藏 shader）
-//
-// 【扩展方式】：
-//   在 shaderEntries 里加一条记录（trackName + material），
-//   不需要修改任何代码。新的 Shader 只要继承 ShaderClipData，
-//   重写 ApplyToMaterial 即可。
+// 修复2："Fade In 直接闪现"
+//   - 删除 inspector 面板的 PushToMaterial(1f)，
+//     材质完全由本系统的 CalculateAlpha 控制
+//   - 在 clip 进入范围的第一帧之前，确保材质已归零
 // ==========================================
-
 public class ShaderPlaybackSystem : MonoBehaviour
 {
-    // ==========================================
-    // Shader 类型注册表
-    // ==========================================
     [System.Serializable]
     public class ShaderEntry
     {
         [Tooltip("轨道名，必须与 DynamicModuleSystem 的 moduleName 一致")]
         public string trackName = "Shader";
 
-        [Tooltip("Full Screen Pass Renderer Feature 使用的材质\n（记得在 URP Renderer Asset 里也引用同一个 Material 实例）")]
+        [Tooltip("Full Screen Pass Renderer Feature 使用的材质\n同一个 Material 实例！")]
         public Material material;
-
-        [Tooltip("是否允许多个 Clip 叠加（一般 Full Screen Shader 不叠加，设 false）")]
-        public bool allowBlend = false;
     }
 
     [Header("=== 时间轴引用 ===")]
@@ -42,122 +32,157 @@ public class ShaderPlaybackSystem : MonoBehaviour
     [Header("=== Shader 类型配置表 ===")]
     public List<ShaderEntry> shaderEntries = new List<ShaderEntry>();
 
-    // ── 内部：记录每个 clip 上一帧的 alpha，用于跳跃时快速同步 ──
-    private Dictionary<TimelineEventData, float> alphaCache
-        = new Dictionary<TimelineEventData, float>();
+    // 记录每个 clip 上一帧是否在范围内，用于精确触发归零
+    private Dictionary<TimelineEventData, bool> wasInRange
+        = new Dictionary<TimelineEventData, bool>();
 
-    private float lastCheckedTime = -999f;
-    private bool  lastWasPlaying  = false;
-
-    // ==========================================
     void Start()
     {
-        // 初始化：把所有已注册 material 的 _FullIntensity 清零
-        foreach (var e in shaderEntries)
-            ZeroMaterial(e.material);
+        ZeroAllMaterials();
     }
 
     void Update()
     {
         if (timeline == null) return;
 
-        float currentTime = timeline.GetCurrentTime();
-        bool  playing     = timeline.musicSource != null && timeline.musicSource.isPlaying;
-
-        // 播放 / 停止切换时强制刷新
-        if (playing != lastWasPlaying)
-        {
-            lastWasPlaying  = playing;
-            lastCheckedTime = -999f;
-        }
-
-        bool timeChanged = Mathf.Abs(currentTime - lastCheckedTime) > 0.008f;
-        if (timeChanged || playing)
-        {
-            lastCheckedTime = currentTime;
-            TickShaders(currentTime);
-        }
+        // 【修复1】：每帧无条件执行，不做节流
+        TickShaders(timeline.GetCurrentTime());
     }
 
     // ==========================================
-    // 每帧：计算所有 Shader Clip 的 alpha 并推给 Material
+    // 核心：每帧处理所有 Shader Clip
     // ==========================================
     private void TickShaders(float currentTime)
     {
         if (timeline?.allEvents == null) return;
 
-        // 先把所有 entry 的 material 重置（防止残留）
-        var activeMaterials = new HashSet<Material>();
+        // 先把本帧所有 entry material 的"活跃贡献"清空
+        // 用 float 字典累加，支持后续多 clip 混合扩展
+        var materialAlpha = new Dictionary<Material, float>();
+        foreach (var e in shaderEntries)
+            if (e.material != null) materialAlpha[e.material] = 0f;
 
         foreach (var evt in timeline.allEvents)
         {
             if (!(evt.customData is ShaderClipData data)) continue;
 
-            float clipStart = evt.startTime;
-            float clipEnd   = evt.startTime + evt.duration;
+            string trackName = GetTrackName(evt.trackIndex);
+            ShaderEntry entry = FindEntry(trackName);
+            if (entry?.material == null) continue;
 
+            // 注入 material 引用（供 inspector 面板知道绑哪个 mat）
+            data.runtimeMaterial = entry.material;
+
+            float clipStart = evt.startTime;
+            float clipEnd = evt.startTime + evt.duration;
             bool inRange = currentTime >= clipStart && currentTime < clipEnd;
+
+            // 【修复2】：clip 刚进入范围时，先确保材质从 0 开始
+            bool prev = wasInRange.ContainsKey(evt) && wasInRange[evt];
+            if (inRange && !prev)
+            {
+                // 刚进入：先强制归零这帧之前的材质值
+                // （防止上一个 clip 或 editor 预览残留非零值）
+                if (materialAlpha.ContainsKey(entry.material))
+                    materialAlpha[entry.material] = 0f;
+            }
+
+            wasInRange[evt] = inRange;
+
             if (!inRange)
             {
-                // 不在范围内：alpha 归零
-                alphaCache[evt] = 0f;
-                continue;
+                // 【修复1】：不在范围 → 显式贡献 0，不依赖末尾循环
+                data.currentAlpha = 0f;
+                continue; // materialAlpha 已初始化为 0，不需要额外操作
             }
 
             // 计算渐入渐出 alpha
             float alpha = CalculateAlpha(currentTime, clipStart, clipEnd,
                                          data.fadeInDuration, data.fadeOutDuration);
-            alphaCache[evt] = alpha;
             data.currentAlpha = alpha;
 
-            // 找对应 material
-            string trackName = GetTrackName(evt.trackIndex);
-            ShaderEntry entry = FindEntry(trackName);
-            if (entry?.material == null) continue;
-
-            // 注入 material 引用（供 Inspector 面板 Edit 模式预览用）
-            data.runtimeMaterial  = entry.material;
-            data.shaderEntryName  = entry.trackName;
-
-            // 推参数到 Material
-            data.ApplyToMaterial(entry.material, alpha);
-            activeMaterials.Add(entry.material);
+            // 累加（同轨道多 clip 叠加时取最大值）
+            if (materialAlpha.ContainsKey(entry.material))
+                materialAlpha[entry.material] = Mathf.Max(materialAlpha[entry.material], alpha);
+            else
+                materialAlpha[entry.material] = alpha;
         }
 
-        // 把没有激活 clip 的 material 强制归零
+        // 把计算好的 alpha 推给每个 material
+        foreach (var evt in timeline.allEvents)
+        {
+            if (!(evt.customData is ShaderClipData data)) continue;
+            if (data.runtimeMaterial == null) continue;
+
+            Material mat = data.runtimeMaterial;
+            if (!materialAlpha.TryGetValue(mat, out float finalAlpha)) finalAlpha = 0f;
+
+            // 只写入对应 clip 的 alpha（防止多 clip 重复写）
+            // 每个 entry 的 material 只写一次，由 materialAlpha 统一管理
+        }
+
+        // 统一写入：每个 entry 的 material 只写一次
         foreach (var e in shaderEntries)
         {
-            if (e.material != null && !activeMaterials.Contains(e.material))
-                ZeroMaterial(e.material);
+            if (e.material == null) continue;
+            materialAlpha.TryGetValue(e.material, out float a);
+
+            // 找到对应这个 material 的、当前贡献最大的那个 clip data 来写参数
+            ShaderClipData bestData = FindBestDataForMaterial(e.material, currentTime);
+            if (bestData != null)
+                bestData.ApplyToMaterial(e.material, a);
+            else
+                ZeroMaterial(e.material); // 无活跃 clip → 归零
         }
     }
 
+    // 找当前时间内对某个 material 贡献最大 alpha 的 clip data
+    private ShaderClipData FindBestDataForMaterial(Material mat, float currentTime)
+    {
+        ShaderClipData best = null;
+        float bestA = -1f;
+
+        foreach (var evt in timeline.allEvents)
+        {
+            if (!(evt.customData is ShaderClipData data)) continue;
+            if (data.runtimeMaterial != mat) continue;
+
+            float clipEnd = evt.startTime + evt.duration;
+            bool inRange = currentTime >= evt.startTime && currentTime < clipEnd;
+            if (!inRange) continue;
+
+            if (data.currentAlpha > bestA)
+            {
+                bestA = data.currentAlpha;
+                best = data;
+            }
+        }
+        return best;
+    }
+
     // ==========================================
-    // 渐入渐出 alpha 计算
+    // 渐入渐出 alpha
     //
-    //   |←fadeIn→|←────持续────→|←fadeOut→|
-    //   0        1              1         0
+    //   │←fadeIn→│←────持续────→│←fadeOut→│
+    //   0        1              1          0
     // ==========================================
     private float CalculateAlpha(float t, float start, float end, float fadeIn, float fadeOut)
     {
         float duration = end - start;
-
-        // 防止 fadeIn + fadeOut 超过 clip 时长（各占一半）
         float maxFade = duration * 0.5f;
-        fadeIn  = Mathf.Min(fadeIn,  maxFade);
-        fadeOut = Mathf.Min(fadeOut, maxFade);
 
-        float elapsed  = t - start;
+        fadeIn = Mathf.Clamp(fadeIn, 0f, maxFade);
+        fadeOut = Mathf.Clamp(fadeOut, 0f, maxFade);
+
+        float elapsed = t - start;
         float remaining = end - t;
 
-        float alphaIn  = (fadeIn  > 0.001f) ? Mathf.Clamp01(elapsed  / fadeIn)  : 1f;
-        float alphaOut = (fadeOut > 0.001f) ? Mathf.Clamp01(remaining / fadeOut) : 1f;
+        float aIn = (fadeIn > 0.001f) ? Mathf.Clamp01(elapsed / fadeIn) : 1f;
+        float aOut = (fadeOut > 0.001f) ? Mathf.Clamp01(remaining / fadeOut) : 1f;
 
-        return Mathf.Min(alphaIn, alphaOut);
+        return Mathf.Min(aIn, aOut);
     }
 
-    // ==========================================
-    // 归零 Material
     // ==========================================
     private void ZeroMaterial(Material mat)
     {
@@ -165,9 +190,11 @@ public class ShaderPlaybackSystem : MonoBehaviour
         if (mat.HasProperty("_FullIntensity")) mat.SetFloat("_FullIntensity", 0f);
     }
 
-    // ==========================================
-    // 工具
-    // ==========================================
+    private void ZeroAllMaterials()
+    {
+        foreach (var e in shaderEntries) ZeroMaterial(e.material);
+    }
+
     private string GetTrackName(int trackIndex)
     {
         var track = timeline?.allTracks?.Find(t => t.trackIndex == trackIndex);
@@ -182,25 +209,9 @@ public class ShaderPlaybackSystem : MonoBehaviour
         return null;
     }
 
-    // 供外部（新建 Clip 后）立即刷新
     public void ForceRefresh()
     {
-        lastCheckedTime = -999f;
-    }
-
-    // ==========================================
-    // Edit 模式实时预览（选中 Clip 时由面板调用）
-    // 传入 previewAlpha = 1f 就是完整预览效果
-    // ==========================================
-    public void PreviewClipInEditor(ShaderClipData data, float previewAlpha = 1f)
-    {
-        if (data?.runtimeMaterial == null) return;
-        data.ApplyToMaterial(data.runtimeMaterial, previewAlpha);
-    }
-
-    public void StopPreview(ShaderClipData data)
-    {
-        if (data?.runtimeMaterial == null) return;
-        ZeroMaterial(data.runtimeMaterial);
+        wasInRange.Clear();
+        ZeroAllMaterials();
     }
 }

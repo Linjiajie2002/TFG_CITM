@@ -1,56 +1,56 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections.Generic;
 
 // ==========================================
-// VFX ²¥·ÅÏµÍ³
+// VFX æ’­æ”¾ç³»ç»Ÿ
 //
-// ¹ÒÔØÎ»ÖÃ£ºSystem_Manager »òÈÎÒâ³£×¤ GameObject
+// æŒ‚è½½ä½ç½®ï¼šSystem_Manager æˆ–ä»»æ„å¸¸é©» GameObject
 //
-// Ö°Ôğ£º
-//   1. Edit + Play Ä£Ê½ÏÂ£¬Scrub/²¥·ÅÊ±¸ù¾İÊ±¼äÖá Clip ¼¤»î/¹Ø±Õ VFX
-//   2. ÎªÃ¿¸ö VFXClipData ¹ÜÀíÒ»¸öÕæÊµµÄ VFX GameObject
-//   3. Ö§³ÖÑ­»· / µ¥´Î²¥·Å
-//   4. Ö§³Ö¶àÖÖ VFX Prefab£¨ÔÚ vfxEntries ÁĞ±íÀïÅäÖÃ£©
+// èŒè´£ï¼š
+//   1. Edit + Play æ¨¡å¼ä¸‹ï¼ŒScrub/æ’­æ”¾æ—¶æ ¹æ®æ—¶é—´è½´ Clip æ¿€æ´»/å…³é—­ VFX
+//   2. ä¸ºæ¯ä¸ª VFXClipData ç®¡ç†ä¸€ä¸ªçœŸå®çš„ VFX GameObject
+//   3. æ”¯æŒå¾ªç¯ / å•æ¬¡æ’­æ”¾
+//   4. æ”¯æŒå¤šç§ VFX Prefabï¼ˆåœ¨ vfxEntries åˆ—è¡¨é‡Œé…ç½®ï¼‰
 //
-// ¡¾À©Õ¹·½Ê½¡¿£º
-//   Èç¹ûÄãÓĞĞÂµÄ VFX ÀàĞÍ£¨ÀıÈç Fire¡¢Snow£©£¬Ö»ĞèÔÚ Inspector µÄ
-//   vfxEntries ÁĞ±íÀï¼ÓÒ»Ìõ¼ÇÂ¼£¬ÌîÉÏ trackName ºÍ¶ÔÓ¦ prefab ¼´¿É£¬
-//   ²»ĞèÒªĞŞ¸ÄÈÎºÎ´úÂë¡£
+// ã€æ‰©å±•æ–¹å¼ã€‘ï¼š
+//   å¦‚æœä½ æœ‰æ–°çš„ VFX ç±»å‹ï¼ˆä¾‹å¦‚ Fireã€Snowï¼‰ï¼Œåªéœ€åœ¨ Inspector çš„
+//   vfxEntries åˆ—è¡¨é‡ŒåŠ ä¸€æ¡è®°å½•ï¼Œå¡«ä¸Š trackName å’Œå¯¹åº” prefab å³å¯ï¼Œ
+//   ä¸éœ€è¦ä¿®æ”¹ä»»ä½•ä»£ç ã€‚
 // ==========================================
 public class VFXPlaybackSystem : MonoBehaviour
 {
     // ==========================================
-    // VFX ÀàĞÍ×¢²á±í£ºtrackName ¡ú Prefab
+    // VFX ç±»å‹æ³¨å†Œè¡¨ï¼štrackName â†’ Prefab
     // ==========================================
     [System.Serializable]
     public class VFXEntry
     {
-        [Tooltip("¹ìµÀÃû£¬±ØĞëÓë DynamicModuleSystem ÀïµÄ moduleName ÍêÈ«Ò»ÖÂ")]
+        [Tooltip("è½¨é“åï¼Œå¿…é¡»ä¸ DynamicModuleSystem é‡Œçš„ moduleName å®Œå…¨ä¸€è‡´")]
         public string trackName = "VFX";
 
-        [Tooltip("¸ÃÀàĞÍ VFX Ê¹ÓÃµÄ Prefab")]
+        [Tooltip("è¯¥ç±»å‹ VFX ä½¿ç”¨çš„ Prefab")]
         public GameObject prefab;
 
-        [Tooltip("Í¬Ò»Ê±¿Ì¸ÃÀàĞÍ×î¶àÊµÀıÊı£¨0 = ²»ÏŞÖÆ£©")]
+        [Tooltip("åŒä¸€æ—¶åˆ»è¯¥ç±»å‹æœ€å¤šå®ä¾‹æ•°ï¼ˆ0 = ä¸é™åˆ¶ï¼‰")]
         public int maxSimultaneous = 0;
     }
 
-    [Header("=== Ê±¼äÖáÒıÓÃ ===")]
+    [Header("=== æ—¶é—´è½´å¼•ç”¨ ===")]
     public TimelineManager timeline;
 
-    [Header("=== VFX ÀàĞÍÅäÖÃ±í ===")]
+    [Header("=== VFX ç±»å‹é…ç½®è¡¨ ===")]
     public List<VFXEntry> vfxEntries = new List<VFXEntry>();
 
-    [Header("=== VFX ¹ÒÔØ¸¸½Úµã ===")]
-    [Tooltip("ËùÓĞÉú³ÉµÄ VFX GameObject ¶¼¹Òµ½ÕâÀï£¬·½±ã¹ÜÀí")]
+    [Header("=== VFX æŒ‚è½½çˆ¶èŠ‚ç‚¹ ===")]
+    [Tooltip("æ‰€æœ‰ç”Ÿæˆçš„ VFX GameObject éƒ½æŒ‚åˆ°è¿™é‡Œï¼Œæ–¹ä¾¿ç®¡ç†")]
     public Transform vfxContainer;
 
-    // ©¤©¤ ÄÚ²¿£ºclip ¡ú (GO, ParticleSystem) ©¤©¤
+    // â”€â”€ å†…éƒ¨ï¼šclip â†’ (GO, ParticleSystem) â”€â”€
     private class RuntimeVFX
     {
         public GameObject go;
-        public ParticleSystem ps;      // ¿ÉÄÜÎª null£¨VFX Graph ÀàĞÍ£©
-        public bool wasActive = false; // ÉÏÒ»Ö¡ÊÇ·ñ¼¤»î
+        public ParticleSystem ps;      // å¯èƒ½ä¸º nullï¼ˆVFX Graph ç±»å‹ï¼‰
+        public bool wasActive = false; // ä¸Šä¸€å¸§æ˜¯å¦æ¿€æ´»
     }
 
     private Dictionary<TimelineEventData, RuntimeVFX> pool
@@ -69,7 +69,7 @@ public class VFXPlaybackSystem : MonoBehaviour
         bool playing = timeline.musicSource != null && timeline.musicSource.isPlaying;
         float currentTime = timeline.GetCurrentTime();
 
-        // ²¥·Å×´Ì¬ÇĞ»»Ê±Ç¿ÖÆË¢ĞÂ
+        // æ’­æ”¾çŠ¶æ€åˆ‡æ¢æ—¶å¼ºåˆ¶åˆ·æ–°
         if (playing != lastWasPlaying)
         {
             lastWasPlaying = playing;
@@ -77,29 +77,29 @@ public class VFXPlaybackSystem : MonoBehaviour
 
             if (!playing)
             {
-                // Í£Ö¹Ñİ³ö£º½«ËùÓĞ VFX ×´Ì¬ÖØÖÃ£¨±£Áô GO£¬µ«Í£Ö¹Á£×Ó£©
+                // åœæ­¢æ¼”å‡ºï¼šå°†æ‰€æœ‰ VFX çŠ¶æ€é‡ç½®ï¼ˆä¿ç•™ GOï¼Œä½†åœæ­¢ç²’å­ï¼‰
                 foreach (var kvp in pool) DeactivateVFX(kvp.Key, kvp.Value);
             }
         }
 
-        // Ã¿Ö¡¼ì²é£¨°üÀ¨ Scrub£©
+        // æ¯å¸§æ£€æŸ¥ï¼ˆåŒ…æ‹¬ Scrubï¼‰
         bool timeChanged = Mathf.Abs(currentTime - lastCheckedTime) > 0.008f;
         if (timeChanged || playing)
         {
             lastCheckedTime = currentTime;
-            RebuildPool();    // ĞÂÔö/É¾³ı Clip ºóÍ¬²½
+            RebuildPool();    // æ–°å¢/åˆ é™¤ Clip ååŒæ­¥
             TickAll(currentTime);
         }
     }
 
     // ==========================================
-    // ºËĞÄ£ºÃ¿Ö¡¸üĞÂËùÓĞ VFX
+    // æ ¸å¿ƒï¼šæ¯å¸§æ›´æ–°æ‰€æœ‰ VFX
     // ==========================================
     private void TickAll(float currentTime)
     {
         bool playing = timeline.musicSource != null && timeline.musicSource.isPlaying;
 
-        // Í³¼ÆÃ¿ÖÖ trackName µ±Ç°ÒÑ¼¤»îÊıÁ¿£¨ÓÃÓÚ maxSimultaneous ÏŞÖÆ£©
+        // ç»Ÿè®¡æ¯ç§ trackName å½“å‰å·²æ¿€æ´»æ•°é‡ï¼ˆç”¨äº maxSimultaneous é™åˆ¶ï¼‰
         var activeCounts = new Dictionary<string, int>();
 
         foreach (var kvp in pool)
@@ -112,7 +112,7 @@ public class VFXPlaybackSystem : MonoBehaviour
             bool inRange = currentTime >= evt.startTime &&
                            currentTime < evt.startTime + evt.duration;
 
-            // ¼ì²é maxSimultaneous
+            // æ£€æŸ¥ maxSimultaneous
             string trackName = GetTrackName(evt.trackIndex);
             VFXEntry entry = FindEntry(trackName);
             if (inRange && entry != null && entry.maxSimultaneous > 0)
@@ -130,13 +130,13 @@ public class VFXPlaybackSystem : MonoBehaviour
     }
 
     // ==========================================
-    // ¼¤»î VFX
+    // æ¿€æ´» VFX
     // ==========================================
     private void ActivateVFX(TimelineEventData evt, RuntimeVFX rvfx, VFXClipData data, bool playing)
     {
         if (rvfx.go == null) return;
 
-        // ¸Õ½øÈëÇø¼ä
+        // åˆšè¿›å…¥åŒºé—´
         if (!rvfx.wasActive)
         {
             rvfx.go.SetActive(true);
@@ -149,10 +149,10 @@ public class VFXPlaybackSystem : MonoBehaviour
             }
         }
 
-        // Ã¿Ö¡Í¬²½²ÎÊı£¨Slider ÍÏ¶¯Ê±ÊµÊ±·´Ó³£©
+        // æ¯å¸§åŒæ­¥å‚æ•°ï¼ˆSlider æ‹–åŠ¨æ—¶å®æ—¶åæ˜ ï¼‰
         VFXClipInspectorPanel.ApplyVFXData(rvfx.go, data);
 
-        // µ¥´Î²¥·Å£ºÁ£×Ó²¥ÍêºóÍ£Ö¹·¢Éä£¨µ« GO ±£³Ö¼¤»îµ½ clip ½áÊø£©
+        // å•æ¬¡æ’­æ”¾ï¼šç²’å­æ’­å®Œååœæ­¢å‘å°„ï¼ˆä½† GO ä¿æŒæ¿€æ´»åˆ° clip ç»“æŸï¼‰
         if (!data.loop && rvfx.ps != null && !rvfx.ps.IsAlive())
         {
             rvfx.ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
@@ -160,7 +160,10 @@ public class VFXPlaybackSystem : MonoBehaviour
     }
 
     // ==========================================
-    // ¹Ø±Õ VFX
+    // å…³é—­ VFX
+    // ==========================================
+    // ==========================================
+    // ä¼˜é›…å…³é—­ VFXï¼šä¸å†ç¬é—´éšè—ï¼Œè€Œæ˜¯åœæ­¢å‘å°„å¹¶ç­‰å¾…è‡ªç„¶æ¶ˆæ•£
     // ==========================================
     private void DeactivateVFX(TimelineEventData evt, RuntimeVFX rvfx)
     {
@@ -169,30 +172,75 @@ public class VFXPlaybackSystem : MonoBehaviour
         if (rvfx.wasActive)
         {
             if (rvfx.ps != null)
-                rvfx.ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            {
+                // ã€æ ¸å¿ƒä¿®æ”¹ã€‘ï¼šä¸å†ä½¿ç”¨ StopEmittingAndClear
+                // ä»…ä»…åœæ­¢å‘å°„æ–°ç²’å­ï¼Œè®©ç©ºä¸­çš„è€ç²’å­è‡ªç„¶é£˜å®Œ
+                rvfx.ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+            }
 
-            rvfx.go.SetActive(false);
+            // ã€æ ¸å¿ƒä¿®æ”¹ã€‘ï¼šæŠŠè¿™è¡Œæ³¨é‡Šæ‰ï¼
+            // rvfx.go.SetActive(false); 
+            // ä¸ºä»€ä¹ˆï¼Ÿå› ä¸ºæˆ‘ä»¬åœ¨ç²’å­ç³»ç»Ÿçš„ Stop Action é‡Œè®¾ç½®äº† Disableã€‚
+            // å½“è€ç²’å­å…¨éƒ¨æ­»å…‰åï¼ŒUnity ä¼šè‡ªåŠ¨å¸®æˆ‘ä»¬æ‰§è¡Œ SetActive(false)ï¼
+
             rvfx.wasActive = false;
         }
     }
 
     // ==========================================
-    // Í¬²½¶ÔÏó³Ø£ºĞÂ Clip ´´½¨ GO£¬É¾³ıµÄ Clip Ïú»Ù GO
+    // åŒæ­¥å¯¹è±¡æ± ï¼šæ–° Clip åˆ›å»º GOï¼Œåˆ é™¤çš„ Clip é”€æ¯ GO
+    // ==========================================
+    // ==========================================
+    // åŒæ­¥å¯¹è±¡æ± ï¼šå¸¦ç»ˆæ Debug è¿½è¸ªç‰ˆ
     // ==========================================
     public void RebuildPool()
     {
-        if (timeline?.allEvents == null) return;
+        if (timeline == null)
+        {
+            Debug.Log("<color=red>[VFX è¿½è¸ª] å¤±è´¥ï¼šTimelineManager å¼•ç”¨ä¸ºç©ºï¼</color>");
+            return;
+        }
+        if (timeline.allEvents == null) return;
 
-        // ĞÂÔö
         foreach (var evt in timeline.allEvents)
         {
-            if (!(evt.customData is VFXClipData data)) continue;
-            if (pool.ContainsKey(evt) && pool[evt].go != null) continue;
+            // è¿‡æ»¤æ‰é VFX è½¨é“çš„æ–¹å—ï¼ˆæ¯”å¦‚ç¯å…‰å’Œç›¸æœºï¼Œä¸æ‰“æ‰°å®ƒä»¬ï¼‰
+            string trackNameCheck = GetTrackName(evt.trackIndex);
+            if (!trackNameCheck.Contains("VFX")) continue;
+
+            Debug.Log($"<color=cyan>[VFX è¿½è¸ª 1] å‘ç° VFX è½¨é“ä¸Šçš„æ–¹å—: {evt.eventName}</color>");
+
+            if (evt.customData == null)
+            {
+                Debug.Log($"<color=yellow>[VFX è¿½è¸ª 2] æ–¹å— {evt.eventName} çš„èƒŒåŒ…æ˜¯ç©ºçš„ï¼(ä½ å¯èƒ½è¿˜æ²¡ç‚¹å‡»å®ƒï¼Œæˆ–è€… Inspector æ²¡æŒ‚å¯¹)</color>");
+                continue;
+            }
+
+            if (!(evt.customData is VFXClipData data))
+            {
+                Debug.Log($"<color=yellow>[VFX è¿½è¸ª 2.5] æ–¹å—çš„èƒŒåŒ…é‡Œä¸æ˜¯ VFXClipDataï¼Œè€Œæ˜¯ {evt.customData.GetType()}ï¼</color>");
+                continue;
+            }
+
+            if (pool.ContainsKey(evt) && pool[evt].go != null) continue; // å·²ç»ç”Ÿæˆè¿‡äº†
 
             string trackName = GetTrackName(evt.trackIndex);
-            VFXEntry entry = FindEntry(trackName);
-            if (entry?.prefab == null) continue;
+            Debug.Log($"<color=orange>[VFX è¿½è¸ª 3] æå–åˆ°è¯¥æ–¹å—çš„è½¨é“å: '{trackName}'</color>");
 
+            VFXEntry entry = FindEntry(trackName);
+            if (entry == null)
+            {
+                Debug.Log($"<color=red>[VFX è¿½è¸ª 4] å¤±è´¥ï¼šåœ¨ VFX Entries åˆ—è¡¨é‡Œï¼Œæ‰¾ä¸åˆ°å’Œ '{trackName}' åŒ¹é…çš„é…ç½®ï¼</color>");
+                continue;
+            }
+
+            if (entry.prefab == null)
+            {
+                Debug.Log($"<color=red>[VFX è¿½è¸ª 5] å¤±è´¥ï¼šæ‰¾åˆ°äº†åä¸º '{trackName}' çš„é…ç½®ï¼Œä½†æ˜¯å®ƒçš„ Prefab æ§½ä½æ˜¯ç©ºçš„ï¼</color>");
+                continue;
+            }
+
+            // é—¯å…³æˆåŠŸï¼Œå¼€å§‹ç”Ÿæˆ
             GameObject go = Instantiate(entry.prefab, vfxContainer);
             go.name = $"{evt.eventName}_{evt.trackIndex}_VFX";
             go.SetActive(false);
@@ -206,9 +254,11 @@ public class VFXPlaybackSystem : MonoBehaviour
             pool[evt] = rvfx;
             data.runtimeInstance = go;
             data.vfxPrefabName = entry.prefab.name;
+
+            Debug.Log($"<color=green>[VFX è¿½è¸ª 6] ğŸ‰ æˆåŠŸç”Ÿæˆç‰¹æ•ˆå®ä¾‹ï¼š{go.name} !</color>");
         }
 
-        // ÇåÀíÒÑÉ¾³ıµÄ Clip
+        // æ¸…ç†å·²åˆ é™¤çš„ Clip (ç•¥å» debug)
         var toRemove = new List<TimelineEventData>();
         foreach (var kvp in pool)
         {
@@ -222,7 +272,7 @@ public class VFXPlaybackSystem : MonoBehaviour
     }
 
     // ==========================================
-    // ¹¤¾ß
+    // å·¥å…·
     // ==========================================
     private string GetTrackName(int trackIndex)
     {
@@ -239,7 +289,7 @@ public class VFXPlaybackSystem : MonoBehaviour
         return null;
     }
 
-    // ¹©Íâ²¿£¨ĞÂ½¨ Clip ºó£©µ÷ÓÃÁ¢¼´Ë¢ĞÂ
+    // ä¾›å¤–éƒ¨ï¼ˆæ–°å»º Clip åï¼‰è°ƒç”¨ç«‹å³åˆ·æ–°
     public void ForceRefresh()
     {
         lastCheckedTime = -999f;

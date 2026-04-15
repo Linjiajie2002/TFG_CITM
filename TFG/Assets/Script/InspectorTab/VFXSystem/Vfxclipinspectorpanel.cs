@@ -1,80 +1,80 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 // ==========================================
-// VFX Clip Inspector Ãæ°å ¡ª »ùÀà
+// VFX Clip Inspector é¢æ¿ â€” åŸºç±»
 //
-// ¡¾À©Õ¹·½·¨¡¿£º
-//   ĞÂ½¨Àà¼Ì³Ğ±¾Àà£¬ÖØĞ´ÕâÈı¸öĞé·½·¨¼´¿É¼ÓÈëÌØÓĞÂß¼­£º
-//     protected virtual void OnBindExtra()       ¡ú °ó¶¨Ê±³õÊ¼»¯¶îÍâ Slider/Toggle
-//     protected virtual void OnDataChangedExtra()¡ú Êı¾İ±ä»¯Ê±Ë¢ĞÂ¶îÍâ²ÎÊı
-//     protected virtual void OnRefreshExtra()    ¡ú RefreshDisplay Ê±Ë¢ĞÂ¶îÍâ UI
+// ã€æ‰©å±•æ–¹æ³•ã€‘ï¼š
+//   æ–°å»ºç±»ç»§æ‰¿æœ¬ç±»ï¼Œé‡å†™è¿™ä¸‰ä¸ªè™šæ–¹æ³•å³å¯åŠ å…¥ç‰¹æœ‰é€»è¾‘ï¼š
+//     protected virtual void OnBindExtra()       â†’ ç»‘å®šæ—¶åˆå§‹åŒ–é¢å¤– Slider/Toggle
+//     protected virtual void OnDataChangedExtra()â†’ æ•°æ®å˜åŒ–æ—¶åˆ·æ–°é¢å¤–å‚æ•°
+//     protected virtual void OnRefreshExtra()    â†’ RefreshDisplay æ—¶åˆ·æ–°é¢å¤– UI
 //
-// Ô¤ÖÆÌå½á¹¹£¨ClipPanel_VFX_Base£©£º
-//   ©À©¤©¤ Header (clipNameText + deleteButton + backButton)
-//   ©À©¤©¤ TimeInfo (startTimeText + durationText + endTimeText)
-//   ©À©¤©¤ Section_Position
-//   ©¦   ©À©¤©¤ Row_X ¡ú Slider + Text
-//   ©¦   ©À©¤©¤ Row_Y ¡ú Slider + Text
-//   ©¦   ©¸©¤©¤ Row_Z ¡ú Slider + Text
-//   ©À©¤©¤ Section_Rotation
-//   ©¦   ©À©¤©¤ Row_X ¡ú Slider + Text
-//   ©¦   ©À©¤©¤ Row_Y ¡ú Slider + Text
-//   ©¦   ©¸©¤©¤ Row_Z ¡ú Slider + Text
-//   ©À©¤©¤ Section_Scale
-//   ©¦   ©À©¤©¤ Row_X ¡ú Slider + Text
-//   ©¦   ©À©¤©¤ Row_Y ¡ú Slider + Text
-//   ©¦   ©¸©¤©¤ Row_Z ¡ú Slider + Text
-//   ©À©¤©¤ Section_Color
-//   ©¦   ©¸©¤©¤ ColorPickerPanel
-//   ©À©¤©¤ Section_Playback
-//   ©¦   ©À©¤©¤ Row_Speed ¡ú Slider(sliderSpeed) + Text(speedValueText)
-//   ©¦   ©¸©¤©¤ Row_Loop  ¡ú Toggle(toggleLoop) + Label "Ñ­»·²¥·Å"
-//   ©¸©¤©¤ Extra_Content (¿ÕÈİÆ÷£¬×ÓÀàµÄ¶îÍâ UI ·ÅÕâÀï)
+// é¢„åˆ¶ä½“ç»“æ„ï¼ˆClipPanel_VFX_Baseï¼‰ï¼š
+//   â”œâ”€â”€ Header (clipNameText + deleteButton + backButton)
+//   â”œâ”€â”€ TimeInfo (startTimeText + durationText + endTimeText)
+//   â”œâ”€â”€ Section_Position
+//   â”‚   â”œâ”€â”€ Row_X â†’ Slider + Text
+//   â”‚   â”œâ”€â”€ Row_Y â†’ Slider + Text
+//   â”‚   â””â”€â”€ Row_Z â†’ Slider + Text
+//   â”œâ”€â”€ Section_Rotation
+//   â”‚   â”œâ”€â”€ Row_X â†’ Slider + Text
+//   â”‚   â”œâ”€â”€ Row_Y â†’ Slider + Text
+//   â”‚   â””â”€â”€ Row_Z â†’ Slider + Text
+//   â”œâ”€â”€ Section_Scale
+//   â”‚   â”œâ”€â”€ Row_X â†’ Slider + Text
+//   â”‚   â”œâ”€â”€ Row_Y â†’ Slider + Text
+//   â”‚   â””â”€â”€ Row_Z â†’ Slider + Text
+//   â”œâ”€â”€ Section_Color
+//   â”‚   â””â”€â”€ ColorPickerPanel
+//   â”œâ”€â”€ Section_Playback
+//   â”‚   â”œâ”€â”€ Row_Speed â†’ Slider(sliderSpeed) + Text(speedValueText)
+//   â”‚   â””â”€â”€ Row_Loop  â†’ Toggle(toggleLoop) + Label "å¾ªç¯æ’­æ”¾"
+//   â””â”€â”€ Extra_Content (ç©ºå®¹å™¨ï¼Œå­ç±»çš„é¢å¤– UI æ”¾è¿™é‡Œ)
 // ==========================================
 public class VFXClipInspectorPanel : ClipInspectorPanel
 {
-    // ©¤©¤©¤ Position ©¤©¤©¤
+    // â”€â”€â”€ Position â”€â”€â”€
     [Header("=== Position ===")]
     public Slider sliderPosX, sliderPosY, sliderPosZ;
     public TextMeshProUGUI posXText, posYText, posZText;
 
-    [Header("Position ·¶Î§")]
+    [Header("Position èŒƒå›´")]
     public float posXMin = -20f; public float posXMax = 20f;
     public float posYMin = -5f; public float posYMax = 15f;
     public float posZMin = -20f; public float posZMax = 20f;
 
-    // ©¤©¤©¤ Rotation ©¤©¤©¤
+    // â”€â”€â”€ Rotation â”€â”€â”€
     [Header("=== Rotation ===")]
     public Slider sliderRotX, sliderRotY, sliderRotZ;
     public TextMeshProUGUI rotXText, rotYText, rotZText;
 
-    [Header("Rotation ·¶Î§")]
+    [Header("Rotation èŒƒå›´")]
     public float rotMin = 0f; public float rotMax = 360f;
 
-    // ©¤©¤©¤ Scale ©¤©¤©¤
+    // â”€â”€â”€ Scale â”€â”€â”€
     [Header("=== Scale ===")]
     public Slider sliderScaleX, sliderScaleY, sliderScaleZ;
     public TextMeshProUGUI scaleXText, scaleYText, scaleZText;
 
-    [Header("Scale ·¶Î§")]
+    [Header("Scale èŒƒå›´")]
     public float scaleMin = 0.1f; public float scaleMax = 5f;
 
-    // ©¤©¤©¤ Color ©¤©¤©¤
+    // â”€â”€â”€ Color â”€â”€â”€
     [Header("=== Color ===")]
     public ColorPickerPanel colorPicker;
 
-    // ©¤©¤©¤ Playback ©¤©¤©¤
+    // â”€â”€â”€ Playback â”€â”€â”€
     [Header("=== Playback ===")]
     public Slider sliderSpeed;
     public TextMeshProUGUI speedValueText;
     public Toggle toggleLoop;
 
-    [Header("PlaySpeed ·¶Î§")]
+    [Header("PlaySpeed èŒƒå›´")]
     public float speedMin = 0.1f; public float speedMax = 3f;
 
-    // ÄÚ²¿
+    // å†…éƒ¨
     protected VFXClipData vfxData;
     private bool isReady = false;
 
@@ -86,13 +86,13 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
     {
         base.BindClip(clip, mgr);
 
-        // È¡³ö»òĞÂ½¨ VFXClipData£¨×ÓÀà¿ÉÒÔ new ³ö×Ô¼ºµÄ×ÓÀàĞÍ£©
+        // å–å‡ºæˆ–æ–°å»º VFXClipDataï¼ˆå­ç±»å¯ä»¥ new å‡ºè‡ªå·±çš„å­ç±»å‹ï¼‰
         vfxData = clip.customData as VFXClipData ?? CreateData();
         if (clip.customData == null) clip.customData = vfxData;
 
         SyncRangesToData();
 
-        // ³õÊ¼»¯ËùÓĞ Slider
+        // åˆå§‹åŒ–æ‰€æœ‰ Slider
         InitSlider(sliderPosX, posXMin, posXMax, vfxData.posX);
         InitSlider(sliderPosY, posYMin, posYMax, vfxData.posY);
         InitSlider(sliderPosZ, posZMin, posZMax, vfxData.posZ);
@@ -119,7 +119,7 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
         isReady = true;
         RegisterListeners();
 
-        // ×ÓÀà¶îÍâ°ó¶¨
+        // å­ç±»é¢å¤–ç»‘å®š
         OnBindExtra();
 
         RefreshDisplay();
@@ -136,23 +136,23 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
     }
 
     // ==========================================
-    // ×ÓÀàÖØĞ´ÇøÓò
+    // å­ç±»é‡å†™åŒºåŸŸ
     // ==========================================
 
-    // ×ÓÀà¿ÉÒÔ·µ»Ø×Ô¼ºµÄÊı¾İÀàĞÍ£¨¼Ì³Ğ VFXClipData ¼´¿É£©
+    // å­ç±»å¯ä»¥è¿”å›è‡ªå·±çš„æ•°æ®ç±»å‹ï¼ˆç»§æ‰¿ VFXClipData å³å¯ï¼‰
     protected virtual VFXClipData CreateData() => new VFXClipData();
 
-    // ×ÓÀàÔÚÕâÀï°ó¶¨¶îÍâµÄ Slider / Toggle
+    // å­ç±»åœ¨è¿™é‡Œç»‘å®šé¢å¤–çš„ Slider / Toggle
     protected virtual void OnBindExtra() { }
 
-    // Êı¾İ±ä»¯Ê±×ÓÀà¶îÍâ´¦Àí
+    // æ•°æ®å˜åŒ–æ—¶å­ç±»é¢å¤–å¤„ç†
     protected virtual void OnDataChangedExtra() { }
 
-    // RefreshDisplay Ê±×ÓÀà¶îÍâË¢ĞÂ
+    // RefreshDisplay æ—¶å­ç±»é¢å¤–åˆ·æ–°
     protected virtual void OnRefreshExtra() { }
 
     // ==========================================
-    // ËùÓĞ Slider ¼àÌı×¢²á
+    // æ‰€æœ‰ Slider ç›‘å¬æ³¨å†Œ
     // ==========================================
     private void RegisterListeners()
     {
@@ -181,7 +181,7 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
     }
 
     // ==========================================
-    // ¸üĞÂÎÄ×Ö±êÇ©
+    // æ›´æ–°æ–‡å­—æ ‡ç­¾
     // ==========================================
     private void UpdateLabels()
     {
@@ -189,9 +189,9 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
         SetLabel(posXText, $"{vfxData.posX:F1}");
         SetLabel(posYText, $"{vfxData.posY:F1}");
         SetLabel(posZText, $"{vfxData.posZ:F1}");
-        SetLabel(rotXText, $"{vfxData.rotX:F0}¡ã");
-        SetLabel(rotYText, $"{vfxData.rotY:F0}¡ã");
-        SetLabel(rotZText, $"{vfxData.rotZ:F0}¡ã");
+        SetLabel(rotXText, $"{vfxData.rotX:F0}Â°");
+        SetLabel(rotYText, $"{vfxData.rotY:F0}Â°");
+        SetLabel(rotZText, $"{vfxData.rotZ:F0}Â°");
         SetLabel(scaleXText, $"{vfxData.scaleX:F2}");
         SetLabel(scaleYText, $"{vfxData.scaleY:F2}");
         SetLabel(scaleZText, $"{vfxData.scaleZ:F2}");
@@ -201,7 +201,7 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
     private void SetLabel(TextMeshProUGUI t, string s) { if (t != null) t.text = s; }
 
     // ==========================================
-    // °ÑÊı¾İÊµÊ±Ó¦ÓÃµ½ÔËĞĞÊ± VFX ÊµÀı£¨Edit Ä£Ê½Ô¤ÀÀ£©
+    // æŠŠæ•°æ®å®æ—¶åº”ç”¨åˆ°è¿è¡Œæ—¶ VFX å®ä¾‹ï¼ˆEdit æ¨¡å¼é¢„è§ˆï¼‰
     // ==========================================
     private void ApplyToRuntime()
     {
@@ -209,7 +209,7 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
         ApplyVFXData(vfxData.runtimeInstance, vfxData);
     }
 
-    // ¾²Ì¬¹¤¾ß£º¹© VFXPlaybackSystem Ò²µ÷ÓÃ
+    // é™æ€å·¥å…·ï¼šä¾› VFXPlaybackSystem ä¹Ÿè°ƒç”¨
     public static void ApplyVFXData(GameObject go, VFXClipData data)
     {
         if (go == null || data == null) return;
@@ -227,7 +227,7 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
             main.loop = data.loop;
             main.startColor = new ParticleSystem.MinMaxGradient(data.color);
 
-            // Èç¹û ps ÒÑ¾­Í£Ö¹µ« clip ÄÚÒªÇóÑ­»·£¬ÖØĞÂ²¥·Å
+            // å¦‚æœ ps å·²ç»åœæ­¢ä½† clip å†…è¦æ±‚å¾ªç¯ï¼Œé‡æ–°æ’­æ”¾
             if (data.loop && !ps.isPlaying) ps.Play();
         }
 
@@ -237,7 +237,7 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
         if (vfxGraph != null)
         {
             vfxGraph.playRate = data.playSpeed;
-            // ÑÕÉ«ĞèÒªÔÚ VFX Graph Àï±©Â¶ "Color" ÊôĞÔ
+            // é¢œè‰²éœ€è¦åœ¨ VFX Graph é‡Œæš´éœ² "Color" å±æ€§
             if (vfxGraph.HasVector4("Color"))
                 vfxGraph.SetVector4("Color", data.color);
         }
@@ -245,7 +245,7 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
     }
 
     // ==========================================
-    // Slider ¹¤¾ß
+    // Slider å·¥å…·
     // ==========================================
     private void InitSlider(Slider s, float min, float max, float val)
     {

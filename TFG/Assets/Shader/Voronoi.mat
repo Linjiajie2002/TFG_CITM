@@ -59,8 +59,8 @@ Material:
     - _VignetteRadiusPower: 15
     - _VoronoiPower: 3
     - _VoronoiScale: 100
-    - _VoronoiSpeed: 3.6680856
+    - _VoronoiSpeed: 3
     m_Colors:
-    - _Color: {r: 1, g: 0, b: 0, a: 0.0035297393}
+    - _Color: {r: 0.92686176, g: 0, b: 1, a: 0.0048006056}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

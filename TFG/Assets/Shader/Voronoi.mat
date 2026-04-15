@@ -42,7 +42,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _Float: 10
-    - _FullIntensity: 1
+    - _FullIntensity: 0
     - _FullscreenIntensity: 0
     - _Fullscreen_AlphaBlendOperation: 0
     - _Fullscreen_BlendMode: 1
@@ -59,8 +59,8 @@ Material:
     - _VignetteRadiusPower: 15
     - _VoronoiPower: 3
     - _VoronoiScale: 100
-    - _VoronoiSpeed: 3
+    - _VoronoiSpeed: 3.6680856
     m_Colors:
-    - _Color: {r: 0.2, g: 0.5, b: 1, a: 1}
+    - _Color: {r: 1, g: 0, b: 0, a: 0.0035297393}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

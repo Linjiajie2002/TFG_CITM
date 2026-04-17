@@ -106,13 +106,35 @@ public class TimelineManager : MonoBehaviour
         BakeRootMotion(danceName, totalDuration); DeselectAll();
     }
 
-    public void AddDynamicTrack(string name, float duration, bool allowOverlap)
+    public void AddDynamicTrackSilent(string name, float duration, bool allowOverlap = true)
     {
-        int idx = trackCount++;
+        int newTrackIndex = trackCount++;
         ResizeContent();
-        CreateTrackHeader(name, idx, allowOverlap);
-        if (playheadSlider != null) { playheadSlider.transform.SetAsLastSibling(); var sliderRt = playheadSlider.GetComponent<RectTransform>(); sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f); }
-        SelectTrack(idx);
+        CreateTrackHeader(name, newTrackIndex, allowOverlap); // ← 加第三个参数
+
+        if (playheadSlider != null)
+        {
+            playheadSlider.transform.SetAsLastSibling();
+            var sliderRt = playheadSlider.GetComponent<RectTransform>();
+            sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f);
+        }
+        // 静默建轨道，不调用 SelectTrack
+    }
+
+    public void AddDynamicTrack(string name, float duration, bool allowOverlap = true)
+    {
+        int newTrackIndex = trackCount++;
+        ResizeContent();
+        CreateTrackHeader(name, newTrackIndex, allowOverlap);
+
+        if (playheadSlider != null)
+        {
+            playheadSlider.transform.SetAsLastSibling();
+            var sliderRt = playheadSlider.GetComponent<RectTransform>();
+            sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f);
+        }
+
+        SelectTrack(newTrackIndex); // 建完自动选中（非静默版）
     }
 
     // ==========================================

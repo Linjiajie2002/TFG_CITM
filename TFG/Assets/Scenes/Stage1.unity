@@ -35986,13 +35986,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1310876013}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.007, y: 0.8, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1944301600}
-  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1312090831
 GameObject:
   m_ObjectHideFlags: 0
@@ -51536,6 +51536,10 @@ MonoBehaviour:
   editorCamera: {fileID: 279623693}
   concertCanvas: {fileID: 0}
   audienceCamera: {fileID: 479811859}
+  danceRotationYOffsets:
+  - 220
+  - 180
+  - -90
   timelineManager: {fileID: 389238167}
 --- !u!4 &1944301600
 Transform:

@@ -1,29 +1,33 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class PerformanceEndManager : MonoBehaviour
 {
-    [Header("=== ¼àÌıÄ¿±ê ===")]
+    [Header("=== ç›‘å¬ç›®æ ‡ ===")]
     public AudioSource musicSource;
 
-    [Header("=== UI ÒıÓÃ ===")]
+    [Header("=== UI å¼•ç”¨ ===")]
     public GameObject endScreenPanel;
+
+    [Tooltip("ç‚¹å‡»è¿™ä¸ªæŒ‰é’®ä¼šå½»åº•å…³é—­æ¸¸æˆè½¯ä»¶")]
     public Button manualExitButton;
+
+    [Tooltip("ç‚¹å‡»è¿™ä¸ªæŒ‰é’®ä¼šé€€å›åˆ°ä¸»èœå•")]
     public Button endScreenReturnButton;
 
-    [Header("=== ³¡¾°Ìø×ªÅäÖÃ ===")]
+    [Header("=== åœºæ™¯è·³è½¬é…ç½® ===")]
     public string menuSceneName = "MainMenu";
 
     private bool isPerformanceModeActive = false;
     private bool hasTriggeredEnd = false;
 
-    // ¼ÇÂ¼Ôø¾­µ½´ï¹ıµÄ×î¸ßÊ±¼ä£¬·À Timeline µ¹´ø
+    // è®°å½•æ›¾ç»åˆ°è¾¾è¿‡çš„æœ€é«˜æ—¶é—´ï¼Œé˜² Timeline å€’å¸¦
     private float highestTimeReached = 0f;
 
     void Start()
     {
-        // ×Ô¶¯Ñ°Â·£ºÈç¹ûÃ»ÍÏÃæ°å£¬×Ô¶¯È«Í¼ËÑ²¶ÃûÎª "EndPanel" µÄÎïÌå
+        // è‡ªåŠ¨å¯»è·¯ï¼šå¦‚æœæ²¡æ‹–é¢æ¿ï¼Œè‡ªåŠ¨å…¨å›¾æœæ•åä¸º "EndPanel" çš„ç‰©ä½“
         if (endScreenPanel == null)
         {
             Transform[] allTransforms = Resources.FindObjectsOfTypeAll<Transform>();
@@ -32,7 +36,7 @@ public class PerformanceEndManager : MonoBehaviour
                 if (t.gameObject.scene.isLoaded && t.name.ToLower().Contains("endpanel"))
                 {
                     endScreenPanel = t.gameObject;
-                    Debug.Log("¡¾PerformanceEndManager¡¿×Ô¶¯×¥È¡³É¹¦£ºÕÒµ½ÁË½áÊøÃæ°å " + t.name);
+                    Debug.Log("ã€PerformanceEndManagerã€‘è‡ªåŠ¨æŠ“å–æˆåŠŸï¼šæ‰¾åˆ°äº†ç»“æŸé¢æ¿ " + t.name);
                     break;
                 }
             }
@@ -41,9 +45,11 @@ public class PerformanceEndManager : MonoBehaviour
         if (endScreenPanel != null)
             endScreenPanel.SetActive(false);
 
+        // ğŸŒŸ ã€æ ¸å¿ƒä¿®æ”¹ã€‘ï¼šæŠŠé€€å‡ºæŒ‰é’®ç»‘å®šåˆ°æ–°å†™çš„é€€å‡ºæ¸¸æˆä¸“ç”¨æ–¹æ³•ä¸Šï¼
         if (manualExitButton != null)
-            manualExitButton.onClick.AddListener(ReturnToMenu);
+            manualExitButton.onClick.AddListener(QuitGame);
 
+        // è¿”å›æŒ‰é’®ä¾ç„¶ç»‘å®šåˆ°é€€å›ä¸»èœå•
         if (endScreenReturnButton != null)
             endScreenReturnButton.onClick.AddListener(ReturnToMenu);
     }
@@ -62,11 +68,11 @@ public class PerformanceEndManager : MonoBehaviour
             isPerformanceModeActive = true;
             hasTriggeredEnd = false;
             highestTimeReached = 0f;
-            Debug.Log($"¡¾PerformanceEndManager¡¿Ñİ³öÄ£Ê½ÒÑ¼¤»î£¡Ä¿±êÒôÀÖ×ÜÊ±³¤: {musicSource.clip.length} Ãë");
+            Debug.Log($"ã€PerformanceEndManagerã€‘æ¼”å‡ºæ¨¡å¼å·²æ¿€æ´»ï¼ç›®æ ‡éŸ³ä¹æ€»æ—¶é•¿: {musicSource.clip.length} ç§’");
         }
         else
         {
-            Debug.LogError("¡¾PerformanceEndManager¡¿¼¤»îÊ§°Ü£¡Ã»ÓĞÕÒµ½¿ÉÓÃµÄ AudioSource£¡");
+            Debug.LogError("ã€PerformanceEndManagerã€‘æ¿€æ´»å¤±è´¥ï¼æ²¡æœ‰æ‰¾åˆ°å¯ç”¨çš„ AudioSourceï¼");
         }
     }
 
@@ -80,12 +86,12 @@ public class PerformanceEndManager : MonoBehaviour
             highestTimeReached = musicSource.time;
         }
 
-        // ÌáÇ° 0.3 ÃëÀ¹½Ø
+        // æå‰ 0.3 ç§’æ‹¦æˆª
         float triggerThreshold = musicSource.clip.length - 0.3f;
 
         if (musicSource.time >= triggerThreshold || highestTimeReached >= triggerThreshold)
         {
-            Debug.Log($"¡¾PerformanceEndManager¡¿³É¹¦½Ø»ñÒôÀÖ½áÊøĞÅºÅ£¡µ±Ç°Ê±¼ä: {musicSource.time}, ×î¸ß¼ÇÂ¼Ê±¼ä: {highestTimeReached}");
+            Debug.Log($"ã€PerformanceEndManagerã€‘æˆåŠŸæˆªè·éŸ³ä¹ç»“æŸä¿¡å·ï¼å½“å‰æ—¶é—´: {musicSource.time}, æœ€é«˜è®°å½•æ—¶é—´: {highestTimeReached}");
             TriggerEndScreen();
         }
     }
@@ -97,28 +103,48 @@ public class PerformanceEndManager : MonoBehaviour
 
         if (endScreenPanel != null)
         {
-            Debug.Log("¡¾PerformanceEndManager¡¿¼´½«µ¯³ö½áÊøÃæ°å£¡");
+            Debug.Log("ã€PerformanceEndManagerã€‘å³å°†å¼¹å‡ºç»“æŸé¢æ¿ï¼");
             endScreenPanel.SetActive(true);
         }
         else
         {
-            Debug.LogWarning("¡¾PerformanceEndManager¡¿¾¯¸æ£ºÃ»ÕÒµ½ End Screen Panel£¬Ö±½ÓÖ´ĞĞÍË»Ø²Ëµ¥²Ù×÷£¡");
+            Debug.LogWarning("ã€PerformanceEndManagerã€‘è­¦å‘Šï¼šæ²¡æ‰¾åˆ° End Screen Panelï¼Œç›´æ¥æ‰§è¡Œé€€å›èœå•æ“ä½œï¼");
             ReturnToMenu();
         }
     }
 
+    // ==========================================
+    // é€€å›ä¸»èœå•
+    // ==========================================
     public void ReturnToMenu()
     {
         Time.timeScale = 1f;
 
         if (!string.IsNullOrEmpty(menuSceneName))
         {
-            Debug.Log($"¡¾PerformanceEndManager¡¿ÕıÔÚ¼ÓÔØ³¡¾°£º{menuSceneName}");
+            Debug.Log($"ã€PerformanceEndManagerã€‘æ­£åœ¨åŠ è½½åœºæ™¯ï¼š{menuSceneName}");
             SceneManager.LoadScene(menuSceneName);
         }
         else
         {
-            Debug.LogError("¡¾PerformanceEndManager¡¿±¨´í£º³¡¾°Ãû×ÖÎª¿Õ£¬ÎŞ·¨Ìø×ª£¡");
+            Debug.LogError("ã€PerformanceEndManagerã€‘æŠ¥é”™ï¼šåœºæ™¯åå­—ä¸ºç©ºï¼Œæ— æ³•è·³è½¬ï¼");
         }
+    }
+
+    // ==========================================
+    // ğŸŒŸ å½»åº•é€€å‡ºè½¯ä»¶/æ¸¸æˆ
+    // ==========================================
+    public void QuitGame()
+    {
+        Debug.Log("ã€PerformanceEndManagerã€‘æ‰§è¡Œé€€å‡ºè½¯ä»¶æŒ‡ä»¤ï¼");
+
+        // æ ¸å¿ƒä»£ç ï¼šåœ¨æ‰“åŒ…å‡ºçš„æ­£å¼æ¸¸æˆé‡Œï¼Œè¿™è¡Œä»£ç ä¼šç›´æ¥æ€æ‰æ¸¸æˆè¿›ç¨‹
+        Application.Quit();
+
+        // è´´å¿ƒå°è¡¥ä¸ï¼šåœ¨ Unity ç¼–è¾‘å™¨é‡Œæµ‹è¯•æ—¶ï¼ŒApplication.Quit() é»˜è®¤æ˜¯æ²¡ååº”çš„ã€‚
+        // åŠ ä¸Šä¸‹é¢è¿™å‡ å¥ï¼Œèƒ½è®©å®ƒåœ¨ç¼–è¾‘å™¨é‡Œä¹Ÿå¼ºåˆ¶åœæ­¢æ’­æ”¾ï¼Œæ–¹ä¾¿ä½ æµ‹è¯•ï¼
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
     }
 }

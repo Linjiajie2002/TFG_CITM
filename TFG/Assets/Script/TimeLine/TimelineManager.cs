@@ -37,6 +37,9 @@ public class TimelineManager : MonoBehaviour
     [Header("=== 模块系统 ===")]
     public DynamicModuleSystem moduleSystem;
 
+    [Header("=== VFX 系统（用于 Clip 删除时立即清理）===")]
+    public VFXPlaybackSystem vfxPlaybackSystem;
+
     [HideInInspector] public int selectedTrackIndex = -1;
     [HideInInspector] public TimelineEventData selectedClip = null;
 
@@ -327,7 +330,19 @@ public class TimelineManager : MonoBehaviour
     public void SelectClip(TimelineEventData clip) { if (clip == null) return; SetClipColor(selectedClip, defaultClipColor); selectedClip = clip; SetClipColor(clip, selectedClipColor); SetHeaderColor(selectedTrackIndex, defaultHeaderColor); selectedTrackIndex = clip.trackIndex; SetHeaderColor(selectedTrackIndex, highlightColor); TrackData track = allTracks.Find(t => t.trackIndex == clip.trackIndex); if (track != null && moduleSystem != null) moduleSystem.ShowInspector(track.trackName); HideAllClipPanels(); if (clip.inspectorPanel != null) clip.inspectorPanel.SetActive(true); var panel = clip.inspectorPanel?.GetComponent<ClipInspectorPanel>(); if (panel != null) panel.RefreshDisplay(); if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null); }
     public void SelectTrack(int index, bool skipTabSync = false) { if (index < 0) return; SetClipColor(selectedClip, defaultClipColor); selectedClip = null; HideAllClipPanels(); SetHeaderColor(selectedTrackIndex, defaultHeaderColor); selectedTrackIndex = index; SetHeaderColor(selectedTrackIndex, highlightColor); if (!skipTabSync) { TrackData track = allTracks.Find(t => t.trackIndex == index); if (track != null && moduleSystem != null) moduleSystem.ShowInspector(track.trackName); } if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null); }
     public void HandleDeleteKey() { if (selectedClip != null) DeleteSelectedClip(); }
-    public void DeleteSelectedClip() { if (selectedClip == null) return; if (selectedClip.inspectorPanel != null) Destroy(selectedClip.inspectorPanel); if (selectedClip.clipObject != null) Destroy(selectedClip.clipObject); allEvents.Remove(selectedClip); selectedClip = null; if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null); }
+    public void DeleteSelectedClip()
+    {
+        if (selectedClip == null) return;
+
+        // 【新增】立即通知 VFX 系统销毁对应特效
+        vfxPlaybackSystem?.OnClipDeleted(selectedClip);
+
+        if (selectedClip.inspectorPanel != null) Destroy(selectedClip.inspectorPanel);
+        if (selectedClip.clipObject != null) Destroy(selectedClip.clipObject);
+        allEvents.Remove(selectedClip);
+        selectedClip = null;
+        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+    }
     public void DeleteSelectedTrack() { if (selectedTrackIndex < 0) return; int idx = selectedTrackIndex; var track = allTracks.Find(t => t.trackIndex == idx); if (track != null) { if (moduleSystem != null) moduleSystem.RestoreCover(track.trackName); if (track.headerObject != null) Destroy(track.headerObject); allTracks.Remove(track); } var toDelete = allEvents.FindAll(e => e.trackIndex == idx); foreach (var e in toDelete) { if (e.inspectorPanel != null) Destroy(e.inspectorPanel); if (e.clipObject != null) Destroy(e.clipObject); } allEvents.RemoveAll(e => e.trackIndex == idx); trackCount--; foreach (var t in allTracks) { if (t.trackIndex > idx) { t.trackIndex--; var btn = t.headerObject?.GetComponent<Button>(); if (btn != null) { int ni = t.trackIndex; btn.onClick.RemoveAllListeners(); btn.onClick.AddListener(() => SelectTrack(ni)); } } } foreach (var e in allEvents) { if (e.trackIndex > idx) e.trackIndex--; } selectedTrackIndex = -1; selectedClip = null; RefreshClipPositions(); ResizeContent(); if (moduleSystem != null) moduleSystem.ShowDefaultInspector(); if (allTracks.Count > 0 && moduleSystem?.tabManager != null) moduleSystem.tabManager.SwitchTab(0); }
     private void SetHeaderColor(int index, Color color) { if (index < 0) return; var t = allTracks.Find(x => x.trackIndex == index); if (t?.headerObject != null) { var img = t.headerObject.GetComponent<Image>(); if (img != null) img.color = color; } }
     private void SetClipColor(TimelineEventData clip, Color color) { if (clip?.clipObject == null) return; var img = clip.clipObject.GetComponent<Image>(); if (img != null) img.color = color; }
@@ -398,5 +413,17 @@ public class TimelineManager : MonoBehaviour
     }
     string FormatTime(float t) { int m = Mathf.FloorToInt(t / 60f), s = Mathf.FloorToInt(t % 60f), f = Mathf.Min(Mathf.FloorToInt((t % 1f) * bakeFPS), Mathf.FloorToInt(bakeFPS - 1)); return string.Format("{0:00}:{1:00}:{2:00}", m, s, f); }
     public void OnSliderDrag(float value) { }
-    public void TogglePlayPause() { if (musicSource == null || musicSource.clip == null) return; if (musicSource.isPlaying) musicSource.Pause(); else musicSource.Play(); }
+    public void TogglePlayPause()
+    {
+        if (musicSource == null || musicSource.clip == null) return;
+        if (musicSource.isPlaying)
+        {
+            musicSource.Pause();
+        }
+        else
+        {
+            musicSource.Play();
+            vfxPlaybackSystem?.OnPlayStarted(); // 【新增】播放开始时清空残留 VFX
+        }
+    }
 }

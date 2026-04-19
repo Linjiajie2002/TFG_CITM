@@ -5761,6 +5761,7 @@ MonoBehaviour:
   audienceOverlay: {fileID: 2094724165}
   cheerStick: {fileID: 1068479423}
   editUIRoot: {fileID: 0}
+  editUICanvasGroup: {fileID: 0}
 --- !u!1 &213968914
 GameObject:
   m_ObjectHideFlags: 0
@@ -10766,6 +10767,7 @@ MonoBehaviour:
   allEvents: []
   allTracks: []
   moduleSystem: {fileID: 211859215}
+  vfxPlaybackSystem: {fileID: 211859220}
   selectedTrackIndex: -1
   selectedClip:
     eventName: 

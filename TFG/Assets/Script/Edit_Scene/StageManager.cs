@@ -52,61 +52,66 @@ public class StageManager : MonoBehaviour
             {
                 currentDance = GameManager.Instance.danceStateNames[musicIndex];
             }
-
-            Debug.Log($"【StageManager】正在向时间轴发送数据... 舞蹈: {currentDance}");
             timelineManager.SetupDynamicTimeline(charAnimator, musicPlayer, currentDance);
-        }
-        else
-        {
-            Debug.LogError("【严重错误】StageManager 上的 Timeline Manager 槽位是空的！");
         }
     }
 
     public void EnterCustomizationMode()
     {
+        // 1. 切换界面
         if (customizationCanvas != null)
         {
             Canvas canvas = customizationCanvas.GetComponent<Canvas>();
             if (canvas != null) canvas.enabled = true;
             else customizationCanvas.SetActive(true);
         }
-
         if (concertCanvas != null) concertCanvas.SetActive(false);
-        if (editorCamera != null) editorCamera.gameObject.SetActive(true);
-        if (audienceCamera != null) audienceCamera.gameObject.SetActive(false);
 
-        if (musicPlayer != null) musicPlayer.Pause();
+        // 2. 告诉大管家退回待机模式
+        AudienceModeSystem audienceSys = FindObjectOfType<AudienceModeSystem>();
+        if (audienceSys != null)
+        {
+            audienceSys.StopEverything();
+        }
+        else
+        {
+            if (editorCamera != null) editorCamera.gameObject.SetActive(true);
+            if (audienceCamera != null) audienceCamera.gameObject.SetActive(false);
+            if (musicPlayer != null) musicPlayer.Pause();
+        }
     }
 
     public void StartConcert()
     {
+        // 1. 切换界面
         if (customizationCanvas != null)
         {
             Canvas canvas = customizationCanvas.GetComponent<Canvas>();
             if (canvas != null) canvas.enabled = false;
             else customizationCanvas.SetActive(false);
         }
-
         if (concertCanvas != null) concertCanvas.SetActive(true);
-        if (editorCamera != null) editorCamera.gameObject.SetActive(false);
 
-        // 开启观众相机
-        if (audienceCamera != null)
+        // 2. 呼叫大管家：动用 VIP 特权，直接开始正式演出！
+        AudienceModeSystem audienceSys = FindObjectOfType<AudienceModeSystem>();
+        if (audienceSys != null)
         {
-            audienceCamera.gameObject.SetActive(true);
-            // 【核心新增】：强制清空 Output Texture，确保画面输出到全屏！
-            audienceCamera.targetTexture = null;
+            audienceSys.PlayAsConcert();
         }
-
-        if (musicPlayer != null && musicPlayer.clip != null)
+        else
         {
-            musicPlayer.time = 0f;
-            musicPlayer.Play();
-
-            if (charAnimator != null) charAnimator.speed = 0f;
-
-            Debug.Log($"Concert Duration: {musicPlayer.clip.length} - 正在播放...");
+            if (editorCamera != null) editorCamera.gameObject.SetActive(false);
+            if (audienceCamera != null)
+            {
+                audienceCamera.gameObject.SetActive(true);
+                audienceCamera.targetTexture = null;
+            }
+            if (musicPlayer != null && musicPlayer.clip != null)
+            {
+                musicPlayer.time = 0f;
+                musicPlayer.Play();
+                if (charAnimator != null) charAnimator.speed = 0f;
+            }
         }
     }
-
 }

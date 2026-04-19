@@ -2,36 +2,27 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
-// ==========================================
-// 观众模式系统 (完美修复版)
-// ==========================================
 public class AudienceModeSystem : MonoBehaviour
 {
     public enum Mode { Idle, PureEnjoy, Audience }
     [HideInInspector] public Mode currentMode = Mode.Idle;
 
-    // ─── 引用 ────────────────────────────────────────────────
     [Header("=== 时间轴 ===")]
     public TimelineManager timeline;
 
     [Header("=== 摄像头 ===")]
-    [Tooltip("纯享受模式 / 编辑模式 使用的摄像头")]
     public Camera playerCamera;
-    [Tooltip("观众模式专用摄像头（直接 SetActive 切换）")]
     public Camera audiencesCamera;
 
     [Header("=== Camera 轨道名 ===")]
     public string cameraTrackName = "Camera";
 
-    // ─── 弹窗 ────────────────────────────────────────────────
     [Header("=== 弹窗（有 Camera Clip 时显示）===")]
     public GameObject popup;
     public Button btnPureEnjoy;
     public Button btnAudience;
 
-    // ─── UI ──────────────────────────────────────────────────
     [Header("=== 纯享受模式 ===")]
-    [Tooltip("屏幕中央的提示文字（'按C切换'）")]
     public GameObject pureEnjoyHint;
 
     [Header("=== 观众模式 ===")]
@@ -40,18 +31,23 @@ public class AudienceModeSystem : MonoBehaviour
 
     [Header("=== 编辑 UI 根节点 ===")]
     public GameObject editUIRoot;
+    public CanvasGroup editUICanvasGroup;
 
-    // ─── 内部标志 ────────────────────────────────────────────
+    // ── 内部标志 ──
     private bool wasPlaying = false;
     private bool hasCameraClips = false;
     private bool modeChosen = false;
-
-    // 【核心修复锁】：标记是否正因为弹窗而处于暂停状态
     private bool isPausedForPopup = false;
 
-    // ==========================================
+    // 正式演出标志
+    private bool isOfficialConcert = false;
+    private RenderTexture defaultPlayerCamTex;
+
     void Start()
     {
+        if (playerCamera != null)
+            defaultPlayerCamTex = playerCamera.targetTexture;
+
         if (btnPureEnjoy != null) btnPureEnjoy.onClick.AddListener(OnClickPureEnjoy);
         if (btnAudience != null) btnAudience.onClick.AddListener(OnClickAudience);
 
@@ -59,81 +55,112 @@ public class AudienceModeSystem : MonoBehaviour
         ApplyMode(Mode.Idle);
     }
 
-    // ==========================================
     void Update()
     {
         if (timeline == null) return;
-
         bool isAudioPlaying = timeline.musicSource != null && timeline.musicSource.isPlaying;
 
-        // ── 1. 演出刚开始，且本次还没选过模式 ──
-        if (isAudioPlaying && !wasPlaying && !modeChosen)
+        // ==========================================
+        // 🛡️ 【核心隔离墙】：Edit 模式下，保安直接下班！
+        // ==========================================
+        if (!isOfficialConcert)
         {
-            OnPlayStarted();
+            // Edit 模式下，允许你按 C 键预览机位（如果不按，就什么都不会发生）
+            if (isAudioPlaying && CheckHasCameraClips())
+            {
+                if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
+                    ToggleMode();
+            }
+
+            wasPlaying = isAudioPlaying;
+            return; // 🚨 绝对不往下走！Edit 模式的播放绝不弹窗、不暂停、不变灰！
         }
 
-        // ── 2. 演出停止 ──
+        // ==========================================
+        // 以下全是【正式演出】的专属拦截与监听逻辑
+        // ==========================================
+
+        // 正式演出中途，音乐停止了（播完结束）
         if (!isAudioPlaying && wasPlaying)
         {
-            // 【核心修复】：如果是弹窗强行按下的暂停，绝对不能当成演出停止！
             if (!isPausedForPopup)
-            {
-                OnPlayStopped();
-            }
+                StopEverything();
         }
 
-        // 记录本帧状态供下一帧对比
-        wasPlaying = isAudioPlaying;
-
-        // ── 3. C 键切换 ──
-        // 条件：正在播放中 + 已经选完模式 + 当前歌曲确实有镜头数据
+        // C 键切换机位
         if (isAudioPlaying && modeChosen && hasCameraClips)
         {
             if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
-            {
                 ToggleMode();
-            }
         }
+
+        wasPlaying = isAudioPlaying;
     }
 
     // ==========================================
-    // 演出开始
+    // 开始正式演出（由 StageManager 呼叫）
     // ==========================================
-    private void OnPlayStarted()
+    public void PlayAsConcert()
     {
+        isOfficialConcert = true;
+        modeChosen = false;
+        isPausedForPopup = false;
         hasCameraClips = CheckHasCameraClips();
 
-        if (editUIRoot != null) editUIRoot.SetActive(false);
+        HidePopup();
+        GrayOutEditUI(false);
+
+        if (playerCamera != null)
+            playerCamera.targetTexture = null;
 
         if (hasCameraClips)
         {
-            // 有摄像头 Clip → 锁定状态，暂停，弹窗
+            // 有 CameraClip：屏息等待，弹窗！
             isPausedForPopup = true;
-            PauseAndFreeze();
+            if (timeline.musicSource != null)
+            {
+                timeline.musicSource.time = 0f;
+                timeline.musicSource.Pause();
+            }
+            if (timeline.playheadSlider != null) timeline.playheadSlider.SetValueWithoutNotify(0f);
+
             ShowPopup();
         }
         else
         {
-            // 没有摄像头 Clip → 直接进入观众模式（无需暂停）
+            // 无 CameraClip：直接全屏观众模式起飞！
             modeChosen = true;
-            isPausedForPopup = false;
             ApplyMode(Mode.Audience);
+
+            if (timeline.musicSource != null)
+            {
+                timeline.musicSource.time = 0f;
+                timeline.musicSource.Play();
+            }
+            wasPlaying = true;
         }
     }
 
     // ==========================================
-    // 演出停止
+    // 退出正式演出，退回捏人/Edit界面
     // ==========================================
-    private void OnPlayStopped()
+    public void StopEverything()
     {
-        // 彻底清理状态，为下次播放做准备
+        isOfficialConcert = false;
         modeChosen = false;
         hasCameraClips = false;
         isPausedForPopup = false;
 
+        if (timeline != null && timeline.musicSource != null)
+            timeline.musicSource.Stop();
+
         ApplyMode(Mode.Idle);
+
+        if (playerCamera != null)
+            playerCamera.targetTexture = defaultPlayerCamTex;
+
         HidePopup();
-        if (editUIRoot != null) editUIRoot.SetActive(true);
+        GrayOutEditUI(false);
     }
 
     // ==========================================
@@ -143,7 +170,7 @@ public class AudienceModeSystem : MonoBehaviour
     {
         HidePopup();
         modeChosen = true;
-        isPausedForPopup = false; // 解除弹窗暂停锁定
+        isPausedForPopup = false;
         ApplyMode(Mode.PureEnjoy);
         ResumePlay();
     }
@@ -152,13 +179,13 @@ public class AudienceModeSystem : MonoBehaviour
     {
         HidePopup();
         modeChosen = true;
-        isPausedForPopup = false; // 解除弹窗暂停锁定
+        isPausedForPopup = false;
         ApplyMode(Mode.Audience);
         ResumePlay();
     }
 
     // ==========================================
-    // 模式切换执行
+    // 工具方法
     // ==========================================
     private void ToggleMode()
     {
@@ -168,39 +195,44 @@ public class AudienceModeSystem : MonoBehaviour
     private void ApplyMode(Mode mode)
     {
         currentMode = mode;
-
         bool isPure = (mode == Mode.PureEnjoy);
         bool isAudience = (mode == Mode.Audience);
 
-        // ── 摄像头：直接 SetActive 切断 ──
-        if (playerCamera != null) playerCamera.gameObject.SetActive(!isAudience);
-        if (audiencesCamera != null) audiencesCamera.gameObject.SetActive(isAudience);
+        if (playerCamera != null)
+        {
+            playerCamera.gameObject.SetActive(!isAudience);
+            if (isOfficialConcert && !isAudience)
+                playerCamera.targetTexture = null;
+        }
 
-        // ── 提示与 UI ──
+        if (audiencesCamera != null)
+        {
+            audiencesCamera.gameObject.SetActive(isAudience);
+            if (isAudience) audiencesCamera.targetTexture = null;
+        }
+
         if (pureEnjoyHint != null) pureEnjoyHint.SetActive(isPure && hasCameraClips);
         if (audienceOverlay != null) audienceOverlay.SetActive(isAudience);
         if (cheerStick != null) cheerStick.SetActive(isAudience);
     }
 
-    // ==========================================
-    // 辅助工具
-    // ==========================================
-    private void PauseAndFreeze()
+    private void GrayOutEditUI(bool isGray)
     {
-        if (timeline.musicSource != null)
+        if (editUICanvasGroup != null)
         {
-            timeline.musicSource.Pause();
-            timeline.musicSource.time = 0f;
+            editUICanvasGroup.alpha = isGray ? 0.5f : 1f;
+            editUICanvasGroup.interactable = !isGray;
+            editUICanvasGroup.blocksRaycasts = !isGray;
         }
-        if (timeline.playheadSlider != null)
-            timeline.playheadSlider.SetValueWithoutNotify(0f);
+        else if (editUIRoot != null)
+        {
+            editUIRoot.SetActive(!isGray);
+        }
     }
 
     private void ResumePlay()
     {
-        // 强制同步状态，防止下一帧出现时序错乱
         wasPlaying = true;
-
         if (timeline.musicSource != null)
             timeline.musicSource.Play();
     }

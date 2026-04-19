@@ -13,7 +13,7 @@ public class VFXClipData
 {
     // ---------- ±ä»» ----------
     public float posX = 0f;
-    public float posY = 0f;
+    public float posY = 3f;
     public float posZ = 0f;
 
     public float rotX = 0f;

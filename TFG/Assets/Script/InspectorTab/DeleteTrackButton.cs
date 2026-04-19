@@ -27,8 +27,8 @@ public class DeleteTrackButton : MonoBehaviour
 
     [Header("=== 按钮文字 ===")]
     public TextMeshProUGUI buttonText;
-    public string normalText = "删除轨道";
-    public string confirmText = "确认删除！";
+    public string normalText = "Delete Track";
+    public string confirmText = "Confirm Delete！";
 
     [Header("=== 按钮颜色 ===")]
     public Image buttonImage;
@@ -62,7 +62,7 @@ public class DeleteTrackButton : MonoBehaviour
         if (currentState == ButtonState.Countdown)
         {
             if (buttonText != null)
-                buttonText.text = $"等待 {Mathf.CeilToInt(timer)} 秒";
+                buttonText.text = $"{Mathf.CeilToInt(timer)}";
 
             // 倒数结束，进入“可确认删除”状态
             if (timer <= 0f)

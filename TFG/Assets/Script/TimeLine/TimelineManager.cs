@@ -354,7 +354,7 @@ public class TimelineManager : MonoBehaviour
 
         if (timeDisplayText != null) timeDisplayText.text = $"{FormatTime(currentTime)} / {FormatTime(totalDuration)}";
         if (timeInputField != null && !timeInputField.isFocused) timeInputField.SetTextWithoutNotify(FormatTime(currentTime));
-        if (playPauseButtonText != null) playPauseButtonText.text = (musicSource != null && musicSource.isPlaying) ? "❚❚" : "▶";
+        if (playPauseButtonText != null) playPauseButtonText.text = (musicSource != null && musicSource.isPlaying) ? "Stop" : "Play";
 
         if (selectedClip != null) { var p = selectedClip.inspectorPanel?.GetComponent<ClipInspectorPanel>(); if (p != null) p.RefreshDisplay(); }
         bool forceUpdate = requiresInitialSync; if (requiresInitialSync) requiresInitialSync = false;

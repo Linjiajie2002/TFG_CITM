@@ -11,10 +11,13 @@ public class SelectionUIManager : MonoBehaviour
     public Button tabScene;
     public Button tabMusic;
 
+    [Header("=== 滑动动画 ===")]
+    public RectTransform slidingIndicator; // 拖入你刚才做的 SlidingIndicator
+    public float slideDuration = 0.2f;     // 滑动过去需要几秒
+
+    private Coroutine slideCoroutine;      // 记录当前的滑动协程，防止冲突
+
     [Header("Tab 视觉")]
-    public Image charUnderline;
-    public Image sceneUnderline;
-    public Image musicUnderline;
     public TextMeshProUGUI charTabText;
     public TextMeshProUGUI sceneTabText;
     public TextMeshProUGUI musicTabText;
@@ -88,12 +91,21 @@ public class SelectionUIManager : MonoBehaviour
         if (slotScene != null) slotScene.SetEmpty();
         if (slotMusic != null) slotMusic.SetEmpty();
 
-        // 初始状态
-        SwitchTab(TabType.Character);
-        RefreshStartButton();
+        StartCoroutine(InitUI());
     }
 
-    private void SwitchTab(TabType tab)
+    private IEnumerator InitUI()
+    {
+        // 核心魔法：等待当前帧结束。
+        // 这就给了 Horizontal Layout Group 足够的时间去计算按钮的真实坐标（比如你的 80）
+        yield return new WaitForEndOfFrame();
+
+        // 排版完成后，再去获取坐标并瞬间移动滑块，此时获取到的绝对是正确的数值！
+        SwitchTab(TabType.Character, true);
+        RefreshStartButton();
+    }
+    // 给方法加上 instant 参数，默认是 false (播放动画)
+    private void SwitchTab(TabType tab, bool instant = false)
     {
         currentTab = tab;
         currentIndex = 0;
@@ -102,13 +114,34 @@ public class SelectionUIManager : MonoBehaviour
         bool isScene = (tab == TabType.Scene);
         bool isMusic = (tab == TabType.Music);
 
-        if (charUnderline != null) charUnderline.enabled = isChar;
-        if (sceneUnderline != null) sceneUnderline.enabled = isScene;
-        if (musicUnderline != null) musicUnderline.enabled = isMusic;
-
         if (charTabText != null) charTabText.color = isChar ? tabActiveTextColor : tabInactiveTextColor;
         if (sceneTabText != null) sceneTabText.color = isScene ? tabActiveTextColor : tabInactiveTextColor;
         if (musicTabText != null) musicTabText.color = isMusic ? tabActiveTextColor : tabInactiveTextColor;
+
+        RectTransform targetRect = null;
+        if (isChar) targetRect = tabCharacter.GetComponent<RectTransform>();
+        if (isScene) targetRect = tabScene.GetComponent<RectTransform>();
+        if (isMusic) targetRect = tabMusic.GetComponent<RectTransform>();
+
+        if (targetRect != null && slidingIndicator != null)
+        {
+            if (slideCoroutine != null)
+            {
+                StopCoroutine(slideCoroutine);
+            }
+
+            // == 核心修改在这里 ==
+            if (instant)
+            {
+                // 如果是瞬间移动（比如刚开局），直接设置坐标
+                slidingIndicator.anchoredPosition = new Vector2(targetRect.anchoredPosition.x, slidingIndicator.anchoredPosition.y);
+            }
+            else
+            {
+                // 如果是玩家点击，播放滑动动画
+                slideCoroutine = StartCoroutine(SlideToPosition(targetRect.anchoredPosition.x));
+            }
+        }
 
         RefreshCarouselImmediate();
     }
@@ -295,5 +328,27 @@ public class SelectionUIManager : MonoBehaviour
         Color c = img.color;
         c.a = a;
         img.color = c;
+    }
+
+    // ==========================================
+    // UI 滑动动画协程
+    // ==========================================
+    private IEnumerator SlideToPosition(float targetX)
+    {
+        float time = 0;
+        Vector2 startPos = slidingIndicator.anchoredPosition;
+        Vector2 targetPos = new Vector2(targetX, startPos.y); // 只改变X轴，Y轴保持不变
+
+        while (time < slideDuration)
+        {
+            time += Time.deltaTime;
+            // SmoothStep 提供丝滑的缓入缓出曲线
+            float t = Mathf.SmoothStep(0, 1, time / slideDuration);
+            slidingIndicator.anchoredPosition = Vector2.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        // 确保最终位置精准
+        slidingIndicator.anchoredPosition = targetPos;
     }
 }

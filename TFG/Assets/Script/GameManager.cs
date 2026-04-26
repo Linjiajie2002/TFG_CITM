@@ -16,11 +16,13 @@ public class GameManager : MonoBehaviour
     public string[] stageSceneNames;        // 场景实际 Build 名（例如 Stage1, Stage2）
     public string[] stageDisplayNames;      // 场景显示名字
     public Sprite[] stageSprites;           // 场景预览图
+    public Sprite[] stageAvatars;
 
     [Header("=== Music ===")]
     public AudioClip[] musicClips;          // 音乐片段
     public string[] musicNames;             // 音乐名字
     public Sprite[] musicSprites;           // 专辑封面（可选，没有就留空）
+    public Sprite[] musicAvatars;
 
     [Header("=== Dance Animation ===")]
     public string[] danceStateNames;        // 舞蹈动画状态名
@@ -89,10 +91,12 @@ public class GameManager : MonoBehaviour
     public string GetMusicName(int i) => (musicNames != null && i >= 0 && i < musicNames.Length) ? musicNames[i] : $"Music {i + 1}";
 
     public Sprite GetCharSprite(int i) => (characterSprites != null && i >= 0 && i < characterSprites.Length) ? characterSprites[i] : null;
-
-    public Sprite GetCharAvatar(int i) => (characterAvatars != null && i >= 0 && i < characterAvatars.Length) ? characterAvatars[i] : null;
     public Sprite GetStageSprite(int i) => (stageSprites != null && i >= 0 && i < stageSprites.Length) ? stageSprites[i] : null;
     public Sprite GetMusicSprite(int i) => (musicSprites != null && i >= 0 && i < musicSprites.Length) ? musicSprites[i] : null;
+
+    public Sprite GetCharAvatar(int i) => (characterAvatars != null && i >= 0 && i < characterAvatars.Length) ? characterAvatars[i] : GetCharSprite(i);
+    public Sprite GetStageAvatar(int i) => (stageAvatars != null && i >= 0 && i < stageAvatars.Length) ? stageAvatars[i] : GetStageSprite(i);
+    public Sprite GetMusicAvatar(int i) => (musicAvatars != null && i >= 0 && i < musicAvatars.Length) ? musicAvatars[i] : GetMusicSprite(i);
 
     public int GetCharCount() => characterPrefabs?.Length ?? 0;
     public int GetStageCount() => stageSceneNames?.Length ?? 0;

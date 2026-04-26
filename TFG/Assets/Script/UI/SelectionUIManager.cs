@@ -31,9 +31,6 @@ public class SelectionUIManager : MonoBehaviour
     public Button btnRight;
     public Image imageA;
     public Image imageB;
-    public TextMeshProUGUI itemNameText;
-    public TextMeshProUGUI indexLeftText;
-    public TextMeshProUGUI indexRightText;
 
     [Header("轮播动画")]
     public float fadeDuration = 0.25f;
@@ -155,7 +152,6 @@ public class SelectionUIManager : MonoBehaviour
         SetAlpha(next, 0f);
 
         currentIndex = nextIndex;
-        RefreshNameAndIndex();
 
         float elapsed = 0f;
         while (elapsed < fadeDuration)
@@ -180,29 +176,6 @@ public class SelectionUIManager : MonoBehaviour
         SetImageSprite(imageA, currentIndex);
         SetAlpha(imageA, 1f);
         SetAlpha(imageB, 0f);
-
-        RefreshNameAndIndex();
-    }
-
-    private void RefreshNameAndIndex()
-    {
-        int count = GetCurrentCount();
-        if (count == 0)
-        {
-            if (itemNameText != null) itemNameText.text = "—";
-            if (indexLeftText != null) indexLeftText.text = "";
-            if (indexRightText != null) indexRightText.text = "";
-            return;
-        }
-
-        if (itemNameText != null)
-            itemNameText.text = GetCurrentName(currentIndex);
-
-        int leftIdx = (currentIndex - 1 + count) % count;
-        int rightIdx = (currentIndex + 1) % count;
-
-        if (indexLeftText != null) indexLeftText.text = $"{leftIdx + 1:D2}.";
-        if (indexRightText != null) indexRightText.text = $"{rightIdx + 1:D2}.";
     }
 
     private void OnSelectClicked()
@@ -222,8 +195,8 @@ public class SelectionUIManager : MonoBehaviour
                 gm.selectedCharIndex = currentIndex;
                 if (slotCharacter != null)
                     slotCharacter.SetSelected(
-                        gm.GetCharAvatar(currentIndex), // 👈 核心修改：这里使用 GetCharAvatar 代替 GetCharSprite
-                        gm.GetCharName(currentIndex),
+                        gm.GetCharAvatar(currentIndex),
+                        // 删除了这里的 GetCharName
                         () => { gm.ClearCharacter(); slotCharacter.SetEmpty(); RefreshStartButton(); });
                 break;
 
@@ -231,8 +204,8 @@ public class SelectionUIManager : MonoBehaviour
                 gm.selectedStageIndex = currentIndex;
                 if (slotScene != null)
                     slotScene.SetSelected(
-                        gm.GetStageSprite(currentIndex),
-                        gm.GetStageName(currentIndex),
+                        gm.GetStageAvatar(currentIndex),
+                        // 删除了这里的 GetStageName
                         () => { gm.ClearStage(); slotScene.SetEmpty(); RefreshStartButton(); });
                 break;
 
@@ -240,8 +213,8 @@ public class SelectionUIManager : MonoBehaviour
                 gm.selectedMusicIndex = currentIndex;
                 if (slotMusic != null)
                     slotMusic.SetSelected(
-                        gm.GetMusicSprite(currentIndex),
-                        gm.GetMusicName(currentIndex),
+                        gm.GetMusicAvatar(currentIndex),
+                        // 删除了这里的 GetMusicName
                         () => { gm.ClearMusic(); slotMusic.SetEmpty(); RefreshStartButton(); });
                 break;
         }
@@ -273,19 +246,6 @@ public class SelectionUIManager : MonoBehaviour
             TabType.Scene => gm.GetStageCount(),
             TabType.Music => gm.GetMusicCount(),
             _ => 0
-        };
-    }
-
-    private string GetCurrentName(int i)
-    {
-        var gm = GameManager.Instance;
-        if (gm == null) return "";
-        return currentTab switch
-        {
-            TabType.Character => gm.GetCharName(i),
-            TabType.Scene => gm.GetStageName(i),
-            TabType.Music => gm.GetMusicName(i),
-            _ => ""
         };
     }
 

@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     public GameObject[] characterPrefabs;   // 角色 Prefab
     public string[] characterNames;         // 角色名字（显示在 UI 上）
     public Sprite[] characterSprites;       // 角色预览图（用于选择界面）
+    public Sprite[] characterAvatars;
 
     [Header("=== Stage（Scene）===")]
     public string[] stageSceneNames;        // 场景实际 Build 名（例如 Stage1, Stage2）
@@ -88,6 +89,8 @@ public class GameManager : MonoBehaviour
     public string GetMusicName(int i) => (musicNames != null && i >= 0 && i < musicNames.Length) ? musicNames[i] : $"Music {i + 1}";
 
     public Sprite GetCharSprite(int i) => (characterSprites != null && i >= 0 && i < characterSprites.Length) ? characterSprites[i] : null;
+
+    public Sprite GetCharAvatar(int i) => (characterAvatars != null && i >= 0 && i < characterAvatars.Length) ? characterAvatars[i] : null;
     public Sprite GetStageSprite(int i) => (stageSprites != null && i >= 0 && i < stageSprites.Length) ? stageSprites[i] : null;
     public Sprite GetMusicSprite(int i) => (musicSprites != null && i >= 0 && i < musicSprites.Length) ? musicSprites[i] : null;
 

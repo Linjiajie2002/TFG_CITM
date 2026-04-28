@@ -105,7 +105,7 @@ public class TimelineManager : MonoBehaviour
         if (trackViewport == null) { GameObject tv = new GameObject("TrackViewport"); trackViewport = tv.AddComponent<RectTransform>(); trackViewport.SetParent(contentParent, false); trackViewport.anchorMin = Vector2.zero; trackViewport.anchorMax = Vector2.one; trackViewport.offsetMin = Vector2.zero; trackViewport.offsetMax = new Vector2(0, -rulerHeight); tv.AddComponent<RectMask2D>(); trackViewport.SetSiblingIndex(0); GameObject tc = new GameObject("TrackContainer"); trackContainer = tc.AddComponent<RectTransform>(); trackContainer.SetParent(trackViewport, false); trackContainer.anchorMin = Vector2.zero; trackContainer.anchorMax = Vector2.one; trackContainer.offsetMin = Vector2.zero; trackContainer.offsetMax = Vector2.zero; }
         ResizeContent(); GenerateGridLines(); GenerateRuler();
         if (playPauseButtonText != null) playPauseButtonText.text = "▶";
-        if (playheadSlider != null) { playheadSlider.transform.SetAsLastSibling(); var sliderRt = playheadSlider.GetComponent<RectTransform>(); sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f); }
+        if (playheadSlider != null) { playheadSlider.transform.SetAsLastSibling(); var sliderRt = playheadSlider.GetComponent<RectTransform>(); sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, 100f); }
         BakeRootMotion(danceName, totalDuration); DeselectAll();
     }
 
@@ -119,7 +119,7 @@ public class TimelineManager : MonoBehaviour
         {
             playheadSlider.transform.SetAsLastSibling();
             var sliderRt = playheadSlider.GetComponent<RectTransform>();
-            sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f);
+            sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, 100f);
         }
         // 静默建轨道，不调用 SelectTrack
     }
@@ -134,7 +134,7 @@ public class TimelineManager : MonoBehaviour
         {
             playheadSlider.transform.SetAsLastSibling();
             var sliderRt = playheadSlider.GetComponent<RectTransform>();
-            sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, -2000f);
+            sliderRt.offsetMin = new Vector2(sliderRt.offsetMin.x, 100f);
         }
 
         SelectTrack(newTrackIndex); // 建完自动选中（非静默版）

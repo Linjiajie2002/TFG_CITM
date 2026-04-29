@@ -54,9 +54,6 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
     [Header("=== Color Picker ===")]
     public ColorPickerPanel colorPicker;
 
-    [Header("=== 叠加上限警告 ===")]
-    public GameObject overlapWarning;  // 超出3个时显示
-    public TextMeshProUGUI warningText;
 
     [Header("=== 灯光播放系统引用 ===")]
     public LightPlaybackSystem lightPlaybackSystem;
@@ -68,7 +65,6 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
     protected override void Awake()
     {
         base.Awake();
-        if (overlapWarning != null) overlapWarning.SetActive(false);
     }
 
     // ==========================================
@@ -138,7 +134,6 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
 
         UpdateValueLabels();
         UpdateLightPreview();
-        CheckOverlapWarning();
     }
 
     // ==========================================
@@ -191,20 +186,6 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
         lightData.runtimeLight.color = lightData.color;
         lightData.runtimeLight.intensity = lightData.intensity;
         lightData.runtimeLight.range = lightData.range;
-    }
-
-    // 检查叠加上限
-    private void CheckOverlapWarning()
-    {
-        if (overlapWarning == null || lightPlaybackSystem == null || boundClip == null) return;
-
-        int overlapCount = lightPlaybackSystem.CountActiveLightsAt(
-            boundClip.startTime + boundClip.duration * 0.5f);
-
-        bool tooMany = overlapCount > LightPlaybackSystem.MAX_SIMULTANEOUS_LIGHTS;
-        overlapWarning.SetActive(tooMany);
-        if (warningText != null && tooMany)
-            warningText.text = $"⚠ 当前时间点已有 {overlapCount} 个灯（上限 {LightPlaybackSystem.MAX_SIMULTANEOUS_LIGHTS}）";
     }
 
     private void SyncRangesToData()

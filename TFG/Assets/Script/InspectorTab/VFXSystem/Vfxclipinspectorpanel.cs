@@ -61,10 +61,6 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
     [Header("Scale 范围")]
     public float scaleMin = 0.1f; public float scaleMax = 5f;
 
-    // ─── Color ───
-    [Header("=== Color ===")]
-    public ColorPickerPanel colorPicker;
-
     // ─── Playback ───
     [Header("=== Playback ===")]
     public Slider sliderSpeed;
@@ -110,11 +106,7 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
             toggleLoop.onValueChanged.AddListener(v => { vfxData.loop = v; OnDataChanged(); });
         }
 
-        if (colorPicker != null)
-        {
-            colorPicker.SetColor(vfxData.color, notify: false);
-            colorPicker.onColorChanged.AddListener(c => { vfxData.color = c; OnDataChanged(); });
-        }
+       
 
         isReady = true;
         RegisterListeners();
@@ -225,7 +217,7 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
             var main = ps.main;
             main.simulationSpeed = data.playSpeed;
             main.loop = data.loop;
-            main.startColor = new ParticleSystem.MinMaxGradient(data.color);
+           
 
             // 如果 ps 已经停止但 clip 内要求循环，重新播放
             if (data.loop && !ps.isPlaying) ps.Play();
@@ -237,9 +229,6 @@ public class VFXClipInspectorPanel : ClipInspectorPanel
         if (vfxGraph != null)
         {
             vfxGraph.playRate = data.playSpeed;
-            // 颜色需要在 VFX Graph 里暴露 "Color" 属性
-            if (vfxGraph.HasVector4("Color"))
-                vfxGraph.SetVector4("Color", data.color);
         }
 #endif
     }

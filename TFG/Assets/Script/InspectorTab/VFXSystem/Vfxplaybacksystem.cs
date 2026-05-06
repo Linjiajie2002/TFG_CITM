@@ -2,28 +2,24 @@
 using System.Collections.Generic;
 
 // ==========================================
-// VFX 播放系统（修复版）
+// VFX 播放系统（FeatureName 匹配版）
 //
-// 修复：
-//   1. 删除 Clip 时立即销毁对应 VFX（不等下一帧）
-//   2. 演出开始时（Edit play 或正式演出）立即清空所有残留 VFX
-//
-// 使用方式：
-//   在 TimelineManager.DeleteSelectedClip() 里调用 vfxSystem.OnClipDeleted(evt)
-//   在播放开始时调用 vfxSystem.OnPlayStarted()
+// 升级：
+//   不再根据轨道(TrackName)生成特效，而是根据方块的名称(FeatureName / eventName)
+//   实现同一轨道内混排多种不同的 VFX 特效！
 // ==========================================
 public class VFXPlaybackSystem : MonoBehaviour
 {
     [System.Serializable]
     public class VFXEntry
     {
-        [Tooltip("轨道名，必须与 DynamicModuleSystem 里的 moduleName 一致")]
-        public string trackName = "VFX";
+        [Tooltip("Clip的名称，必须与 DynamicModuleSystem -> Feature Panel Maps 里的 Feature Name 一致")]
+        public string featureName = "NewVFX";
 
-        [Tooltip("该类型 VFX 使用的 Prefab")]
+        [Tooltip("该类型 VFX 使用的 3D 粒子 Prefab")]
         public GameObject prefab;
 
-        [Tooltip("同一时刻最多实例数，0 = 不限制")]
+        [Tooltip("同一时刻同类特效最多实例数，0 = 不限制")]
         public int maxSimultaneous = 0;
     }
 
@@ -67,7 +63,7 @@ public class VFXPlaybackSystem : MonoBehaviour
 
             if (playing)
             {
-                // 【修复2】：演出/Edit 开始播放时，立即清空所有 VFX 残留
+                // 演出/Edit 开始播放时，立即清空所有 VFX 残留
                 DeactivateAll();
                 lastCheckedTime = -999f;
             }
@@ -88,7 +84,7 @@ public class VFXPlaybackSystem : MonoBehaviour
     }
 
     // ==========================================
-    // 【修复2】：供 TimelineManager 的播放开始时调用
+    // 供 TimelineManager 的播放开始时调用
     // ==========================================
     public void OnPlayStarted()
     {
@@ -97,10 +93,7 @@ public class VFXPlaybackSystem : MonoBehaviour
     }
 
     // ==========================================
-    // 【修复1】：Clip 被删除时立即调用
-    // 在 TimelineManager.DeleteSelectedClip() 里加上：
-    //   if (moduleSystem?.GetComponent<VFXPlaybackSystem>() != null) ...
-    // 或者直接在 TimelineManager 里持有 VFXPlaybackSystem 引用
+    // Clip 被删除时立即调用
     // ==========================================
     public void OnClipDeleted(TimelineEventData evt)
     {
@@ -129,14 +122,15 @@ public class VFXPlaybackSystem : MonoBehaviour
             bool inRange = currentTime >= evt.startTime &&
                            currentTime < evt.startTime + evt.duration;
 
-            // 检查 maxSimultaneous
-            string trackName = GetTrackName(evt.trackIndex);
-            VFXEntry entry = FindEntry(trackName);
+            // 🌟 核心升级：通过方块名字 (FeatureName) 检查限制
+            string featureName = evt.eventName;
+            VFXEntry entry = FindEntry(featureName);
+
             if (inRange && entry != null && entry.maxSimultaneous > 0)
             {
-                activeCounts.TryGetValue(trackName, out int count);
+                activeCounts.TryGetValue(featureName, out int count);
                 if (count >= entry.maxSimultaneous) inRange = false;
-                else activeCounts[trackName] = count + 1;
+                else activeCounts[featureName] = count + 1;
             }
 
             if (inRange) ActivateVFX(evt, rvfx, data, playing);
@@ -159,6 +153,7 @@ public class VFXPlaybackSystem : MonoBehaviour
             }
         }
 
+        // 调用面板里的方法同步数据（位置、缩放等）
         VFXClipInspectorPanel.ApplyVFXData(rvfx.go, data);
 
         if (!data.loop && rvfx.ps != null && !rvfx.ps.IsAlive())
@@ -173,7 +168,6 @@ public class VFXPlaybackSystem : MonoBehaviour
         rvfx.wasActive = false;
     }
 
-    // 关闭所有 VFX
     private void DeactivateAll()
     {
         foreach (var kvp in pool)
@@ -185,18 +179,18 @@ public class VFXPlaybackSystem : MonoBehaviour
     {
         if (timeline?.allEvents == null) return;
 
-        // 新增
         foreach (var evt in timeline.allEvents)
         {
             if (!(evt.customData is VFXClipData data)) continue;
             if (pool.ContainsKey(evt) && pool[evt].go != null) continue;
 
-            string trackName = GetTrackName(evt.trackIndex);
-            VFXEntry entry = FindEntry(trackName);
+            // 🌟 核心升级：读取方块本身的名字
+            string featureName = evt.eventName;
+            VFXEntry entry = FindEntry(featureName);
             if (entry?.prefab == null) continue;
 
             GameObject go = Instantiate(entry.prefab, vfxContainer);
-            go.name = $"{evt.eventName}_{evt.trackIndex}_VFX";
+            go.name = $"{featureName}_{evt.trackIndex}_VFX";
             go.SetActive(false);
 
             var rvfx = new RuntimeVFX { go = go, ps = go.GetComponentInChildren<ParticleSystem>() };
@@ -205,7 +199,7 @@ public class VFXPlaybackSystem : MonoBehaviour
             data.vfxPrefabName = entry.prefab.name;
         }
 
-        // 【修复1】：清理已不存在于 allEvents 的条目，立即销毁 GO
+        // 清理已不存在于 allEvents 的条目，立即销毁 GO
         var toRemove = new List<TimelineEventData>();
         foreach (var kvp in pool)
         {
@@ -224,17 +218,15 @@ public class VFXPlaybackSystem : MonoBehaviour
         RebuildPool();
     }
 
-    private string GetTrackName(int trackIndex)
-    {
-        var track = timeline?.allTracks?.Find(t => t.trackIndex == trackIndex);
-        return track?.trackName ?? "";
-    }
-
-    private VFXEntry FindEntry(string trackName)
+    // 🌟 核心升级：根据 featureName 在配置表中寻找对应的预制体
+    private VFXEntry FindEntry(string featureName)
     {
         foreach (var e in vfxEntries)
-            if (!string.IsNullOrEmpty(e.trackName) && trackName.StartsWith(e.trackName))
+        {
+            // 精确匹配方块名字
+            if (!string.IsNullOrEmpty(e.featureName) && e.featureName == featureName)
                 return e;
+        }
         return null;
     }
 }

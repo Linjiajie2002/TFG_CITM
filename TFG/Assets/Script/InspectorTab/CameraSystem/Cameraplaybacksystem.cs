@@ -1,41 +1,38 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections.Generic;
 
 // ==========================================
-// Ó²ÇĞÉãÏñÍ·²¥·ÅÒıÇæ
-//
-// Ö§³Ö¹ÛÖÚÄ£Ê½£ºµ± audienceMode = true Ê±£¬
-// ²»¸úËæÈÎºÎ Camera Clip£¬±£³ÖÔÚÄ¬ÈÏÎ»ÖÃ
+// å…¨èƒ½æ‘„åƒæœºæ’­æ”¾å¼•æ“
+// åŒæ—¶æ”¯æŒåŒä¸€ä¸ªè½¨é“å†…çš„â€œç¡¬åˆ‡(CameraClipData)â€å’Œâ€œå¹³æ»‘(SmoothCameraClipData)â€
 // ==========================================
 public class CameraPlaybackSystem : MonoBehaviour
 {
-    [Header("=== ÉãÏñÍ·ÒıÓÃ ===")]
-    [Tooltip("Edit Ä£Ê½ / ´¿ÏíÊÜÄ£Ê½ÏÂÊ¹ÓÃµÄÉãÏñÍ·")]
+    [Header("=== æ‘„åƒå¤´å¼•ç”¨ ===")]
+    [Tooltip("Edit æ¨¡å¼ / çº¯äº«å—æ¨¡å¼ä¸‹ä½¿ç”¨çš„æ‘„åƒå¤´")]
     public Camera editCamera;
 
-    [Tooltip("´¿ÏíÊÜÄ£Ê½ÏÂ¿ØÖÆµÄÉãÏñÍ·£¨Ëæ Camera Clip ÒÆ¶¯£©")]
+    [Tooltip("çº¯äº«å—æ¨¡å¼ä¸‹æ§åˆ¶çš„æ‘„åƒå¤´ï¼ˆéš Camera Clip ç§»åŠ¨ï¼‰")]
     public Camera playCamera;
 
-    [Header("=== Ä¬ÈÏÎ»ÖÃ£¨ÎŞ Clip Ê± / ¹ÛÖÚÄ£Ê½Ê±Ê¹ÓÃ£©===")]
+    [Header("=== é»˜è®¤ä½ç½®ï¼ˆæ—  Clip æ—¶ / è§‚ä¼—æ¨¡å¼æ—¶ä½¿ç”¨ï¼‰===")]
     public Vector3 defaultPosition = new Vector3(0f, 3f, -8f);
     public Vector3 defaultRotation = new Vector3(10f, 0f, 0f);
 
-    [Header("=== Ê±¼äÖáÒıÓÃ ===")]
+    [Header("=== æ—¶é—´è½´å¼•ç”¨ ===")]
     public TimelineManager timeline;
 
-    [Header("=== Camera ¹ìµÀÃû ===")]
-    public string cameraTrackName = "Camera";
+    [Header("=== Camera è½¨é“å ===")]
+    public string cameraTrackName = "Camera"; // ä¿æŒå« Camera å³å¯
 
-    [Header("=== Edit Ä£Ê½Ô¤ÀÀ ===")]
-    [Tooltip("¿ªÆôºó£¬Scrub ½ø Clip Ê± editCamera Ò²¸ú×ÅÒÆ¶¯£¨·½±ãÔ¤ÀÀ£©")]
+    [Header("=== Edit æ¨¡å¼é¢„è§ˆ ===")]
+    [Tooltip("å¼€å¯åï¼ŒScrub è¿› Clip æ—¶ editCamera ä¹Ÿè·Ÿç€ç§»åŠ¨ï¼ˆæ–¹ä¾¿é¢„è§ˆï¼‰")]
     public bool previewOnEditCamera = false;
 
-    // ©¤©¤ ÄÚ²¿ ©¤©¤
+    // â”€â”€ å†…éƒ¨ â”€â”€
     private bool isPlaying = false;
-    private bool audienceMode = false;   // true = ¹ÛÖÚÄ£Ê½£¬ºöÂÔËùÓĞ Clip
+    private bool audienceMode = false;   // true = è§‚ä¼—æ¨¡å¼ï¼Œå¿½ç•¥æ‰€æœ‰ Clip
     private float lastCheckedTime = -999f;
 
-    // ==========================================
     void Start()
     {
         ApplyToPlayCamera(defaultPosition, Quaternion.Euler(defaultRotation));
@@ -52,7 +49,7 @@ public class CameraPlaybackSystem : MonoBehaviour
             isPlaying = nowPlaying;
             if (!isPlaying)
             {
-                // Í£Ö¹Ê±¹éÎ»
+                // åœæ­¢æ—¶å½’ä½
                 ApplyToPlayCamera(defaultPosition, Quaternion.Euler(defaultRotation));
                 lastCheckedTime = -999f;
             }
@@ -70,24 +67,78 @@ public class CameraPlaybackSystem : MonoBehaviour
     // ==========================================
     private void TickCamera(float currentTime)
     {
-        // ¹ÛÖÚÄ£Ê½£ºÓÀÔ¶ÓÃÄ¬ÈÏÎ»ÖÃ£¬²»¸ú Clip ×ß
+        // è§‚ä¼—æ¨¡å¼ï¼šæ°¸è¿œç”¨é»˜è®¤ä½ç½®ï¼Œä¸è·Ÿ Clip èµ°
         if (audienceMode)
         {
             ApplyToPlayCamera(defaultPosition, Quaternion.Euler(defaultRotation));
             return;
         }
 
-        CameraClipData active = FindActiveClipData(currentTime);
+        // ç»Ÿä¸€è·å–å½“å‰æ—¶é—´æ¿€æ´»çš„æ–¹å—
+        TimelineEventData activeEvt = FindActiveClipEvent(currentTime);
 
-        if (active != null)
+        if (activeEvt != null)
         {
-            ApplyToPlayCamera(active.Position, active.Rotation);
+            Vector3 targetPos = defaultPosition;
+            Quaternion targetRot = Quaternion.Euler(defaultRotation);
+
+            // ğŸŒŸ æ ¸å¿ƒåˆ†æµï¼šçœ‹çœ‹è¿™ä¸ªæ–¹å—ç»‘å®šçš„æ•°æ®æ˜¯å“ªç§ç±»å‹
+            if (activeEvt.customData is CameraClipData hardData)
+            {
+                // ã€æƒ…å†µ Aã€‘é‡åˆ°äº†æ—§ç‰ˆçš„ç¡¬åˆ‡æ•°æ®
+                targetPos = hardData.Position;
+                targetRot = hardData.Rotation;
+            }
+            else if (activeEvt.customData is SmoothCameraClipData smoothData)
+            {
+                // è®¡ç®—å½“å‰åœ¨ Clip ä¸­çš„è¿›åº¦ (0.0 ~ 1.0)
+                float progress = (currentTime - activeEvt.startTime) / activeEvt.duration;
+                progress = Mathf.Clamp01(progress);
+
+                if (smoothData.useMidPoint)
+                {
+                    // ==================================================
+                    // å¼€å¯äº†ä¸­é—´ç‚¹ï¼šä½¿ç”¨è´å¡å°”æ›²çº¿ (De Casteljau's algorithm)
+                    // å‘ˆç°å‡ºå¦‚åŒç”µå½±ä¸€èˆ¬çš„å®Œç¾å¼§çº¿è¿‡æ¸¡ï¼Œæ‹’ç»åƒµç¡¬æŠ˜çº¿ï¼
+                    // ==================================================
+
+                    // 1. ä½ç½®è´å¡å°”æ’å€¼
+                    Vector3 p0 = smoothData.point1.Position;
+                    Vector3 p1 = smoothData.midPoint.Position;
+                    Vector3 p2 = smoothData.point2.Position;
+
+                    Vector3 p01 = Vector3.Lerp(p0, p1, progress);
+                    Vector3 p12 = Vector3.Lerp(p1, p2, progress);
+                    targetPos = Vector3.Lerp(p01, p12, progress);
+
+                    // 2. æ—‹è½¬çƒé¢è´å¡å°”æ’å€¼ (å®Œç¾ä¸æ»‘çš„è§’åº¦è·Ÿæ‹)
+                    Quaternion q0 = smoothData.point1.Rotation;
+                    Quaternion q1 = smoothData.midPoint.Rotation;
+                    Quaternion q2 = smoothData.point2.Rotation;
+
+                    Quaternion q01 = Quaternion.Slerp(q0, q1, progress);
+                    Quaternion q12 = Quaternion.Slerp(q1, q2, progress);
+                    targetRot = Quaternion.Slerp(q01, q12, progress);
+                }
+                else
+                {
+                    // ==================================================
+                    // æ²¡æœ‰å¼€å¯ä¸­é—´ç‚¹ï¼šæ™®é€šçš„ç›´çº¿åŒ€é€Ÿç§»åŠ¨
+                    // ==================================================
+                    targetPos = Vector3.Lerp(smoothData.point1.Position, smoothData.point2.Position, progress);
+                    targetRot = Quaternion.Lerp(smoothData.point1.Rotation, smoothData.point2.Rotation, progress);
+                }
+            }
+
+            // åº”ç”¨è®¡ç®—å‡ºæ¥çš„åæ ‡å’Œæ—‹è½¬
+            ApplyToPlayCamera(targetPos, targetRot);
 
             if (previewOnEditCamera && !isPlaying && editCamera != null)
-                ApplyToCamera(editCamera, active.Position, active.Rotation);
+                ApplyToCamera(editCamera, targetPos, targetRot);
         }
         else
         {
+            // è½¨é“ä¸Šå½“å‰æ—¶é—´ç‚¹æ²¡æœ‰ä»»ä½•æ–¹å—ï¼Œå½’ä½
             ApplyToPlayCamera(defaultPosition, Quaternion.Euler(defaultRotation));
 
             if (previewOnEditCamera && !isPlaying && editCamera != null)
@@ -96,30 +147,33 @@ public class CameraPlaybackSystem : MonoBehaviour
     }
 
     // ==========================================
-    private CameraClipData FindActiveClipData(float currentTime)
+    // å¯»æ‰¾å½“å‰æ—¶é—´ä¸‹æ­£åœ¨ç”Ÿæ•ˆçš„ Clip Event
+    // ==========================================
+    private TimelineEventData FindActiveClipEvent(float currentTime)
     {
         if (timeline.allEvents == null || timeline.allTracks == null) return null;
 
         var cameraIndices = new HashSet<int>();
         foreach (var track in timeline.allTracks)
+        {
             if (track.trackName == cameraTrackName) cameraIndices.Add(track.trackIndex);
+        }
 
-        CameraClipData found = null;
+        TimelineEventData foundEvent = null;
         float bestStart = -1f;
 
         foreach (var evt in timeline.allEvents)
         {
             if (!cameraIndices.Contains(evt.trackIndex)) continue;
-            if (!(evt.customData is CameraClipData data)) continue;
 
             float end = evt.startTime + evt.duration;
             if (currentTime >= evt.startTime && currentTime < end && evt.startTime > bestStart)
             {
                 bestStart = evt.startTime;
-                found = data;
+                foundEvent = evt;
             }
         }
-        return found;
+        return foundEvent;
     }
 
     // ==========================================
@@ -138,27 +192,15 @@ public class CameraPlaybackSystem : MonoBehaviour
     }
 
     // ==========================================
-    // ÓÉ AudienceModeSystem µ÷ÓÃ
+    // å¤–éƒ¨æ¥å£
     // ==========================================
-
-    /// <summary>true = ¹ÛÖÚÄ£Ê½£¬ÉãÏñÍ·¹Ì¶¨ÔÚÄ¬ÈÏÎ»ÖÃ</summary>
     public void SetAudienceMode(bool value)
     {
         audienceMode = value;
-        if (audienceMode)
-            ApplyToPlayCamera(defaultPosition, Quaternion.Euler(defaultRotation));
+        if (audienceMode) ApplyToPlayCamera(defaultPosition, Quaternion.Euler(defaultRotation));
     }
 
-    /// <summary>Ç¿ÖÆ±¾Ö¡Á¢¼´ÖØĞÂ¼ÆËãÉãÏñÍ·£¨C ¼üÇĞ»»ºóµ÷ÓÃ£©</summary>
     public void ForceRefresh() { lastCheckedTime = -999f; }
-
-    // ÆäËûÍâ²¿½Ó¿Ú£¨±£³Ö¼æÈİ£©
-    public void PreviewInEditMode(CameraClipData data)
-    {
-        if (isPlaying || editCamera == null || data == null) return;
-        editCamera.transform.position = data.Position;
-        editCamera.transform.rotation = data.Rotation;
-    }
 
     public void ResetEditCameraToDefault()
     {

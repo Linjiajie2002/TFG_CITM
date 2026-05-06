@@ -47,4 +47,11 @@ public class SmoothCameraClipData
             rotZ = Mathf.LerpAngle(point1.rotZ, point2.rotZ, 0.5f)
         };
     }
+    // 根据索引获取当前点，方便面板直接调用
+    public CamPoint GetCurrent(int index)
+    {
+        if (index == 0) return point1;
+        if (index == 1) return point2;
+        return midPoint;
+    }
 }

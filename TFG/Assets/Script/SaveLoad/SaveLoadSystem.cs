@@ -176,6 +176,32 @@ public class SaveLoadSystem : MonoBehaviour
                 });
                 break;
 
+            case SmoothCameraClipData smCam:
+                clip.customDataType = "SmoothCamera";
+                var saveObj = new SmoothCameraClipSave();
+
+                // 基础设置
+                saveObj.useMidPoint = smCam.useMidPoint;
+                saveObj.curveAmount = smCam.curveAmount;
+                saveObj.posXMin = smCam.posXMin; saveObj.posXMax = smCam.posXMax;
+                saveObj.posYMin = smCam.posYMin; saveObj.posYMax = smCam.posYMax;
+                saveObj.posZMin = smCam.posZMin; saveObj.posZMax = smCam.posZMax;
+
+                // 起点
+                saveObj.point1.posX = smCam.point1.posX; saveObj.point1.posY = smCam.point1.posY; saveObj.point1.posZ = smCam.point1.posZ;
+                saveObj.point1.rotX = smCam.point1.rotX; saveObj.point1.rotY = smCam.point1.rotY; saveObj.point1.rotZ = smCam.point1.rotZ;
+
+                // 终点
+                saveObj.point2.posX = smCam.point2.posX; saveObj.point2.posY = smCam.point2.posY; saveObj.point2.posZ = smCam.point2.posZ;
+                saveObj.point2.rotX = smCam.point2.rotX; saveObj.point2.rotY = smCam.point2.rotY; saveObj.point2.rotZ = smCam.point2.rotZ;
+
+                // 中间点
+                saveObj.midPoint.posX = smCam.midPoint.posX; saveObj.midPoint.posY = smCam.midPoint.posY; saveObj.midPoint.posZ = smCam.midPoint.posZ;
+                saveObj.midPoint.rotX = smCam.midPoint.rotX; saveObj.midPoint.rotY = smCam.midPoint.rotY; saveObj.midPoint.rotZ = smCam.midPoint.rotZ;
+
+                clip.customDataJson = JsonUtility.ToJson(saveObj);
+                break;
+
             case PointLightClipData lt:
                 clip.customDataType = "PointLight";
                 clip.customDataJson = JsonUtility.ToJson(new PointLightClipSave
@@ -370,6 +396,33 @@ public class SaveLoadSystem : MonoBehaviour
                         posZMin = s.posZMin,
                         posZMax = s.posZMax
                     };
+                }
+
+            case "SmoothCamera":
+                {
+                    var s = JsonUtility.FromJson<SmoothCameraClipSave>(clip.customDataJson);
+                    var newData = new SmoothCameraClipData();
+
+                    // 基础设置
+                    newData.useMidPoint = s.useMidPoint;
+                    newData.curveAmount = s.curveAmount;
+                    newData.posXMin = s.posXMin; newData.posXMax = s.posXMax;
+                    newData.posYMin = s.posYMin; newData.posYMax = s.posYMax;
+                    newData.posZMin = s.posZMin; newData.posZMax = s.posZMax;
+
+                    // 起点
+                    newData.point1.posX = s.point1.posX; newData.point1.posY = s.point1.posY; newData.point1.posZ = s.point1.posZ;
+                    newData.point1.rotX = s.point1.rotX; newData.point1.rotY = s.point1.rotY; newData.point1.rotZ = s.point1.rotZ;
+
+                    // 终点
+                    newData.point2.posX = s.point2.posX; newData.point2.posY = s.point2.posY; newData.point2.posZ = s.point2.posZ;
+                    newData.point2.rotX = s.point2.rotX; newData.point2.rotY = s.point2.rotY; newData.point2.rotZ = s.point2.rotZ;
+
+                    // 中间点
+                    newData.midPoint.posX = s.midPoint.posX; newData.midPoint.posY = s.midPoint.posY; newData.midPoint.posZ = s.midPoint.posZ;
+                    newData.midPoint.rotX = s.midPoint.rotX; newData.midPoint.rotY = s.midPoint.rotY; newData.midPoint.rotZ = s.midPoint.rotZ;
+
+                    return newData;
                 }
 
             case "PointLight":

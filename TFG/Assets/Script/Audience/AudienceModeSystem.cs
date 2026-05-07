@@ -243,12 +243,22 @@ public class AudienceModeSystem : MonoBehaviour
     private bool CheckHasCameraClips()
     {
         if (timeline?.allEvents == null || timeline?.allTracks == null) return false;
+
         foreach (var track in timeline.allTracks)
         {
             if (track.trackName != cameraTrackName) continue;
+
             foreach (var evt in timeline.allEvents)
-                if (evt.trackIndex == track.trackIndex && evt.customData is CameraClipData)
-                    return true;
+            {
+                if (evt.trackIndex == track.trackIndex)
+                {
+                    // 【核心修复】：同时识别旧版的 CameraClipData 和新版的 SmoothCameraClipData
+                    if (evt.customData is CameraClipData || evt.customData is SmoothCameraClipData)
+                    {
+                        return true;
+                    }
+                }
+            }
         }
         return false;
     }

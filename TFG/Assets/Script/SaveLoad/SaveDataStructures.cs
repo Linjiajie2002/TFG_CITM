@@ -48,6 +48,28 @@ public class ClipSaveData
     public string customDataJson = "";
 }
 
+// ── Smooth Camera Clip 数据 (新增的平滑相机存档结构) ────────────
+[Serializable]
+public class CamPointSave
+{
+    public float posX; public float posY; public float posZ;
+    public float rotX; public float rotY; public float rotZ;
+}
+
+[Serializable]
+public class SmoothCameraClipSave
+{
+    public CamPointSave point1 = new CamPointSave();
+    public CamPointSave point2 = new CamPointSave();
+    public CamPointSave midPoint = new CamPointSave();
+    public bool useMidPoint;
+    public float curveAmount;
+
+    public float posXMin; public float posXMax;
+    public float posYMin; public float posYMax;
+    public float posZMin; public float posZMax;
+}
+
 // ── Camera Clip 数据 ─────────────────────────────────────────
 [Serializable]
 public class CameraClipSave

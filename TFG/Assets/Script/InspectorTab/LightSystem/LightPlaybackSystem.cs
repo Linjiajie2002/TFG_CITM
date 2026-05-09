@@ -96,17 +96,22 @@ public class LightPlaybackSystem : MonoBehaviour
             {
                 if (!go.activeSelf) go.SetActive(true);
 
-                // Transform
+                // ── 外层 Empty：位置 + 缩放 + 静态朝向 ──
                 go.transform.position = data.Position;
                 go.transform.localScale = data.Scale;
-                go.transform.rotation = data.isRotating
-                    ? data.Rotation * Quaternion.Euler(0f, currentTime * data.rotationSpeed, 0f)
-                    : data.Rotation;
+                go.transform.rotation = data.Rotation;   // rotX / rotY / rotZ（Inspector 控制）
 
-                // Shader（通过独立材质实例，每个灯互不干扰）
+                // ── 中层 Empty：Y 轴循环旋转 ──
+                if (data.runtimeMiddleEmpty != null)
+                {
+                    float spinY = data.isRotating ? (currentTime * data.rotationSpeed) % 360f : 0f;
+                    data.runtimeMiddleEmpty.localEulerAngles = new Vector3(0f, spinY, data.circleRadius);
+                }
+
+                // ── Shader（通过独立材质实例，每个灯互不干扰）──
                 ApplyShaderParams(data);
 
-                // 物理 Light
+                // ── 物理 Light ──
                 Light lt = go.GetComponentInChildren<Light>();
                 if (lt != null)
                 {
@@ -162,13 +167,14 @@ public class LightPlaybackSystem : MonoBehaviour
                     spotLightPool[evt] = go;
                     sData.runtimeInstance = go;
 
-                    // ★ 关键：为每个实例创建独立材质，避免多灯共享同一材质
+                    // 存中层 Empty（Prefab 第一个子物体）
+                    if (go.transform.childCount > 0)
+                        sData.runtimeMiddleEmpty = go.transform.GetChild(0);
+
+                    // ★ 为每个实例创建独立材质，避免多灯共享同一材质
                     MeshRenderer rend = go.GetComponentInChildren<MeshRenderer>();
                     if (rend != null)
-                    {
-                        // renderer.material 会自动 clone 一份，此实例独享
-                        sData.runtimeMaterial = rend.material;
-                    }
+                        sData.runtimeMaterial = rend.material; // renderer.material 自动 clone
                 }
             }
         }
@@ -192,7 +198,6 @@ public class LightPlaybackSystem : MonoBehaviour
             if (!timeline.allEvents.Contains(k)) deadSpot.Add(k);
         foreach (var k in deadSpot)
         {
-            // 销毁前先销毁独立材质，防止内存泄漏
             if (spotLightPool[k] != null)
             {
                 SpotLightClipData d = k.customData as SpotLightClipData;

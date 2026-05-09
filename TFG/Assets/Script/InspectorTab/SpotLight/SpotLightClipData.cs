@@ -8,7 +8,7 @@ public class SpotLightClipData
     public float posY = 5f;
     public float posZ = 0f;
 
-    // ---------- 旋转 ----------
+    // ---------- 旋转（外层 Empty，控制整体朝向）----------
     public float rotX = 0f;
     public float rotY = 0f;
     public float rotZ = 0f;
@@ -20,13 +20,18 @@ public class SpotLightClipData
 
     // ---------- 旋转动画 ----------
     public bool isRotating = false;
-    public float rotationSpeed = 60f;
+    public float rotationSpeed = 60f;       // 中层 RotY 每秒转多少度
 
-    // ---------- Shader 参数（对应 ShaderGraph 属性名）----------
-    public float alpha = 1f;             // → _Global_Alpha
-    public float breathSpeed = 0f;       // → _Breath_Speed
-    public Color colorTop = new Color(0f, 0f, 0f, 1f);   // → _Color_Top
-    public Color colorBottom = new Color(0f, 0f, 0f, 1f);   // → _Color_Bottom
+    // ★ 新增：转圈半径（中层 Empty 的 RotZ，控制灯扫出的圆圈大小）
+    public float circleRadius = 0f;         // → 中层 Empty 的 localEulerAngles.z
+    public float circleRadiusMin = 0f;
+    public float circleRadiusMax = 60f;
+
+    // ---------- Shader 参数 ----------
+    public float alpha = 1f;
+    public float breathSpeed = 0f;
+    public Color colorTop = new Color(0f, 0f, 0f, 1f);
+    public Color colorBottom = new Color(0f, 0f, 0f, 1f);
 
     // ---------- 物理灯光 ----------
     public float range = 15f;
@@ -44,8 +49,8 @@ public class SpotLightClipData
 
     // ---------- 运行时（不序列化）----------
     [System.NonSerialized] public GameObject runtimeInstance = null;
-    // 每个实例独立的材质（用 renderer.material 创建，避免共享）
     [System.NonSerialized] public Material runtimeMaterial = null;
+    [System.NonSerialized] public Transform runtimeMiddleEmpty = null; // 中层 Empty
 
     // ---------- 快捷属性 ----------
     public Vector3 Position => new Vector3(posX, posY, posZ);

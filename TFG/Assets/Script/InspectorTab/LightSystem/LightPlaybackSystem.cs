@@ -15,7 +15,6 @@ public class LightPlaybackSystem : MonoBehaviour
     public GameObject spotLightPrefab;
     public Transform spotLightContainer;
 
-    // Shader 属性 ID（缓存，避免每帧字符串查找）
     private static readonly int ID_GlobalAlpha = Shader.PropertyToID("_Global_Alpha");
     private static readonly int ID_BreathSpeed = Shader.PropertyToID("_Breath_Speed");
     private static readonly int ID_ColorTop = Shader.PropertyToID("_Color_Top");
@@ -23,9 +22,6 @@ public class LightPlaybackSystem : MonoBehaviour
 
     private Dictionary<TimelineEventData, Light> pointLightPool = new();
     private Dictionary<TimelineEventData, GameObject> spotLightPool = new();
-
-    private float lastCheckedTime = -999f;
-    private bool isPlaying = false;
 
     void Start()
     {
@@ -36,25 +32,8 @@ public class LightPlaybackSystem : MonoBehaviour
     {
         if (timeline == null) return;
 
-        bool nowPlaying = timeline.musicSource != null && timeline.musicSource.isPlaying;
-        float currentTime = timeline.GetCurrentTime();
-
-        if (nowPlaying != isPlaying)
-        {
-            isPlaying = nowPlaying;
-            if (!isPlaying)
-            {
-                DeactivateAll();
-                lastCheckedTime = -999f;
-            }
-        }
-
-        if (Mathf.Abs(currentTime - lastCheckedTime) > 0.008f || isPlaying)
-        {
-            lastCheckedTime = currentTime;
-            RebuildPools();
-            TickLights(currentTime);
-        }
+        RebuildPools();
+        TickLights(timeline.GetCurrentTime());
     }
 
     // ==========================================
@@ -96,22 +75,27 @@ public class LightPlaybackSystem : MonoBehaviour
             {
                 if (!go.activeSelf) go.SetActive(true);
 
-                // ── 外层 Empty：位置 + 缩放 + 静态朝向 ──
+                // 外层：位置 + 缩放 + 静态朝向
                 go.transform.position = data.Position;
                 go.transform.localScale = data.Scale;
-                go.transform.rotation = data.Rotation;   // rotX / rotY / rotZ（Inspector 控制）
+                go.transform.rotation = data.Rotation;
 
-                // ── 中层 Empty：Y 轴循环旋转 ──
+                // 中层：旋转中 Y 轴转圈+RotZ 半径；关闭时全归零
                 if (data.runtimeMiddleEmpty != null)
                 {
-                    float spinY = data.isRotating ? (currentTime * data.rotationSpeed) % 360f : 0f;
-                    data.runtimeMiddleEmpty.localEulerAngles = new Vector3(0f, spinY, data.circleRadius);
+                    if (data.isRotating)
+                    {
+                        float spinY = (Time.time * data.rotationSpeed) % 360f;
+                        data.runtimeMiddleEmpty.localEulerAngles = new Vector3(0f, spinY, data.circleRadius);
+                    }
+                    else
+                    {
+                        data.runtimeMiddleEmpty.localEulerAngles = Vector3.zero;
+                    }
                 }
 
-                // ── Shader（通过独立材质实例，每个灯互不干扰）──
                 ApplyShaderParams(data);
 
-                // ── 物理 Light ──
                 Light lt = go.GetComponentInChildren<Light>();
                 if (lt != null)
                 {
@@ -127,9 +111,6 @@ public class LightPlaybackSystem : MonoBehaviour
         }
     }
 
-    // ==========================================
-    // 向独立材质实例写入 Shader 参数
-    // ==========================================
     private void ApplyShaderParams(SpotLightClipData data)
     {
         if (data.runtimeMaterial == null) return;
@@ -148,7 +129,6 @@ public class LightPlaybackSystem : MonoBehaviour
 
         foreach (var evt in timeline.allEvents)
         {
-            // PointLight
             if (evt.customData is PointLightClipData pData && !pointLightPool.ContainsKey(evt))
             {
                 Light lt = CreatePointLight($"PointLight_{evt.trackIndex}");
@@ -156,7 +136,6 @@ public class LightPlaybackSystem : MonoBehaviour
                 pData.runtimeLight = lt;
             }
 
-            // SpotLight
             if (evt.customData is SpotLightClipData sData && !spotLightPool.ContainsKey(evt))
             {
                 if (spotLightPrefab != null)
@@ -167,14 +146,12 @@ public class LightPlaybackSystem : MonoBehaviour
                     spotLightPool[evt] = go;
                     sData.runtimeInstance = go;
 
-                    // 存中层 Empty（Prefab 第一个子物体）
                     if (go.transform.childCount > 0)
                         sData.runtimeMiddleEmpty = go.transform.GetChild(0);
 
-                    // ★ 为每个实例创建独立材质，避免多灯共享同一材质
                     MeshRenderer rend = go.GetComponentInChildren<MeshRenderer>();
                     if (rend != null)
-                        sData.runtimeMaterial = rend.material; // renderer.material 自动 clone
+                        sData.runtimeMaterial = rend.material;
                 }
             }
         }
@@ -224,9 +201,5 @@ public class LightPlaybackSystem : MonoBehaviour
         foreach (var go in spotLightPool.Values) if (go) go.SetActive(false);
     }
 
-    public void ForceRefresh()
-    {
-        lastCheckedTime = -999f;
-        RebuildPools();
-    }
+    public void ForceRefresh() => RebuildPools();
 }

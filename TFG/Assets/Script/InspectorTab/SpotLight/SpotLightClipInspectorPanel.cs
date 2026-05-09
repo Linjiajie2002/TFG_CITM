@@ -22,16 +22,15 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
     public TextMeshProUGUI scaleXText, scaleYText, scaleZText;
 
     [Header("=== Circle Rotation Animation ===")]
-    public Button btnToggleRotation;
-    public TextMeshProUGUI btnRotationLabel;
-
-    public GameObject circleRadiusRow;
-    public Slider sliderCircleRadius;
-    public TextMeshProUGUI circleRadiusText;
+    public Toggle toggleRotation;   // 开/关旋转
 
     public GameObject rotSpeedRow;
     public Slider sliderRotSpeed;
     public TextMeshProUGUI rotSpeedText;
+
+    // circleRadius Slider：开启时显示保存值，关闭时 Slider 回到 0（但数值保留）
+    public Slider sliderCircleRadius;
+    public TextMeshProUGUI circleRadiusText;
 
     [Header("=== Shader ===")]
     public Slider sliderAlpha;
@@ -45,23 +44,10 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
 
     private SpotLightClipData spotData;
     private bool isReady = false;
+    private float savedCircleRadius = 0f; // 关闭时暂存 circleRadius
 
     protected override void Awake() => base.Awake();
 
-    // ==========================================
-    // 每帧：旋转中层 Empty 的 RotY
-    // ==========================================
-    void Update()
-    {
-        if (!isReady || spotData == null) return;
-        if (!spotData.isRotating) return;
-        if (spotData.runtimeMiddleEmpty == null) return;
-
-        float spinY = (Time.time * spotData.rotationSpeed) % 360f;
-        spotData.runtimeMiddleEmpty.localEulerAngles = new Vector3(0f, spinY, spotData.circleRadius);
-    }
-
-    // ==========================================
     public override void BindClip(TimelineEventData clip, TimelineManager mgr)
     {
         isReady = false;
@@ -82,12 +68,17 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         SetupSlider(sliderRotSpeed, spotData.rotSpeedMin, spotData.rotSpeedMax, spotData.rotationSpeed);
         SetupSlider(sliderAlpha, spotData.alphaMin, spotData.alphaMax, spotData.alpha);
         SetupSlider(sliderBreathSpeed, spotData.breathSpeedMin, spotData.breathSpeedMax, spotData.breathSpeed);
-        SetupSlider(sliderCircleRadius, spotData.circleRadiusMin, spotData.circleRadiusMax, spotData.circleRadius);
 
-        if (btnToggleRotation != null)
+        // circleRadius：开启时显示保存值，关闭时显示 0
+        float radiusDisplay = spotData.isRotating ? spotData.circleRadius : 0f;
+        SetupSlider(sliderCircleRadius, spotData.circleRadiusMin, spotData.circleRadiusMax, radiusDisplay);
+
+        // Toggle
+        if (toggleRotation != null)
         {
-            btnToggleRotation.onClick.RemoveAllListeners();
-            btnToggleRotation.onClick.AddListener(OnToggleRotationClicked);
+            toggleRotation.onValueChanged.RemoveAllListeners();
+            toggleRotation.isOn = spotData.isRotating;
+            toggleRotation.onValueChanged.AddListener(OnToggleChanged);
         }
 
         if (colorPickerTop != null)
@@ -109,49 +100,60 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
     }
 
     // ==========================================
-    // 按钮：开/停旋转
+    // Toggle 回调
     // ==========================================
-    private void OnToggleRotationClicked()
+    private void OnToggleChanged(bool isOn)
     {
-        if (spotData == null) return;
-        spotData.isRotating = !spotData.isRotating;
+        if (!isReady || spotData == null) return;
+        spotData.isRotating = isOn;
 
-        // 停止时把中层 RotY 归零
-        if (!spotData.isRotating && spotData.runtimeMiddleEmpty != null)
-            spotData.runtimeMiddleEmpty.localEulerAngles = new Vector3(0f, 0f, spotData.circleRadius);
+        if (isOn)
+        {
+            // 开启：从 savedCircleRadius 恢复值
+            spotData.circleRadius = savedCircleRadius;
+            SetupSlider(sliderCircleRadius, spotData.circleRadiusMin, spotData.circleRadiusMax, spotData.circleRadius);
+            if (sliderCircleRadius != null)
+                sliderCircleRadius.onValueChanged.AddListener(v => { spotData.circleRadius = v; Refresh(); });
+        }
+        else
+        {
+            // 关闭：把当前值存到 savedCircleRadius，然后把 circleRadius 和 Slider 都归零
+            savedCircleRadius = sliderCircleRadius != null ? sliderCircleRadius.value : spotData.circleRadius;
+            spotData.circleRadius = 0f;
 
-        SetRotationRowsVisible(spotData.isRotating);
-        UpdateRotationButtonLabel();
-    }
+            if (sliderCircleRadius != null)
+            {
+                sliderCircleRadius.onValueChanged.RemoveAllListeners();
+                sliderCircleRadius.value = 0f;
+                sliderCircleRadius.interactable = false;
+            }
+        }
 
-    private void UpdateRotationButtonLabel()
-    {
-        if (btnRotationLabel == null) return;
-        btnRotationLabel.text = spotData.isRotating ? "停止旋转" : "开始旋转";
+        SetRotationRowsVisible(isOn);
     }
 
     private void SetRotationRowsVisible(bool v)
     {
         if (rotSpeedRow != null) rotSpeedRow.SetActive(v);
-        if (circleRadiusRow != null) circleRadiusRow.SetActive(v);
+        // circleRadius 行跟随显隐（如果你有单独的行容器可以在这里控制，没有就删这行）
+        if (sliderCircleRadius != null) sliderCircleRadius.interactable = v;
     }
 
-    // ==========================================
     public override void RefreshDisplay()
     {
         base.RefreshDisplay();
         if (!isReady || spotData == null) return;
+        if (toggleRotation != null) toggleRotation.isOn = spotData.isRotating;
         SetRotationRowsVisible(spotData.isRotating);
-        UpdateRotationButtonLabel();
         UpdateLabels();
         UpdatePreview();
     }
 
-    // ==========================================
     private void SetupSlider(Slider s, float min, float max, float val)
     {
         if (s == null) return;
         s.onValueChanged.RemoveAllListeners();
+        s.interactable = true;
         s.minValue = min;
         s.maxValue = max;
         s.value = Mathf.Clamp(val, min, max);
@@ -171,7 +173,10 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         if (sliderRotSpeed != null) sliderRotSpeed.onValueChanged.AddListener(v => { spotData.rotationSpeed = v; Refresh(); });
         if (sliderAlpha != null) sliderAlpha.onValueChanged.AddListener(v => { spotData.alpha = v; Refresh(); });
         if (sliderBreathSpeed != null) sliderBreathSpeed.onValueChanged.AddListener(v => { spotData.breathSpeed = v; Refresh(); });
-        if (sliderCircleRadius != null) sliderCircleRadius.onValueChanged.AddListener(v => { spotData.circleRadius = v; Refresh(); });
+
+        // circleRadius 只在开启时注册（关闭时由 OnToggleChanged 处理）
+        if (sliderCircleRadius != null && spotData.isRotating)
+            sliderCircleRadius.onValueChanged.AddListener(v => { spotData.circleRadius = v; Refresh(); });
     }
 
     private void Refresh()
@@ -194,23 +199,18 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         if (rotSpeedText) rotSpeedText.text = $"{spotData.rotationSpeed:F0}°/s";
         if (alphaText) alphaText.text = $"{spotData.alpha:F2}";
         if (breathSpeedText) breathSpeedText.text = $"{spotData.breathSpeed:F2}";
-        if (circleRadiusText) circleRadiusText.text = $"{spotData.circleRadius:F1}°";
+        // 关闭时显示 0，开启时显示实际保存值
+        if (circleRadiusText) circleRadiusText.text = spotData.isRotating ? $"{spotData.circleRadius:F1}°" : "0°";
     }
 
     private void UpdatePreview()
     {
         if (spotData?.runtimeInstance == null) return;
 
-        // 外层：位置 / 缩放 / 静态朝向
         spotData.runtimeInstance.transform.position = spotData.Position;
         spotData.runtimeInstance.transform.localScale = spotData.Scale;
         spotData.runtimeInstance.transform.rotation = spotData.Rotation;
 
-        // 中层：停止时只写半径，旋转中由 Update() 负责不覆盖
-        if (!spotData.isRotating && spotData.runtimeMiddleEmpty != null)
-            spotData.runtimeMiddleEmpty.localEulerAngles = new Vector3(0f, 0f, spotData.circleRadius);
-
-        // Shader
         if (spotData.runtimeMaterial != null)
         {
             spotData.runtimeMaterial.SetFloat(ID_GlobalAlpha, spotData.alpha);
@@ -219,7 +219,6 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
             spotData.runtimeMaterial.SetColor(ID_ColorBottom, spotData.colorBottom);
         }
 
-        // 物理 Light
         Light lt = spotData.runtimeInstance.GetComponentInChildren<Light>();
         if (lt != null)
         {

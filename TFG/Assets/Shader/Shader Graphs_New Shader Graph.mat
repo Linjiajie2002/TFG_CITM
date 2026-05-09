@@ -51,13 +51,15 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Breath_Speed: 2
+    - _Breath_Speed: 1.18
     - _Depth_Fade_Distance: 0.5
+    - _Flow_Distortion: 0.3
     - _Fresnel_Power: 3
     - _Global_Alpha: 1
-    - _Master_Alpha: 1
+    - _Master_Alpha: 0
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _Twist_Amount: 1
     m_Colors:
     - _Color_Bottom: {r: 0, g: 1.0624709, b: 5.3403134, a: 1}
     - _Color_Top: {r: 2.0474796, g: 0, b: 0.12529531, a: 1}

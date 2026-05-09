@@ -1,217 +1,227 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// ==========================================
-// 灯光播放系统
-//
-// 挂载位置：System_Manager 或任意常驻 GameObject
-//
-// 职责：
-//   1. Edit 和 Play 模式下，Scrub/播放时根据时间轴 Clip 数据
-//      实时开关场景里的 Point Light
-//   2. 强制最多同时 3 个灯（MAX_SIMULTANEOUS_LIGHTS）
-//   3. 为每个 PointLightClipData 创建 / 复用真实 Light GameObject
-// ==========================================
 public class LightPlaybackSystem : MonoBehaviour
 {
-    // ── 全局灯光数量上限（所有灯类型共享）──
-    public const int MAX_SIMULTANEOUS_LIGHTS = 3;
-
-    [Header("=== 时间轴引用 ===")]
+    [Header("=== 核心引用 ===")]
     public TimelineManager timeline;
 
-    [Header("=== 灯光轨道名（与 AddModule 时填的名字一致）===")]
-    [Tooltip("默认 'Light'，如果你的模块名不同请修改")]
+    [Header("=== PointLight 配置 ===")]
     public string lightTrackName = "Light";
+    public Transform pointLightContainer;
 
-    [Header("=== 灯光父节点（所有生成的灯挂在这里）===")]
-    [Tooltip("在场景里新建一个空 GameObject 拖进来，方便管理")]
-    public Transform lightContainer;
+    [Header("=== SpotLight 配置 ===")]
+    public string spotLightTrackName = "SpotLight";
+    public GameObject spotLightPrefab;
+    public Transform spotLightContainer;
 
-    // ── 内部：每个 clip 对应一个 Light GO ──
-    // key = TimelineEventData 引用，value = 对应的 Light GameObject
-    private Dictionary<TimelineEventData, Light> lightPool
-        = new Dictionary<TimelineEventData, Light>();
+    // Shader 属性 ID（缓存，避免每帧字符串查找）
+    private static readonly int ID_GlobalAlpha = Shader.PropertyToID("_Global_Alpha");
+    private static readonly int ID_BreathSpeed = Shader.PropertyToID("_Breath_Speed");
+    private static readonly int ID_ColorTop = Shader.PropertyToID("_Color_Top");
+    private static readonly int ID_ColorBottom = Shader.PropertyToID("_Color_Bottom");
+
+    private Dictionary<TimelineEventData, Light> pointLightPool = new();
+    private Dictionary<TimelineEventData, GameObject> spotLightPool = new();
 
     private float lastCheckedTime = -999f;
+    private bool isPlaying = false;
 
     void Start()
     {
-        // 扫描已有的 clip（场景加载时可能已有数据）
-        RebuildLightPool();
+        RebuildPools();
     }
 
     void Update()
     {
         if (timeline == null) return;
 
+        bool nowPlaying = timeline.musicSource != null && timeline.musicSource.isPlaying;
         float currentTime = timeline.GetCurrentTime();
 
-        // 每帧都检查（包括 Scrub）
-        if (Mathf.Abs(currentTime - lastCheckedTime) > 0.008f ||
-            (timeline.musicSource != null && timeline.musicSource.isPlaying))
+        if (nowPlaying != isPlaying)
+        {
+            isPlaying = nowPlaying;
+            if (!isPlaying)
+            {
+                DeactivateAll();
+                lastCheckedTime = -999f;
+            }
+        }
+
+        if (Mathf.Abs(currentTime - lastCheckedTime) > 0.008f || isPlaying)
         {
             lastCheckedTime = currentTime;
+            RebuildPools();
             TickLights(currentTime);
         }
     }
 
     // ==========================================
-    // 核心：每帧根据当前时间决定哪些灯亮
-    // ==========================================
     private void TickLights(float currentTime)
     {
-        // 1. 先确保所有 clip 都有对应的 Light GO
-        RebuildLightPool();
-
-        // 2. 收集当前时间内激活的所有灯 clip，按 startTime 排序
-        List<TimelineEventData> activeClips = GetActiveClips(currentTime);
-
-        // 3. 强制最多 MAX_SIMULTANEOUS_LIGHTS 个（超出的直接关掉）
-        int shown = 0;
-        foreach (var evt in activeClips)
+        // ── PointLight ──
+        foreach (var kvp in pointLightPool)
         {
-            bool show = shown < MAX_SIMULTANEOUS_LIGHTS;
-            SetLightActive(evt, show);
-            if (show) shown++;
+            TimelineEventData evt = kvp.Key;
+            Light lt = kvp.Value;
+            PointLightClipData data = evt.customData as PointLightClipData;
+            if (lt == null || data == null) continue;
+
+            bool active = currentTime >= evt.startTime && currentTime < evt.startTime + evt.duration;
+            if (active)
+            {
+                if (!lt.gameObject.activeSelf) lt.gameObject.SetActive(true);
+                lt.transform.position = data.Position;
+                lt.color = data.color;
+                lt.intensity = data.intensity;
+                lt.range = data.range;
+            }
+            else
+            {
+                if (lt.gameObject.activeSelf) lt.gameObject.SetActive(false);
+            }
         }
 
-        // 4. 关掉所有不在激活列表里的灯
-        foreach (var kvp in lightPool)
+        // ── SpotLight ──
+        foreach (var kvp in spotLightPool)
         {
-            if (!activeClips.Contains(kvp.Key))
-                SetLightActive(kvp.Key, false);
+            TimelineEventData evt = kvp.Key;
+            GameObject go = kvp.Value;
+            SpotLightClipData data = evt.customData as SpotLightClipData;
+            if (go == null || data == null) continue;
+
+            bool active = currentTime >= evt.startTime && currentTime < evt.startTime + evt.duration;
+            if (active)
+            {
+                if (!go.activeSelf) go.SetActive(true);
+
+                // Transform
+                go.transform.position = data.Position;
+                go.transform.localScale = data.Scale;
+                go.transform.rotation = data.isRotating
+                    ? data.Rotation * Quaternion.Euler(0f, currentTime * data.rotationSpeed, 0f)
+                    : data.Rotation;
+
+                // Shader（通过独立材质实例，每个灯互不干扰）
+                ApplyShaderParams(data);
+
+                // 物理 Light
+                Light lt = go.GetComponentInChildren<Light>();
+                if (lt != null)
+                {
+                    lt.range = data.range;
+                    lt.color = data.colorTop;
+                    lt.intensity = data.alpha * 5f;
+                }
+            }
+            else
+            {
+                if (go.activeSelf) go.SetActive(false);
+            }
         }
     }
 
     // ==========================================
-    // 收集当前时间激活的所有 Light Clip（按 startTime 排序）
+    // 向独立材质实例写入 Shader 参数
     // ==========================================
-    private List<TimelineEventData> GetActiveClips(float currentTime)
+    private void ApplyShaderParams(SpotLightClipData data)
     {
-        var result = new List<TimelineEventData>();
-
-        if (timeline.allEvents == null || timeline.allTracks == null) return result;
-
-        // 找所有灯轨道的 trackIndex
-        var lightTrackIndices = new HashSet<int>();
-        foreach (var track in timeline.allTracks)
-        {
-            // 所有以 lightTrackName 开头的轨道（以后可扩展 SpotLight、AreaLight 等）
-            if (track.trackName.StartsWith(lightTrackName))
-                lightTrackIndices.Add(track.trackIndex);
-        }
-
-        foreach (var evt in timeline.allEvents)
-        {
-            if (!lightTrackIndices.Contains(evt.trackIndex)) continue;
-            if (!(evt.customData is PointLightClipData)) continue;
-            if (currentTime >= evt.startTime && currentTime < evt.startTime + evt.duration)
-                result.Add(evt);
-        }
-
-        // 按 startTime 升序（最早触发的优先获得灯）
-        result.Sort((a, b) => a.startTime.CompareTo(b.startTime));
-        return result;
+        if (data.runtimeMaterial == null) return;
+        data.runtimeMaterial.SetFloat(ID_GlobalAlpha, data.alpha);
+        data.runtimeMaterial.SetFloat(ID_BreathSpeed, data.breathSpeed);
+        data.runtimeMaterial.SetColor(ID_ColorTop, data.colorTop);
+        data.runtimeMaterial.SetColor(ID_ColorBottom, data.colorBottom);
     }
 
     // ==========================================
-    // 为每个 PointLightClipData 确保有对应的 Light GO
+    // 对象池维护
     // ==========================================
-    public void RebuildLightPool()
+    public void RebuildPools()
     {
         if (timeline?.allEvents == null) return;
 
         foreach (var evt in timeline.allEvents)
         {
-            if (!(evt.customData is PointLightClipData data)) continue;
-
-            if (!lightPool.ContainsKey(evt))
+            // PointLight
+            if (evt.customData is PointLightClipData pData && !pointLightPool.ContainsKey(evt))
             {
-                Light lt = CreateLight(evt.eventName + "_Light");
-                lt.gameObject.SetActive(false);
-                lightPool[evt] = lt;
-                data.runtimeLight = lt;
+                Light lt = CreatePointLight($"PointLight_{evt.trackIndex}");
+                pointLightPool[evt] = lt;
+                pData.runtimeLight = lt;
             }
-            else if (lightPool[evt] == null)
+
+            // SpotLight
+            if (evt.customData is SpotLightClipData sData && !spotLightPool.ContainsKey(evt))
             {
-                // GO 被意外销毁，重建
-                Light lt = CreateLight(evt.eventName + "_Light");
-                lt.gameObject.SetActive(false);
-                lightPool[evt] = lt;
-                data.runtimeLight = lt;
+                if (spotLightPrefab != null)
+                {
+                    GameObject go = Instantiate(spotLightPrefab, spotLightContainer);
+                    go.name = $"SpotLight_{evt.startTime}";
+                    go.SetActive(false);
+                    spotLightPool[evt] = go;
+                    sData.runtimeInstance = go;
+
+                    // ★ 关键：为每个实例创建独立材质，避免多灯共享同一材质
+                    MeshRenderer rend = go.GetComponentInChildren<MeshRenderer>();
+                    if (rend != null)
+                    {
+                        // renderer.material 会自动 clone 一份，此实例独享
+                        sData.runtimeMaterial = rend.material;
+                    }
+                }
             }
         }
 
-        // 清理已删除 clip 对应的灯
-        var toRemove = new List<TimelineEventData>();
-        foreach (var kvp in lightPool)
-        {
-            if (!timeline.allEvents.Contains(kvp.Key))
-            {
-                if (kvp.Value != null) Destroy(kvp.Value.gameObject);
-                toRemove.Add(kvp.Key);
-            }
-        }
-        foreach (var k in toRemove) lightPool.Remove(k);
+        CleanupRemovedClips();
     }
 
-    // ==========================================
-    // 开关某个 clip 的灯，并同步参数
-    // ==========================================
-    private void SetLightActive(TimelineEventData evt, bool active)
+    private void CleanupRemovedClips()
     {
-        if (!lightPool.TryGetValue(evt, out Light lt) || lt == null) return;
-
-        lt.gameObject.SetActive(active);
-
-        if (active && evt.customData is PointLightClipData data)
+        var deadPoint = new List<TimelineEventData>();
+        foreach (var k in pointLightPool.Keys)
+            if (!timeline.allEvents.Contains(k)) deadPoint.Add(k);
+        foreach (var k in deadPoint)
         {
-            lt.transform.position = data.Position;
-            lt.color = data.color;
-            lt.intensity = data.intensity;
-            lt.range = data.range;
+            if (pointLightPool[k] != null) Destroy(pointLightPool[k].gameObject);
+            pointLightPool.Remove(k);
+        }
+
+        var deadSpot = new List<TimelineEventData>();
+        foreach (var k in spotLightPool.Keys)
+            if (!timeline.allEvents.Contains(k)) deadSpot.Add(k);
+        foreach (var k in deadSpot)
+        {
+            // 销毁前先销毁独立材质，防止内存泄漏
+            if (spotLightPool[k] != null)
+            {
+                SpotLightClipData d = k.customData as SpotLightClipData;
+                if (d?.runtimeMaterial != null) Destroy(d.runtimeMaterial);
+                Destroy(spotLightPool[k]);
+            }
+            spotLightPool.Remove(k);
         }
     }
 
-    // ==========================================
-    // 创建一个 Point Light GameObject
-    // ==========================================
-    private Light CreateLight(string lightName)
+    private Light CreatePointLight(string name)
     {
-        GameObject go = new GameObject(lightName);
-        if (lightContainer != null)
-            go.transform.SetParent(lightContainer, false);
-
+        GameObject go = new GameObject(name);
+        if (pointLightContainer != null) go.transform.SetParent(pointLightContainer);
         Light lt = go.AddComponent<Light>();
         lt.type = LightType.Point;
-        lt.shadows = LightShadows.Soft;
+        go.SetActive(false);
         return lt;
     }
 
-    // ==========================================
-    // 供 Inspector 面板调用：统计某时刻有多少灯激活
-    // （用于显示叠加上限警告）
-    // ==========================================
-    public int CountActiveLightsAt(float time)
+    private void DeactivateAll()
     {
-        if (timeline?.allEvents == null) return 0;
-        int count = 0;
-        foreach (var evt in timeline.allEvents)
-        {
-            if (!(evt.customData is PointLightClipData)) continue;
-            if (time >= evt.startTime && time < evt.startTime + evt.duration)
-                count++;
-        }
-        return count;
+        foreach (var lt in pointLightPool.Values) if (lt) lt.gameObject.SetActive(false);
+        foreach (var go in spotLightPool.Values) if (go) go.SetActive(false);
     }
 
-    // ==========================================
-    // 供外部调用：立即刷新（新建 Clip 后调用）
-    // ==========================================
     public void ForceRefresh()
     {
         lastCheckedTime = -999f;
-        RebuildLightPool();
+        RebuildPools();
     }
 }

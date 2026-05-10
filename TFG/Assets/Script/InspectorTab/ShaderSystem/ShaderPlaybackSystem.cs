@@ -39,11 +39,11 @@ public class ShaderPlaybackSystem : MonoBehaviour
 
         // ── ShaderClipData：trackName 匹配，原逻辑不动 ──
         var shaderAlpha = new Dictionary<Material, float>();
-        var shaderBest = new Dictionary<Material, ShaderClipData>();
+        var shaderBest = new Dictionary<Material, VoronoiShaderClipData>();
 
         foreach (var evt in timeline.allEvents)
         {
-            if (!(evt.customData is ShaderClipData data)) continue;
+            if (!(evt.customData is VoronoiShaderClipData data)) continue;
             ShaderEntry entry = FindShaderEntry(GetTrackName(evt.trackIndex));
             if (entry?.material == null) continue;
 
@@ -72,7 +72,7 @@ public class ShaderPlaybackSystem : MonoBehaviour
 
         foreach (var kvp in shaderAlpha)
         {
-            shaderBest.TryGetValue(kvp.Key, out ShaderClipData best);
+            shaderBest.TryGetValue(kvp.Key, out VoronoiShaderClipData best);
             if (best != null) best.ApplyToMaterial(kvp.Key, kvp.Value);
             else ZeroShaderMaterial(kvp.Key);
         }

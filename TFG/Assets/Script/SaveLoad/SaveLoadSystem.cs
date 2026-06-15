@@ -360,6 +360,29 @@ public class SaveLoadSystem : MonoBehaviour
         vfxSystem?.ForceRefresh();
         shaderSystem?.ForceRefresh();
 
+        // 4.5 ForceRefresh 之后 runtimeInstance 才有值，
+        //     补调一次子节点同步，修复导入后不点击 clip 数据不生效的问题
+        if (timeline?.allEvents != null)
+        {
+            foreach (var evt in timeline.allEvents)
+            {
+                if (!(evt.customData is VFXClipData vfxData)) continue;
+                if (vfxData.runtimeInstance == null) continue;
+
+                // 让 runtimeInstance 上的 VFXChildApplier 执行一次（如果有的话）
+                var applier = vfxData.runtimeInstance.GetComponent<VFXChildApplier>();
+                if (applier != null)
+                {
+                    applier.data = vfxData;
+                    applier.Apply();
+                    continue;
+                }
+
+                // 没有 VFXChildApplier 说明是普通 VFX，走父类静态方法即可
+                VFXClipInspectorPanel.ApplyVFXData(vfxData.runtimeInstance, vfxData);
+            }
+        }
+
         // 5. 恢复 Tab 状态（选中第一条轨道）
         if (timeline?.allTracks?.Count > 0)
             timeline.SelectTrack(0);

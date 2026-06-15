@@ -16182,16 +16182,16 @@ MonoBehaviour:
     maxSimultaneous: 1
   - featureName: VFX1
     prefab: {fileID: 2393111809793729749, guid: 05609566f0df27848962c113cb77d33c, type: 3}
-    maxSimultaneous: 1
+    maxSimultaneous: 10
   - featureName: VFX2
     prefab: {fileID: 6248455984205620138, guid: 943f1f3193990ba449e06e1a7ff60721, type: 3}
-    maxSimultaneous: 1
+    maxSimultaneous: 10
   - featureName: VFX3
     prefab: {fileID: 2046140665488341963, guid: 9d292543345e17f47a88af867d7eabbd, type: 3}
-    maxSimultaneous: 1
+    maxSimultaneous: 10
   - featureName: VFX4
     prefab: {fileID: 6145854677200143934, guid: 87dfa69dd72f5914b9ddf1c5ffcbf703, type: 3}
-    maxSimultaneous: 1
+    maxSimultaneous: 10
   vfxContainer: {fileID: 1715580955}
 --- !u!114 &211859221
 MonoBehaviour:
@@ -18227,9 +18227,9 @@ MonoBehaviour:
   deleteButton: {fileID: 2144281053}
   backButton: {fileID: 89386077}
   colorPickerOutline: {fileID: 66485466}
-  sliderColorThreshold: {fileID: 0}
+  sliderColorThreshold: {fileID: 1658618687}
   colorThresholdText: {fileID: 1534528848}
-  sliderNormalThreshold: {fileID: 0}
+  sliderNormalThreshold: {fileID: 995758245}
   normalThresholdText: {fileID: 506732664}
 --- !u!1 &239384260
 GameObject:
@@ -24039,7 +24039,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &341336770
 RectTransform:
   m_ObjectHideFlags: 0
@@ -69658,7 +69658,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &966568530
 RectTransform:
   m_ObjectHideFlags: 0
@@ -76019,7 +76019,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1052410213
 RectTransform:
   m_ObjectHideFlags: 0
@@ -76092,7 +76092,7 @@ MonoBehaviour:
   toggleLoop: {fileID: 1353243213}
   speedMin: 0.1
   speedMax: 3
-  parentTarget: {fileID: 2393111809793729749, guid: 05609566f0df27848962c113cb77d33c, type: 3}
+  parentTarget: {fileID: 6248455984205620138, guid: 943f1f3193990ba449e06e1a7ff60721, type: 3}
   sectionRotation: {fileID: 0}
   colorPicker: {fileID: 1538267677}
 --- !u!114 &1052410215
@@ -83799,7 +83799,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1178205840
 RectTransform:
   m_ObjectHideFlags: 0
@@ -83872,7 +83872,7 @@ MonoBehaviour:
   toggleLoop: {fileID: 282194067}
   speedMin: 0.1
   speedMax: 3
-  parentTarget: {fileID: 2393111809793729749, guid: 05609566f0df27848962c113cb77d33c, type: 3}
+  parentTarget: {fileID: 2046140665488341963, guid: 9d292543345e17f47a88af867d7eabbd, type: 3}
   sectionRotation: {fileID: 0}
   colorPicker: {fileID: 1112105444}
 --- !u!114 &1178205842
@@ -99842,7 +99842,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1411845981
 RectTransform:
   m_ObjectHideFlags: 0
@@ -99915,7 +99915,7 @@ MonoBehaviour:
   toggleLoop: {fileID: 1962215684}
   speedMin: 0.1
   speedMax: 3
-  parentTarget: {fileID: 2393111809793729749, guid: 05609566f0df27848962c113cb77d33c, type: 3}
+  parentTarget: {fileID: 6145854677200143934, guid: 87dfa69dd72f5914b9ddf1c5ffcbf703, type: 3}
   sectionRotation: {fileID: 0}
   colorPicker: {fileID: 1231531441}
 --- !u!114 &1411845983
@@ -139070,7 +139070,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1967285060
 RectTransform:
   m_ObjectHideFlags: 0

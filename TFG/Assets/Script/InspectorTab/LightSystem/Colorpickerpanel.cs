@@ -5,27 +5,7 @@ using TMPro;
 using UnityEngine.Events;
 
 // ==========================================
-// 专业级颜色选择器
-//
-// 预制体结构（ColorPickerPanel）：
-//   ├── Swatch_Button (Button + Image)         ← 折叠态，显示当前颜色，点击展开
-//   └── Picker_Panel (默认隐藏)
-//       ├── SV_Square (RawImage)               ← 饱和度/亮度二维选区
-//       │   └── SV_Cursor (Image, 小圆圈)
-//       ├── Hue_Bar (RawImage)                 ← 色相条（横向）
-//       │   └── Hue_Cursor (Image, 竖线)
-//       ├── Alpha_Bar (RawImage)               ← 透明度条
-//       │   └── Alpha_Cursor (Image, 竖线)
-//       ├── Preview_Area
-//       │   ├── Preview_Old (Image)            ← 修改前颜色
-//       │   └── Preview_New (Image)            ← 当前颜色
-//       ├── RGBA_Sliders
-//       │   ├── Row_R → Slider + TMP
-//       │   ├── Row_G → Slider + TMP
-//       │   ├── Row_B → Slider + TMP
-//       │   └── Row_A → Slider + TMP
-//       ├── Hex_InputField (TMP_InputField)    ← 十六进制输入
-//       └── Close_Button
+// 专业级颜色选择器 (主类放在最上面，防止 Unity 识别错误)
 // ==========================================
 public class ColorPickerPanel : MonoBehaviour,
     IPointerDownHandler, IDragHandler
@@ -93,9 +73,19 @@ public class ColorPickerPanel : MonoBehaviour,
     private enum DragTarget { None, SV, Hue, Alpha }
     private DragTarget dragTarget = DragTarget.None;
 
+    // 记录父级的 ScrollRect 原始状态
+    private ScrollRect parentScroll;
+    private bool originalVertical;
+    private bool originalHorizontal;
+
     // ==========================================
     void Awake()
     {
+        // 【动态添加事件转发器】
+        AttachForwarder(svSquare);
+        AttachForwarder(hueBar);
+        AttachForwarder(alphaBar);
+
         BuildTextures();
 
         if (swatchButton != null) swatchButton.onClick.AddListener(TogglePicker);
@@ -108,8 +98,19 @@ public class ColorPickerPanel : MonoBehaviour,
         if (pickerPanel != null) pickerPanel.SetActive(false);
     }
 
+    // 给分离到外部的 UI 挂载转发器
+    private void AttachForwarder(RawImage targetImage)
+    {
+        if (targetImage != null)
+        {
+            targetImage.raycastTarget = true;
+            var forwarder = targetImage.gameObject.AddComponent<ColorPickerEventForwarder>();
+            forwarder.targetPanel = this;
+        }
+    }
+
     // ==========================================
-    // 外部调用：设置颜色（不触发回调可传 notify=false）
+    // 外部调用：设置颜色
     // ==========================================
     public void SetColor(Color c, bool notify = true)
     {
@@ -140,13 +141,17 @@ public class ColorPickerPanel : MonoBehaviour,
     void TogglePicker()
     {
         isOpen = !isOpen;
-        if (pickerPanel != null) pickerPanel.SetActive(isOpen);
+        if (pickerPanel != null)
+        {
+            pickerPanel.SetActive(isOpen);
+            if (isOpen) pickerPanel.transform.SetAsLastSibling();
+        }
+
+        ToggleParentScroll(!isOpen);
 
         if (isOpen)
         {
-            // 记下当前的颜色作为“旧颜色”
             oldColor = CurrentColor();
-            // 【核心修复】：把这个颜色立刻涂到左边的 Preview Old 图片上！
             if (previewOld != null) previewOld.color = oldColor;
         }
     }
@@ -155,10 +160,38 @@ public class ColorPickerPanel : MonoBehaviour,
     {
         isOpen = false;
         if (pickerPanel != null) pickerPanel.SetActive(false);
+        ToggleParentScroll(true);
+    }
+
+    private void ToggleParentScroll(bool canScroll)
+    {
+        if (parentScroll == null)
+        {
+            parentScroll = GetComponentInParent<ScrollRect>();
+            if (parentScroll != null)
+            {
+                originalVertical = parentScroll.vertical;
+                originalHorizontal = parentScroll.horizontal;
+            }
+        }
+
+        if (parentScroll != null)
+        {
+            if (canScroll)
+            {
+                parentScroll.vertical = originalVertical;
+                parentScroll.horizontal = originalHorizontal;
+            }
+            else
+            {
+                parentScroll.vertical = false;
+                parentScroll.horizontal = false;
+            }
+        }
     }
 
     // ==========================================
-    // 鼠标/拖拽：判断点击在哪个区域
+    // 鼠标/拖拽
     // ==========================================
     public void OnPointerDown(PointerEventData data)
     {
@@ -210,7 +243,7 @@ public class ColorPickerPanel : MonoBehaviour,
 
         Rect r = hueBar.rectTransform.rect;
         h = Mathf.Clamp01((local.x - r.xMin) / r.width);
-        RebuildSVTexture();  // 色相变了，SV 图要更新
+        RebuildSVTexture();
         OnHSVChanged();
     }
 
@@ -243,11 +276,9 @@ public class ColorPickerPanel : MonoBehaviour,
     {
         Color c = CurrentColor();
 
-        // Swatch
         if (swatchImage != null) swatchImage.color = c;
         if (previewNew != null) previewNew.color = c;
 
-        // 更新 SV 光标位置
         if (svCursor != null && svSquare != null)
         {
             Rect r = svSquare.rectTransform.rect;
@@ -256,14 +287,12 @@ public class ColorPickerPanel : MonoBehaviour,
                 r.yMin + v * r.height);
         }
 
-        // 更新色相光标
         if (hueCursor != null && hueBar != null)
         {
             Rect r = hueBar.rectTransform.rect;
             hueCursor.anchoredPosition = new Vector2(r.xMin + h * r.width, 0f);
         }
 
-        // 更新透明度光标 + 透明度条背景色
         if (alphaCursor != null && alphaBar != null)
         {
             Rect r = alphaBar.rectTransform.rect;
@@ -271,7 +300,6 @@ public class ColorPickerPanel : MonoBehaviour,
         }
         RebuildAlphaTexture();
 
-        // RGBA 滑条（不触发回调）
         SetSliderSilent(sliderR, c.r);
         SetSliderSilent(sliderG, c.g);
         SetSliderSilent(sliderB, c.b);
@@ -282,7 +310,6 @@ public class ColorPickerPanel : MonoBehaviour,
         if (labelB != null) labelB.text = Mathf.RoundToInt(c.b * 255).ToString();
         if (labelA != null) labelA.text = Mathf.RoundToInt(a * 255).ToString();
 
-        // Hex
         if (hexInput != null && !hexInput.isFocused)
             hexInput.SetTextWithoutNotify(ColorUtility.ToHtmlStringRGBA(c));
     }
@@ -320,13 +347,11 @@ public class ColorPickerPanel : MonoBehaviour,
     // ==========================================
     private void BuildTextures()
     {
-        // SV 方形
         svTex = new Texture2D(SV_SIZE, SV_SIZE, TextureFormat.RGB24, false);
         svTex.filterMode = FilterMode.Bilinear;
         RebuildSVTexture();
         if (svSquare != null) svSquare.texture = svTex;
 
-        // 色相条
         hueTex = new Texture2D(HUE_SIZE, 1, TextureFormat.RGB24, false);
         hueTex.filterMode = FilterMode.Bilinear;
         for (int x = 0; x < HUE_SIZE; x++)
@@ -334,7 +359,6 @@ public class ColorPickerPanel : MonoBehaviour,
         hueTex.Apply();
         if (hueBar != null) hueBar.texture = hueTex;
 
-        // 透明度条（在 RebuildAlphaTexture 里更新）
         alphaTex = new Texture2D(BAR_W, 1, TextureFormat.RGBA32, false);
         alphaTex.filterMode = FilterMode.Bilinear;
         RebuildAlphaTexture();
@@ -376,5 +400,23 @@ public class ColorPickerPanel : MonoBehaviour,
         Color c = Color.HSVToRGB(h, s, v);
         c.a = a;
         return c;
+    }
+}
+
+// ==========================================
+// 跨层级事件转发器 (辅助类放到下面)
+// ==========================================
+public class ColorPickerEventForwarder : MonoBehaviour, IPointerDownHandler, IDragHandler
+{
+    public ColorPickerPanel targetPanel;
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        if (targetPanel != null) targetPanel.OnPointerDown(eventData);
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (targetPanel != null) targetPanel.OnDrag(eventData);
     }
 }

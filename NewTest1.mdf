@@ -1,0 +1,139 @@
+﻿{
+    "version": "1.0",
+    "savedAt": "2026-06-15 23:54:48",
+    "sceneName": "Stage1",
+    "tracks": [
+        {
+            "trackName": "Light",
+            "trackIndex": 0,
+            "allowOverlap": false
+        },
+        {
+            "trackName": "Camera",
+            "trackIndex": 1,
+            "allowOverlap": false
+        },
+        {
+            "trackName": "VFX",
+            "trackIndex": 2,
+            "allowOverlap": false
+        },
+        {
+            "trackName": "Shader",
+            "trackIndex": 3,
+            "allowOverlap": false
+        }
+    ],
+    "clips": [
+        {
+            "eventName": "PointLight",
+            "trackIndex": 0,
+            "startTime": 0.0,
+            "duration": 14.573957443237305,
+            "customDataType": "PointLight",
+            "customDataJson": "{\"posX\":0.0,\"posY\":3.0,\"posZ\":0.0,\"r\":0.0,\"g\":1.0,\"b\":0.15560317039489747,\"a\":1.0,\"intensity\":34.13534164428711,\"range\":10.0,\"posXMin\":-6.0,\"posXMax\":6.0,\"posYMin\":0.5,\"posYMax\":5.5,\"posZMin\":-6.0,\"posZMax\":6.0,\"intensityMin\":0.0,\"intensityMax\":50.0,\"rangeMin\":1.0,\"rangeMax\":50.0}"
+        },
+        {
+            "eventName": "SpotLight",
+            "trackIndex": 0,
+            "startTime": 0.0,
+            "duration": 14.58945083618164,
+            "customDataType": "SpotLight",
+            "customDataJson": "{\"posX\":-2.621692419052124,\"posY\":0.0,\"posZ\":-1.2066495418548585,\"rotX\":-180.0,\"rotY\":-8.580118179321289,\"rotZ\":0.0,\"scaleX\":1.4136366844177247,\"scaleY\":2.3499999046325685,\"scaleZ\":2.5,\"isRotating\":true,\"rotationSpeed\":60.0,\"circleRadius\":21.140581130981447,\"alpha\":1.0,\"breathSpeed\":1.8125442266464234,\"topR\":1.0,\"topG\":0.0,\"topB\":0.0,\"topA\":1.0,\"botR\":0.0,\"botG\":0.30962300300598147,\"botB\":1.0,\"botA\":1.0,\"range\":15.0,\"posXMin\":-20.0,\"posXMax\":20.0,\"posYMin\":0.0,\"posYMax\":20.0,\"posZMin\":-20.0,\"posZMax\":20.0,\"rotMin\":-180.0,\"rotMax\":180.0,\"scaleMin\":0.10000000149011612,\"scaleMax\":10.0,\"rotSpeedMin\":0.0,\"rotSpeedMax\":360.0,\"circleRadiusMin\":0.0,\"circleRadiusMax\":60.0,\"alphaMin\":0.0,\"alphaMax\":1.0,\"breathSpeedMin\":-3.0,\"breathSpeedMax\":3.0,\"rangeMin\":1.0,\"rangeMax\":50.0}"
+        },
+        {
+            "eventName": "SpotLight",
+            "trackIndex": 0,
+            "startTime": 0.0,
+            "duration": 14.604942321777344,
+            "customDataType": "SpotLight",
+            "customDataJson": "{\"posX\":3.5750412940979006,\"posY\":0.0,\"posZ\":-0.4766678810119629,\"rotX\":-180.0,\"rotY\":4.290010929107666,\"rotZ\":0.0,\"scaleX\":2.5,\"scaleY\":2.3499999046325685,\"scaleZ\":2.5,\"isRotating\":true,\"rotationSpeed\":60.0,\"circleRadius\":11.618879318237305,\"alpha\":1.0,\"breathSpeed\":3.0,\"topR\":1.0,\"topG\":0.0,\"topB\":0.0,\"topA\":1.0,\"botR\":0.0,\"botG\":0.006992340087890625,\"botB\":1.0,\"botA\":1.0,\"range\":15.0,\"posXMin\":-20.0,\"posXMax\":20.0,\"posYMin\":0.0,\"posYMax\":20.0,\"posZMin\":-20.0,\"posZMax\":20.0,\"rotMin\":-180.0,\"rotMax\":180.0,\"scaleMin\":0.10000000149011612,\"scaleMax\":10.0,\"rotSpeedMin\":0.0,\"rotSpeedMax\":360.0,\"circleRadiusMin\":0.0,\"circleRadiusMax\":60.0,\"alphaMin\":0.0,\"alphaMax\":1.0,\"breathSpeedMin\":-3.0,\"breathSpeedMax\":3.0,\"rangeMin\":1.0,\"rangeMax\":50.0}"
+        },
+        {
+            "eventName": "Fixed",
+            "trackIndex": 1,
+            "startTime": 0.0,
+            "duration": 5.0,
+            "customDataType": "Camera",
+            "customDataJson": "{\"posX\":0.28600311279296877,\"posY\":1.9201284646987916,\"posZ\":-2.613290309906006,\"rotX\":0.0,\"rotY\":-8.580118179321289,\"rotZ\":-36.46544647216797,\"posXMin\":-4.0,\"posXMax\":4.0,\"posYMin\":0.6000000238418579,\"posYMax\":3.5999999046325685,\"posZMin\":-3.5999999046325685,\"posZMax\":3.5999999046325685}"
+        },
+        {
+            "eventName": "Smooth",
+            "trackIndex": 1,
+            "startTime": 5.0,
+            "duration": 9.601076126098633,
+            "customDataType": "SmoothCamera",
+            "customDataJson": "{\"point1\":{\"posX\":0.2383279800415039,\"posY\":1.8637148141860963,\"posZ\":-2.6166391372680666,\"rotX\":0.0,\"rotY\":0.0,\"rotZ\":0.0},\"point2\":{\"posX\":0.0,\"posY\":2.608767032623291,\"posZ\":-8.575037956237793,\"rotX\":0.0,\"rotY\":0.0,\"rotZ\":25.740365982055665},\"midPoint\":{\"posX\":0.0,\"posY\":2.0725114345550539,\"posZ\":-5.0,\"rotX\":0.0,\"rotY\":0.0,\"rotZ\":-40.755470275878909},\"useMidPoint\":true,\"curveAmount\":0.0,\"posXMin\":-20.0,\"posXMax\":20.0,\"posYMin\":0.0,\"posYMax\":15.0,\"posZMin\":-20.0,\"posZMax\":5.0}"
+        },
+        {
+            "eventName": "Sakura",
+            "trackIndex": 2,
+            "startTime": 0.0,
+            "duration": 14.632458686828614,
+            "customDataType": "VFX",
+            "customDataJson": "{\"posX\":0.0,\"posY\":3.0,\"posZ\":-1.9066691398620606,\"rotX\":102.6446304321289,\"rotY\":122.26638793945313,\"rotZ\":53.625587463378909,\"scaleX\":0.28977489471435549,\"scaleY\":0.19488736987113954,\"scaleZ\":0.10000000149011612,\"r\":1.0,\"g\":1.0,\"b\":1.0,\"a\":1.0,\"playSpeed\":1.0,\"loop\":true,\"vfxPrefabName\":\"Petals Prefab 1\",\"posXMin\":-20.0,\"posXMax\":20.0,\"posYMin\":-5.0,\"posYMax\":15.0,\"posZMin\":-20.0,\"posZMax\":20.0,\"rotMin\":0.0,\"rotMax\":360.0,\"scaleMin\":0.10000000149011612,\"scaleMax\":5.0,\"speedMin\":0.10000000149011612,\"speedMax\":3.0}"
+        },
+        {
+            "eventName": "VFX1",
+            "trackIndex": 2,
+            "startTime": 0.0,
+            "duration": 7.649106502532959,
+            "customDataType": "VFX",
+            "customDataJson": "{\"posX\":-0.2383279800415039,\"posY\":2.404155731201172,\"posZ\":0.0,\"rotX\":0.0,\"rotY\":0.0,\"rotZ\":0.0,\"scaleX\":2.644716262817383,\"scaleY\":2.644716501235962,\"scaleZ\":2.6763460636138918,\"r\":0.0,\"g\":1.0,\"b\":0.4366180896759033,\"a\":1.0,\"playSpeed\":1.0,\"loop\":true,\"vfxPrefabName\":\"Hit_1_Normal\",\"posXMin\":-20.0,\"posXMax\":20.0,\"posYMin\":-5.0,\"posYMax\":15.0,\"posZMin\":-20.0,\"posZMax\":20.0,\"rotMin\":0.0,\"rotMax\":360.0,\"scaleMin\":0.10000000149011612,\"scaleMax\":5.0,\"speedMin\":0.10000000149011612,\"speedMax\":3.0}"
+        },
+        {
+            "eventName": "VFX2",
+            "trackIndex": 2,
+            "startTime": 0.0,
+            "duration": 5.790085315704346,
+            "customDataType": "VFX",
+            "customDataJson": "{\"posX\":-2.14502215385437,\"posY\":3.0,\"posZ\":0.0,\"rotX\":0.0,\"rotY\":0.0,\"rotZ\":0.0,\"scaleX\":2.201908826828003,\"scaleY\":2.0753917694091799,\"scaleZ\":2.0753917694091799,\"r\":1.0,\"g\":0.7072968482971191,\"b\":0.0,\"a\":1.0,\"playSpeed\":1.0,\"loop\":true,\"vfxPrefabName\":\"Hit_2_Normal\",\"posXMin\":-20.0,\"posXMax\":20.0,\"posYMin\":-5.0,\"posYMax\":15.0,\"posZMin\":-20.0,\"posZMax\":20.0,\"rotMin\":0.0,\"rotMax\":360.0,\"scaleMin\":0.10000000149011612,\"scaleMax\":5.0,\"speedMin\":0.10000000149011612,\"speedMax\":3.0}"
+        },
+        {
+            "eventName": "VFX2",
+            "trackIndex": 2,
+            "startTime": 0.0,
+            "duration": 7.847028732299805,
+            "customDataType": "VFX",
+            "customDataJson": "{\"posX\":1.6683435440063477,\"posY\":2.5233263969421388,\"posZ\":0.0,\"rotX\":0.0,\"rotY\":0.0,\"rotZ\":0.0,\"scaleX\":1.0,\"scaleY\":1.0,\"scaleZ\":1.0,\"r\":0.0,\"g\":1.0,\"b\":0.3285360336303711,\"a\":1.0,\"playSpeed\":1.0,\"loop\":true,\"vfxPrefabName\":\"Hit_2_Normal\",\"posXMin\":-20.0,\"posXMax\":20.0,\"posYMin\":-5.0,\"posYMax\":15.0,\"posZMin\":-20.0,\"posZMax\":20.0,\"rotMin\":0.0,\"rotMax\":360.0,\"scaleMin\":0.10000000149011612,\"scaleMax\":5.0,\"speedMin\":0.10000000149011612,\"speedMax\":3.0}"
+        },
+        {
+            "eventName": "VFX3",
+            "trackIndex": 2,
+            "startTime": 0.0,
+            "duration": 8.160337448120118,
+            "customDataType": "VFX",
+            "customDataJson": "{\"posX\":1.1916851997375489,\"posY\":3.0,\"posZ\":0.0,\"rotX\":0.0,\"rotY\":0.0,\"rotZ\":0.0,\"scaleX\":2.581458568572998,\"scaleY\":2.1684646606445314,\"scaleZ\":2.454941511154175,\"r\":1.0,\"g\":0.0,\"b\":0.8180828094482422,\"a\":1.0,\"playSpeed\":1.0,\"loop\":true,\"vfxPrefabName\":\"Hit_3_Normal\",\"posXMin\":-20.0,\"posXMax\":20.0,\"posYMin\":-5.0,\"posYMax\":15.0,\"posZMin\":-20.0,\"posZMax\":20.0,\"rotMin\":0.0,\"rotMax\":360.0,\"scaleMin\":0.10000000149011612,\"scaleMax\":5.0,\"speedMin\":0.10000000149011612,\"speedMax\":3.0}"
+        },
+        {
+            "eventName": "VFX4",
+            "trackIndex": 2,
+            "startTime": 0.0,
+            "duration": 10.976381301879883,
+            "customDataType": "VFX",
+            "customDataJson": "{\"posX\":0.0,\"posY\":3.0,\"posZ\":0.0,\"rotX\":0.0,\"rotY\":0.0,\"rotZ\":0.0,\"scaleX\":4.004772186279297,\"scaleY\":4.3210625648498539,\"scaleZ\":4.068029880523682,\"r\":1.0,\"g\":0.0,\"b\":0.0,\"a\":1.0,\"playSpeed\":2.379732131958008,\"loop\":true,\"vfxPrefabName\":\"Hit_4_Normal\",\"posXMin\":-20.0,\"posXMax\":20.0,\"posYMin\":-5.0,\"posYMax\":15.0,\"posZMin\":-20.0,\"posZMax\":20.0,\"rotMin\":0.0,\"rotMax\":360.0,\"scaleMin\":0.10000000149011612,\"scaleMax\":5.0,\"speedMin\":0.10000000149011612,\"speedMax\":3.0}"
+        },
+        {
+            "eventName": "FullScreen",
+            "trackIndex": 3,
+            "startTime": 5.065832614898682,
+            "duration": 5.573198318481445,
+            "customDataType": "Shader_Voronoi",
+            "customDataJson": "{\"fadeInDuration\":0.5,\"fadeOutDuration\":0.5,\"r\":0.20000000298023225,\"g\":0.5,\"b\":1.0,\"a\":1.0,\"voronoiSpeed\":3.0,\"voronoiScale\":100.0,\"voronoiPower\":3.0,\"vignetteRadiusPower\":6.0,\"vignetteIntensity\":1.0,\"glowPower\":1.0,\"voronoiSpeedMin\":1.0,\"voronoiSpeedMax\":10.0,\"voronoiScaleMin\":1.0,\"voronoiScaleMax\":100.0,\"voronoiPowerMin\":-10.0,\"voronoiPowerMax\":10.0,\"vignetteRadiusMin\":0.0,\"vignetteRadiusMax\":10.0,\"vignetteIntMin\":1.0,\"vignetteIntMax\":3.0,\"glowMin\":1.0,\"glowMax\":10.0}"
+        },
+        {
+            "eventName": "Outline",
+            "trackIndex": 3,
+            "startTime": 0.0,
+            "duration": 5.100001335144043,
+            "customDataType": "Outline",
+            "customDataJson": "{\"r\":0.2441563904285431,\"g\":0.6856106519699097,\"b\":0.6659281253814697,\"a\":1.0,\"colorThreshold\":0.8691795468330383,\"normalThreshold\":1.0,\"colorThresholdMin\":0.10000000149011612,\"colorThresholdMax\":2.0,\"normalThresholdMin\":0.10000000149011612,\"normalThresholdMax\":3.0}"
+        }
+    ],
+    "activatedModules": [
+        "Light",
+        "Camera",
+        "VFX",
+        "Shader"
+    ]
+}

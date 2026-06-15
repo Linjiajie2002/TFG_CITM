@@ -207,7 +207,8 @@ public class AudienceModeSystem : MonoBehaviour
 
         if (audiencesCamera != null)
         {
-            audiencesCamera.gameObject.SetActive(isAudience);
+            //audiencesCamera.gameObject.SetActive(isAudience);
+            audiencesCamera.gameObject.SetActive(true);
             if (isAudience) audiencesCamera.targetTexture = null;
         }
 

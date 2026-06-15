@@ -303,6 +303,73 @@ public class SaveLoadSystem : MonoBehaviour
                     fadeOutDuration = sh.fadeOutDuration
                 });
                 break;
+
+            case OutlineClipData outline:
+                clip.customDataType = "Outline";
+                clip.customDataJson = JsonUtility.ToJson(new OutlineClipSave
+                {
+                    r = outline.outlineColor.r,
+                    g = outline.outlineColor.g,
+                    b = outline.outlineColor.b,
+                    a = outline.outlineColor.a,
+                    colorThreshold = outline.colorThreshold,
+                    normalThreshold = outline.normalThreshold,
+                    colorThresholdMin = outline.colorThresholdMin,
+                    colorThresholdMax = outline.colorThresholdMax,
+                    normalThresholdMin = outline.normalThresholdMin,
+                    normalThresholdMax = outline.normalThresholdMax
+                });
+                break;
+
+            case SpotLightClipData spot:
+                clip.customDataType = "SpotLight";
+                clip.customDataJson = JsonUtility.ToJson(new SpotLightClipSave
+                {
+                    posX = spot.posX,
+                    posY = spot.posY,
+                    posZ = spot.posZ,
+                    rotX = spot.rotX,
+                    rotY = spot.rotY,
+                    rotZ = spot.rotZ,
+                    scaleX = spot.scaleX,
+                    scaleY = spot.scaleY,
+                    scaleZ = spot.scaleZ,
+                    isRotating = spot.isRotating,
+                    rotationSpeed = spot.rotationSpeed,
+                    circleRadius = spot.circleRadius,
+                    alpha = spot.alpha,
+                    breathSpeed = spot.breathSpeed,
+                    topR = spot.colorTop.r,
+                    topG = spot.colorTop.g,
+                    topB = spot.colorTop.b,
+                    topA = spot.colorTop.a,
+                    botR = spot.colorBottom.r,
+                    botG = spot.colorBottom.g,
+                    botB = spot.colorBottom.b,
+                    botA = spot.colorBottom.a,
+                    range = spot.range,
+                    posXMin = spot.posXMin,
+                    posXMax = spot.posXMax,
+                    posYMin = spot.posYMin,
+                    posYMax = spot.posYMax,
+                    posZMin = spot.posZMin,
+                    posZMax = spot.posZMax,
+                    rotMin = spot.rotMin,
+                    rotMax = spot.rotMax,
+                    scaleMin = spot.scaleMin,
+                    scaleMax = spot.scaleMax,
+                    rotSpeedMin = spot.rotSpeedMin,
+                    rotSpeedMax = spot.rotSpeedMax,
+                    circleRadiusMin = spot.circleRadiusMin,
+                    circleRadiusMax = spot.circleRadiusMax,
+                    alphaMin = spot.alphaMin,
+                    alphaMax = spot.alphaMax,
+                    breathSpeedMin = spot.breathSpeedMin,
+                    breathSpeedMax = spot.breathSpeedMax,
+                    rangeMin = spot.rangeMin,
+                    rangeMax = spot.rangeMax
+                });
+                break;
         }
     }
 
@@ -541,6 +608,66 @@ public class SaveLoadSystem : MonoBehaviour
                     {
                         fadeInDuration = s.fadeInDuration,
                         fadeOutDuration = s.fadeOutDuration
+                    };
+                }
+
+            case "Outline":
+                {
+                    var s = JsonUtility.FromJson<OutlineClipSave>(clip.customDataJson);
+                    return new OutlineClipData
+                    {
+                        outlineColor = new Color(s.r, s.g, s.b, s.a),
+                        colorThreshold = s.colorThreshold,
+                        normalThreshold = s.normalThreshold,
+                        colorThresholdMin = s.colorThresholdMin,
+                        colorThresholdMax = s.colorThresholdMax,
+                        normalThresholdMin = s.normalThresholdMin,
+                        normalThresholdMax = s.normalThresholdMax
+                    };
+                }
+
+            case "SpotLight":
+                {
+                    var s = JsonUtility.FromJson<SpotLightClipSave>(clip.customDataJson);
+                    return new SpotLightClipData
+                    {
+                        posX = s.posX,
+                        posY = s.posY,
+                        posZ = s.posZ,
+                        rotX = s.rotX,
+                        rotY = s.rotY,
+                        rotZ = s.rotZ,
+                        scaleX = s.scaleX,
+                        scaleY = s.scaleY,
+                        scaleZ = s.scaleZ,
+                        isRotating = s.isRotating,
+                        rotationSpeed = s.rotationSpeed,
+                        circleRadius = s.circleRadius,
+                        alpha = s.alpha,
+                        breathSpeed = s.breathSpeed,
+                        colorTop = new Color(s.topR, s.topG, s.topB, s.topA),
+                        colorBottom = new Color(s.botR, s.botG, s.botB, s.botA),
+                        range = s.range,
+                        posXMin = s.posXMin,
+                        posXMax = s.posXMax,
+                        posYMin = s.posYMin,
+                        posYMax = s.posYMax,
+                        posZMin = s.posZMin,
+                        posZMax = s.posZMax,
+                        rotMin = s.rotMin,
+                        rotMax = s.rotMax,
+                        scaleMin = s.scaleMin,
+                        scaleMax = s.scaleMax,
+                        rotSpeedMin = s.rotSpeedMin,
+                        rotSpeedMax = s.rotSpeedMax,
+                        circleRadiusMin = s.circleRadiusMin,
+                        circleRadiusMax = s.circleRadiusMax,
+                        alphaMin = s.alphaMin,
+                        alphaMax = s.alphaMax,
+                        breathSpeedMin = s.breathSpeedMin,
+                        breathSpeedMax = s.breathSpeedMax,
+                        rangeMin = s.rangeMin,
+                        rangeMax = s.rangeMax
                     };
                 }
 

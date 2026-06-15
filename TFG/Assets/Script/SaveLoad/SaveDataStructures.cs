@@ -11,12 +11,12 @@ using UnityEngine;
 [Serializable]
 public class MDFSaveData
 {
-    public string version   = "1.0";
-    public string savedAt   = "";
+    public string version = "1.0";
+    public string savedAt = "";
     public string sceneName = "";
 
     public List<TrackSaveData> tracks = new List<TrackSaveData>();
-    public List<ClipSaveData>  clips  = new List<ClipSaveData>();
+    public List<ClipSaveData> clips = new List<ClipSaveData>();
 
     // 记录哪些模块的 startPanel 已关闭（即已添加轨道）
     public List<string> activatedModules = new List<string>();
@@ -27,8 +27,8 @@ public class MDFSaveData
 public class TrackSaveData
 {
     public string trackName;
-    public int    trackIndex;
-    public bool   allowOverlap;
+    public int trackIndex;
+    public bool allowOverlap;
 }
 
 // ── Clip 通用壳 ─────────────────────────────────────────────
@@ -36,12 +36,12 @@ public class TrackSaveData
 public class ClipSaveData
 {
     public string eventName;
-    public int    trackIndex;
-    public float  startTime;
-    public float  duration;
+    public int trackIndex;
+    public float startTime;
+    public float duration;
 
     // 类型判别字段：决定 customDataJson 解析成哪个类
-    // 取值："Camera" | "PointLight" | "VFX" | "Shader_Voronoi" | "Shader_Base" | ""
+    // 取值："Camera" | "SmoothCamera" | "PointLight" | "VFX" | "Shader_Voronoi" | "Shader_Base" | "Outline" | "SpotLight" | ""
     public string customDataType = "";
 
     // 把具体数据二次序列化成 JSON 字符串存在这里
@@ -92,7 +92,7 @@ public class PointLightClipSave
     public float posYMin; public float posYMax;
     public float posZMin; public float posZMax;
     public float intensityMin; public float intensityMax;
-    public float rangeMin;     public float rangeMax;
+    public float rangeMin; public float rangeMax;
 }
 
 // ── VFX Clip 数据 ────────────────────────────────────────────
@@ -104,13 +104,13 @@ public class VFXClipSave
     public float scaleX; public float scaleY; public float scaleZ;
     public float r; public float g; public float b; public float a;
     public float playSpeed;
-    public bool  loop;
+    public bool loop;
     public string vfxPrefabName;
     // 范围
     public float posXMin; public float posXMax;
     public float posYMin; public float posYMax;
     public float posZMin; public float posZMax;
-    public float rotMin;  public float rotMax;
+    public float rotMin; public float rotMax;
     public float scaleMin; public float scaleMax;
     public float speedMin; public float speedMax;
 }
@@ -136,6 +136,54 @@ public class VoronoiShaderClipSave : ShaderClipBaseSave
     public float voronoiScaleMin; public float voronoiScaleMax;
     public float voronoiPowerMin; public float voronoiPowerMax;
     public float vignetteRadiusMin; public float vignetteRadiusMax;
-    public float vignetteIntMin;    public float vignetteIntMax;
+    public float vignetteIntMin; public float vignetteIntMax;
     public float glowMin; public float glowMax;
+}
+
+// ── Outline Clip 数据 ──────────────────────────────────────────
+[Serializable]
+public class OutlineClipSave
+{
+    public float r; public float g; public float b; public float a;
+    public float colorThreshold;
+    public float normalThreshold;
+    // 范围
+    public float colorThresholdMin; public float colorThresholdMax;
+    public float normalThresholdMin; public float normalThresholdMax;
+}
+
+// ── SpotLight Clip 数据 ────────────────────────────────────────
+[Serializable]
+public class SpotLightClipSave
+{
+    // 位置 / 旋转 / 缩放
+    public float posX; public float posY; public float posZ;
+    public float rotX; public float rotY; public float rotZ;
+    public float scaleX; public float scaleY; public float scaleZ;
+
+    // 旋转动画
+    public bool isRotating;
+    public float rotationSpeed;
+    public float circleRadius;
+
+    // Shader 参数
+    public float alpha;
+    public float breathSpeed;
+    public float topR; public float topG; public float topB; public float topA;
+    public float botR; public float botG; public float botB; public float botA;
+
+    // 物理灯光
+    public float range;
+
+    // 范围
+    public float posXMin; public float posXMax;
+    public float posYMin; public float posYMax;
+    public float posZMin; public float posZMax;
+    public float rotMin; public float rotMax;
+    public float scaleMin; public float scaleMax;
+    public float rotSpeedMin; public float rotSpeedMax;
+    public float circleRadiusMin; public float circleRadiusMax;
+    public float alphaMin; public float alphaMax;
+    public float breathSpeedMin; public float breathSpeedMax;
+    public float rangeMin; public float rangeMax;
 }

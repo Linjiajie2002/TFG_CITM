@@ -752,9 +752,10 @@ public class SaveLoadSystem : MonoBehaviour
             "导出演出数据", "", DEFAULT_FILENAME, FILE_EXT);
         return path;
 #else
-        // 运行时：固定存到 Application.persistentDataPath
-        return Path.Combine(Application.persistentDataPath,
-                            DEFAULT_FILENAME + "." + FILE_EXT);
+        // Build 后用 StandaloneFileBrowser 插件弹出系统原生保存窗口
+        string path = SFB.StandaloneFileBrowser.SaveFilePanel(
+            "导出演出数据", "", DEFAULT_FILENAME, FILE_EXT);
+        return path;
 #endif
     }
 
@@ -765,14 +766,10 @@ public class SaveLoadSystem : MonoBehaviour
             "导入演出数据", "", FILE_EXT);
         return path;
 #else
-        string path = Path.Combine(Application.persistentDataPath,
-                                   DEFAULT_FILENAME + "." + FILE_EXT);
-        if (!File.Exists(path))
-        {
-            ShowStatus($"✗ 找不到文件：{path}", false);
-            return "";
-        }
-        return path;
+        // Build 后用 StandaloneFileBrowser 插件弹出系统原生打开窗口
+        string[] paths = SFB.StandaloneFileBrowser.OpenFilePanel(
+            "导入演出数据", "", FILE_EXT, false);
+        return (paths != null && paths.Length > 0) ? paths[0] : "";
 #endif
     }
 

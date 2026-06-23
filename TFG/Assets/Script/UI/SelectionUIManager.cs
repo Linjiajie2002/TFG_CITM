@@ -51,6 +51,14 @@ public class SelectionUIManager : MonoBehaviour
     public SelectionSlotUI slotScene;
     public SelectionSlotUI slotMusic;
 
+    // ── 音乐自动播放 ─────────────────────────────────────────
+    [Header("=== 音乐自动播放 ===")]
+    public AudioSource musicAudioSource;
+    public GameObject musicReplayPanel; // 遮罩面板（内部需要包含一个 Button 组件，用于点击重播）
+    public float musicPlayDuration = 20f;
+
+    private Coroutine musicPlayCoroutine;
+
     // ── 内部状态 ─────────────────────────────────────────────
     private enum TabType { Character, Scene, Music }
     private TabType currentTab = TabType.Character;
@@ -82,6 +90,22 @@ public class SelectionUIManager : MonoBehaviour
         if (slotCharacter != null) slotCharacter.SetEmpty();
         if (slotScene != null) slotScene.SetEmpty();
         if (slotMusic != null) slotMusic.SetEmpty();
+
+        if (musicReplayPanel != null)
+        {
+            musicReplayPanel.SetActive(false);
+
+            // 面板内部找按钮（哪怕按钮在子物体上、当前是隐藏状态也能找到）
+            Button replayBtn = musicReplayPanel.GetComponentInChildren<Button>(true);
+            if (replayBtn != null)
+            {
+                replayBtn.onClick.AddListener(OnMusicReplayClicked);
+            }
+            else
+            {
+                Debug.LogWarning("[音乐播放] musicReplayPanel 内没有找到 Button 组件，点击不会生效");
+            }
+        }
 
         StartCoroutine(InitUI());
     }
@@ -129,6 +153,16 @@ public class SelectionUIManager : MonoBehaviour
         }
 
         RefreshCarouselImmediate();
+
+        // 切到 Music 自动从第一首开始播放；切走则停止播放并隐藏重播按钮
+        if (tab == TabType.Music)
+        {
+            PlayCurrentMusic();
+        }
+        else
+        {
+            StopCurrentMusic();
+        }
     }
 
     private void Navigate(int dir)
@@ -139,6 +173,12 @@ public class SelectionUIManager : MonoBehaviour
 
         int nextIndex = (currentIndex + dir + count) % count;
         StartCoroutine(AnimateCarousel(nextIndex));
+
+        // 左右切歌时，若在 Music tab，立即打断旧播放并从新歌曲重新开始
+        if (currentTab == TabType.Music)
+        {
+            PlayCurrentMusic();
+        }
     }
 
     private IEnumerator AnimateCarousel(int nextIndex)
@@ -234,6 +274,84 @@ public class SelectionUIManager : MonoBehaviour
 
         if (selectBtnText != null)
             selectBtnText.text = allDone ? "START" : "SELECT";
+    }
+
+    // ──────────────────────────────────────────────
+    // 音乐自动播放逻辑
+    // ──────────────────────────────────────────────
+    private void PlayCurrentMusic()
+    {
+        if (musicAudioSource == null) return;
+
+        // 打断上一首的播放计时
+        if (musicPlayCoroutine != null)
+        {
+            StopCoroutine(musicPlayCoroutine);
+            musicPlayCoroutine = null;
+        }
+
+        if (musicReplayPanel != null)
+            musicReplayPanel.SetActive(false);
+
+        var gm = GameManager.Instance;
+        if (gm == null) return;
+
+        // 需要 GameManager 提供 GetMusicClip(int index) 方法，返回对应的 AudioClip
+        AudioClip clip = gm.GetMusicClip(currentIndex);
+
+        musicAudioSource.Stop();
+
+        if (clip == null)
+        {
+            Debug.LogWarning($"[音乐播放] 索引 {currentIndex} 没有找到对应的 AudioClip");
+            return;
+        }
+
+        musicAudioSource.clip = clip;
+        musicAudioSource.loop = true; // 歌曲短于设定时长时循环填满播放时长
+        musicAudioSource.time = 0f;
+        musicAudioSource.Play();
+
+        Debug.Log($"[音乐播放] 开始播放第 {currentIndex} 首，播放时长 {musicPlayDuration} 秒");
+        musicPlayCoroutine = StartCoroutine(MusicPlaybackRoutine());
+    }
+
+    private IEnumerator MusicPlaybackRoutine()
+    {
+        yield return new WaitForSeconds(musicPlayDuration);
+
+        if (musicAudioSource != null)
+            musicAudioSource.Stop();
+
+        if (musicReplayPanel != null)
+            musicReplayPanel.SetActive(true);
+
+        Debug.Log("[音乐播放] 播放时长结束，显示重播按钮");
+        musicPlayCoroutine = null;
+    }
+
+    private void StopCurrentMusic()
+    {
+        if (musicPlayCoroutine != null)
+        {
+            StopCoroutine(musicPlayCoroutine);
+            musicPlayCoroutine = null;
+        }
+
+        if (musicAudioSource != null)
+            musicAudioSource.Stop();
+
+        if (musicReplayPanel != null)
+            musicReplayPanel.SetActive(false);
+    }
+
+    private void OnMusicReplayClicked()
+    {
+        if (musicReplayPanel != null)
+            musicReplayPanel.SetActive(false);
+
+        Debug.Log("[音乐播放] 点击重播按钮，重新播放当前歌曲");
+        PlayCurrentMusic();
     }
 
     private int GetCurrentCount()

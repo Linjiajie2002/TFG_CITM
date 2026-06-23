@@ -1,33 +1,33 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
-    // ©¤©¤ ×ÊÔ´ÁÐ±í ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ô´ï¿½Ð±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     [Header("=== Character ===")]
-    public GameObject[] characterPrefabs;   // ½ÇÉ« Prefab
-    public string[] characterNames;         // ½ÇÉ«Ãû×Ö£¨ÏÔÊ¾ÔÚ UI ÉÏ£©
-    public Sprite[] characterSprites;       // ½ÇÉ«Ô¤ÀÀÍ¼£¨ÓÃÓÚÑ¡Ôñ½çÃæ£©
+    public GameObject[] characterPrefabs;   // ï¿½ï¿½É« Prefab
+    public string[] characterNames;         // ï¿½ï¿½É«ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ UI ï¿½Ï£ï¿½
+    public Sprite[] characterSprites;       // ï¿½ï¿½É«Ô¤ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½æ£©
     public Sprite[] characterAvatars;
 
-    [Header("=== Stage£¨Scene£©===")]
-    public string[] stageSceneNames;        // ³¡¾°Êµ¼Ê Build Ãû£¨ÀýÈç Stage1, Stage2£©
-    public string[] stageDisplayNames;      // ³¡¾°ÏÔÊ¾Ãû×Ö
-    public Sprite[] stageSprites;           // ³¡¾°Ô¤ÀÀÍ¼
+    [Header("=== Stageï¿½ï¿½Sceneï¿½ï¿½===")]
+    public string[] stageSceneNames;        // ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ Build ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Stage1, Stage2ï¿½ï¿½
+    public string[] stageDisplayNames;      // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
+    public Sprite[] stageSprites;           // ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½Í¼
     public Sprite[] stageAvatars;
 
     [Header("=== Music ===")]
-    public AudioClip[] musicClips;          // ÒôÀÖÆ¬¶Î
-    public string[] musicNames;             // ÒôÀÖÃû×Ö
-    public Sprite[] musicSprites;           // ×¨¼­·âÃæ£¨¿ÉÑ¡£¬Ã»ÓÐ¾ÍÁô¿Õ£©
+    public AudioClip[] musicClips;          // ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½
+    public string[] musicNames;             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    public Sprite[] musicSprites;           // ×¨ï¿½ï¿½ï¿½ï¿½ï¿½æ£¨ï¿½ï¿½Ñ¡ï¿½ï¿½Ã»ï¿½Ð¾ï¿½ï¿½ï¿½ï¿½Õ£ï¿½
     public Sprite[] musicAvatars;
 
     [Header("=== Dance Animation ===")]
-    public string[] danceStateNames;        // Îèµ¸¶¯»­×´Ì¬Ãû
+    public string[] danceStateNames;        // ï¿½èµ¸ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½
 
-    // ©¤©¤ Íæ¼Òµ±Ç°Ñ¡Ôñ£¨-1 = Î´Ñ¡£©©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Òµï¿½Ç°Ñ¡ï¿½ï¿½-1 = Î´Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     [HideInInspector] public int selectedCharIndex = -1;
     [HideInInspector] public int selectedStageIndex = -1;
     [HideInInspector] public int selectedMusicIndex = -1;
@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // ¡¾¹Ø¼üÐÞ¸´¡¿£ºÇ¿ÖÆÖØÖÃÊý¾Ý£¬·ÀÖ¹ Unity »º´æÉÏ´Î²âÊÔµÄÊý¾Ýµ¼ÖÂÒ»¿ª¾Ö¾Í½øÈëÓÎÏ·
+            // ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½Ö¹ Unity ï¿½ï¿½ï¿½ï¿½ï¿½Ï´Î²ï¿½ï¿½Ôµï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö¾Í½ï¿½ï¿½ï¿½ï¿½ï¿½Ï·
             selectedCharIndex = -1;
             selectedStageIndex = -1;
             selectedMusicIndex = -1;
@@ -52,7 +52,7 @@ public class GameManager : MonoBehaviour
     }
 
     // ==========================================
-    // ÈýÏîÈ«²¿Ñ¡ºÃ²ÅÄÜ½øÈë¶ÔÓ¦µÄÓÎÏ·³¡¾°
+    // ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½Ñ¡ï¿½Ã²ï¿½ï¿½Ü½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Ï·ï¿½ï¿½ï¿½ï¿½
     // ==========================================
     public bool AllSelected =>
         selectedCharIndex >= 0 &&
@@ -60,13 +60,13 @@ public class GameManager : MonoBehaviour
         selectedMusicIndex >= 0;
 
     // ==========================================
-    // ½øÈëÍæ¼ÒÑ¡ÖÐµÄ³¡¾°
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ÐµÄ³ï¿½ï¿½ï¿½
     // ==========================================
     public void LoadSelectedStage()
     {
         if (!AllSelected) return;
 
-        // °²È«¼ì²é£ºÈ·±£Ë÷ÒýÔÚÊý×é·¶Î§ÄÚ
+        // ï¿½ï¿½È«ï¿½ï¿½é£ºÈ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½é·¶Î§ï¿½ï¿½
         if (selectedStageIndex >= 0 && selectedStageIndex < stageSceneNames.Length)
         {
             string targetSceneName = stageSceneNames[selectedStageIndex];
@@ -74,18 +74,18 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("³¡¾°Ë÷ÒýÔ½½ç»òÎ´ÅäÖÃ³¡¾°Ãû£¡");
+            Debug.LogError("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
         }
     }
 
     // ==========================================
-    // È¡ÏûÄ³ÏîÑ¡Ôñ
+    // È¡ï¿½ï¿½Ä³ï¿½ï¿½Ñ¡ï¿½ï¿½
     // ==========================================
     public void ClearCharacter() { selectedCharIndex = -1; }
     public void ClearStage() { selectedStageIndex = -1; }
     public void ClearMusic() { selectedMusicIndex = -1; }
 
-    // ©¤©¤ °²È«»ñÈ¡Êý¾Ý ©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤©¤
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È«ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     public string GetCharName(int i) => (characterNames != null && i >= 0 && i < characterNames.Length) ? characterNames[i] : $"Character {i + 1}";
     public string GetStageName(int i) => (stageDisplayNames != null && i >= 0 && i < stageDisplayNames.Length) ? stageDisplayNames[i] : $"Stage {i + 1}";
     public string GetMusicName(int i) => (musicNames != null && i >= 0 && i < musicNames.Length) ? musicNames[i] : $"Music {i + 1}";
@@ -93,6 +93,7 @@ public class GameManager : MonoBehaviour
     public Sprite GetCharSprite(int i) => (characterSprites != null && i >= 0 && i < characterSprites.Length) ? characterSprites[i] : null;
     public Sprite GetStageSprite(int i) => (stageSprites != null && i >= 0 && i < stageSprites.Length) ? stageSprites[i] : null;
     public Sprite GetMusicSprite(int i) => (musicSprites != null && i >= 0 && i < musicSprites.Length) ? musicSprites[i] : null;
+    public AudioClip GetMusicClip(int i) => (musicClips != null && i >= 0 && i < musicClips.Length) ? musicClips[i] : null;
 
     public Sprite GetCharAvatar(int i) => (characterAvatars != null && i >= 0 && i < characterAvatars.Length) ? characterAvatars[i] : GetCharSprite(i);
     public Sprite GetStageAvatar(int i) => (stageAvatars != null && i >= 0 && i < stageAvatars.Length) ? stageAvatars[i] : GetStageSprite(i);

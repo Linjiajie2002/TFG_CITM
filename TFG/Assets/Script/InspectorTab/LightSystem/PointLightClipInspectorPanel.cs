@@ -54,6 +54,12 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
     [Header("=== Color Picker ===")]
     public ColorPickerPanel colorPicker;
 
+    [Header("=== 灯光替身 (3D Dummy) ===")]
+    public GameObject lightDummyPrefab;
+    public Color selectedColor = new Color(1f, 0.5f, 0f, 1f);
+    private GameObject myDummyInstance;
+    private MeshRenderer[] dummyRenderers;
+    private Color[] originalColors;
 
     [Header("=== 灯光播放系统引用 ===")]
     public LightPlaybackSystem lightPlaybackSystem;
@@ -65,6 +71,19 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
     protected override void Awake()
     {
         base.Awake();
+    }
+
+    private void OnEnable()
+    {
+        if (dummyRenderers != null)
+            foreach (var r in dummyRenderers) r.material.color = selectedColor;
+    }
+
+    private void OnDisable()
+    {
+        if (dummyRenderers != null)
+            for (int i = 0; i < dummyRenderers.Length; i++)
+                dummyRenderers[i].material.color = originalColors[i];
     }
 
     // ==========================================
@@ -121,9 +140,21 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
             colorPicker.onColorChanged.AddListener(OnColorChanged);
         }
 
+        // 克隆 3D 替身
+        if (myDummyInstance == null && lightDummyPrefab != null)
+        {
+            myDummyInstance = Instantiate(lightDummyPrefab);
+            dummyRenderers = myDummyInstance.GetComponentsInChildren<MeshRenderer>();
+            originalColors = new Color[dummyRenderers.Length];
+            for (int i = 0; i < dummyRenderers.Length; i++)
+                originalColors[i] = dummyRenderers[i].material.color;
+            SetLayerRecursively(myDummyInstance, LayerMask.NameToLayer("EditorOnly"));
+        }
+
         isReady = true;
         RegisterListeners();
         RefreshDisplay();
+        UpdateVisuals();
     }
 
     // ==========================================
@@ -134,6 +165,7 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
 
         UpdateValueLabels();
         UpdateLightPreview();
+        UpdateVisuals();
     }
 
     // ==========================================
@@ -166,6 +198,7 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
     {
         UpdateValueLabels();
         UpdateLightPreview();
+        UpdateVisuals();
     }
 
     private void UpdateValueLabels()
@@ -196,5 +229,25 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
         lightData.posZMin = posZMin; lightData.posZMax = posZMax;
         lightData.intensityMin = intensityMin; lightData.intensityMax = intensityMax;
         lightData.rangeMin = rangeMin; lightData.rangeMax = rangeMax;
+    }
+
+    // 把 Dummy 移到灯光当前的坐标
+    private void UpdateVisuals()
+    {
+        if (myDummyInstance != null && lightData != null)
+            myDummyInstance.transform.position = lightData.Position;
+    }
+
+    private void OnDestroy()
+    {
+        if (myDummyInstance != null) Destroy(myDummyInstance);
+    }
+
+    private void SetLayerRecursively(GameObject obj, int newLayer)
+    {
+        if (obj == null) return;
+        obj.layer = newLayer;
+        foreach (Transform child in obj.transform)
+            SetLayerRecursively(child.gameObject, newLayer);
     }
 }

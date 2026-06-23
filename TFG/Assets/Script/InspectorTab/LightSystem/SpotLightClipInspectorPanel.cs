@@ -1,4 +1,4 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -22,13 +22,13 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
     public TextMeshProUGUI scaleXText, scaleYText, scaleZText;
 
     [Header("=== Circle Rotation Animation ===")]
-    public Toggle toggleRotation;   // ø™/πÿ–˝◊™
+    public Toggle toggleRotation;   // ÔøΩÔøΩ/ÔøΩÔøΩÔøΩÔøΩ◊™
 
     public GameObject rotSpeedRow;
     public Slider sliderRotSpeed;
     public TextMeshProUGUI rotSpeedText;
 
-    // circleRadius Slider£∫ø™∆Ù ±œ‘ æ±£¥Ê÷µ£¨πÿ±’ ± Slider ªÿµΩ 0£®µ´ ˝÷µ±£¡Ù£©
+    // circleRadius SliderÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ±ÔøΩÔøΩ æÔøΩÔøΩÔøΩÔøΩ÷µÔøΩÔøΩÔøΩÿ±ÔøΩ ± Slider ÔøΩÿµÔøΩ 0ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ÷µÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
     public Slider sliderCircleRadius;
     public TextMeshProUGUI circleRadiusText;
 
@@ -42,11 +42,31 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
     public ColorPickerPanel colorPickerTop;
     public ColorPickerPanel colorPickerBottom;
 
+    [Header("=== ÊõøË∫´ (3D Dummy) ===")]
+    public GameObject spotDummyPrefab;
+    public Color selectedColor = new Color(1f, 0.5f, 0f, 1f);
+    private GameObject myDummyInstance;
+    private MeshRenderer[] dummyRenderers;
+    private Color[] originalColors;
+
     private SpotLightClipData spotData;
     private bool isReady = false;
-    private float savedCircleRadius = 0f; // πÿ±’ ±‘›¥Ê circleRadius
+    private float savedCircleRadius = 0f; // ÔøΩÿ±ÔøΩ ±ÔøΩ›¥ÔøΩ circleRadius
 
     protected override void Awake() => base.Awake();
+
+    private void OnEnable()
+    {
+        if (dummyRenderers != null)
+            foreach (var r in dummyRenderers) r.material.color = selectedColor;
+    }
+
+    private void OnDisable()
+    {
+        if (dummyRenderers != null)
+            for (int i = 0; i < dummyRenderers.Length; i++)
+                dummyRenderers[i].material.color = originalColors[i];
+    }
 
     public override void BindClip(TimelineEventData clip, TimelineManager mgr)
     {
@@ -69,7 +89,7 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         SetupSlider(sliderAlpha, spotData.alphaMin, spotData.alphaMax, spotData.alpha);
         SetupSlider(sliderBreathSpeed, spotData.breathSpeedMin, spotData.breathSpeedMax, spotData.breathSpeed);
 
-        // circleRadius£∫ø™∆Ù ±œ‘ æ±£¥Ê÷µ£¨πÿ±’ ±œ‘ æ 0
+        // circleRadiusÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ±ÔøΩÔøΩ æÔøΩÔøΩÔøΩÔøΩ÷µÔøΩÔøΩÔøΩÿ±ÔøΩ ±ÔøΩÔøΩ æ 0
         float radiusDisplay = spotData.isRotating ? spotData.circleRadius : 0f;
         SetupSlider(sliderCircleRadius, spotData.circleRadiusMin, spotData.circleRadiusMax, radiusDisplay);
 
@@ -97,13 +117,24 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
             colorPickerBottom.onColorChanged.AddListener(c => { spotData.colorBottom = c; Refresh(); });
         }
 
+        // ÂÖãÈöÜ 3D ÊõøË∫´
+        if (myDummyInstance == null && spotDummyPrefab != null)
+        {
+            myDummyInstance = Instantiate(spotDummyPrefab);
+            dummyRenderers = myDummyInstance.GetComponentsInChildren<MeshRenderer>();
+            originalColors = new Color[dummyRenderers.Length];
+            for (int i = 0; i < dummyRenderers.Length; i++)
+                originalColors[i] = dummyRenderers[i].material.color;
+            SetLayerRecursively(myDummyInstance, LayerMask.NameToLayer("EditorOnly"));
+        }
+
         isReady = true;
         RegisterListeners();
         RefreshDisplay();
     }
 
     // ==========================================
-    // Toggle ªÿµ˜
+    // Toggle ÔøΩÿµÔøΩ
     // ==========================================
     private void OnToggleChanged(bool isOn)
     {
@@ -112,7 +143,7 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
 
         if (isOn)
         {
-            // ø™∆Ù£∫¥” savedCircleRadius ª÷∏¥÷µ
+            // ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ savedCircleRadius ÔøΩ÷∏ÔøΩ÷µ
             spotData.circleRadius = savedCircleRadius;
             SetupSlider(sliderCircleRadius, spotData.circleRadiusMin, spotData.circleRadiusMax, spotData.circleRadius);
             if (sliderCircleRadius != null)
@@ -120,7 +151,7 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         }
         else
         {
-            // πÿ±’£∫∞—µ±«∞÷µ¥ÊµΩ savedCircleRadius£¨»ª∫Û∞— circleRadius ∫Õ Slider ∂ºπÈ¡„
+            // ÔøΩÿ±’£ÔøΩÔøΩ—µÔøΩ«∞÷µÔøΩÊµΩ savedCircleRadiusÔøΩÔøΩ»ªÔøΩÔøΩÔøΩ circleRadius ÔøΩÔøΩ Slider ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
             savedCircleRadius = sliderCircleRadius != null ? sliderCircleRadius.value : spotData.circleRadius;
             spotData.circleRadius = 0f;
 
@@ -138,7 +169,7 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
     private void SetRotationRowsVisible(bool v)
     {
         if (rotSpeedRow != null) rotSpeedRow.SetActive(v);
-        // circleRadius ––∏˙ÀÊœ‘“˛£®»Áπ˚ƒ„”–µ•∂¿µƒ––»›∆˜ø…“‘‘⁄’‚¿Ôøÿ÷∆£¨√ª”–æÕ…æ’‚––£©
+        // circleRadius ÔøΩ–∏ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ–µÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ∆£ÔøΩ√ªÔøΩ–æÔøΩ…æÔøΩÔøΩÔøΩ–£ÔøΩ
         if (sliderCircleRadius != null) sliderCircleRadius.interactable = v;
     }
 
@@ -150,6 +181,7 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         SetRotationRowsVisible(spotData.isRotating);
         UpdateLabels();
         UpdatePreview();
+        UpdateVisuals();
     }
 
     private void SetupSlider(Slider s, float min, float max, float val)
@@ -177,7 +209,7 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         if (sliderAlpha != null) sliderAlpha.onValueChanged.AddListener(v => { spotData.alpha = v; Refresh(); });
         if (sliderBreathSpeed != null) sliderBreathSpeed.onValueChanged.AddListener(v => { spotData.breathSpeed = v; Refresh(); });
 
-        // circleRadius ÷ª‘⁄ø™∆Ù ±◊¢≤·£®πÿ±’ ±”… OnToggleChanged ¥¶¿Ì£©
+        // circleRadius ÷ªÔøΩ⁄øÔøΩÔøΩÔøΩ ±◊¢ÔøΩ·£®ÔøΩÿ±ÔøΩ ±ÔøΩÔøΩ OnToggleChanged ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
         if (sliderCircleRadius != null && spotData.isRotating)
             sliderCircleRadius.onValueChanged.AddListener(v => { spotData.circleRadius = v; Refresh(); });
     }
@@ -186,6 +218,7 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
     {
         UpdateLabels();
         UpdatePreview();
+        UpdateVisuals();
     }
 
     private void UpdateLabels()
@@ -193,17 +226,17 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         if (posXText) posXText.text = $"{spotData.posX:F1}";
         if (posYText) posYText.text = $"{spotData.posY:F1}";
         if (posZText) posZText.text = $"{spotData.posZ:F1}";
-        if (rotXText) rotXText.text = $"{spotData.rotX:F0}°„";
-        if (rotYText) rotYText.text = $"{spotData.rotY:F0}°„";
-        if (rotZText) rotZText.text = $"{spotData.rotZ:F0}°„";
+        if (rotXText) rotXText.text = $"{spotData.rotX:F0}ÔøΩÔøΩ";
+        if (rotYText) rotYText.text = $"{spotData.rotY:F0}ÔøΩÔøΩ";
+        if (rotZText) rotZText.text = $"{spotData.rotZ:F0}ÔøΩÔøΩ";
         if (scaleXText) scaleXText.text = $"{spotData.scaleX:F2}";
         if (scaleYText) scaleYText.text = $"{spotData.scaleY:F2}";
         if (scaleZText) scaleZText.text = $"{spotData.scaleZ:F2}";
-        if (rotSpeedText) rotSpeedText.text = $"{spotData.rotationSpeed:F0}°„/s";
+        if (rotSpeedText) rotSpeedText.text = $"{spotData.rotationSpeed:F0}ÔøΩÔøΩ/s";
         if (alphaText) alphaText.text = $"{spotData.alpha:F2}";
         if (breathSpeedText) breathSpeedText.text = $"{spotData.breathSpeed:F2}";
-        // πÿ±’ ±œ‘ æ 0£¨ø™∆Ù ±œ‘ æ µº ±£¥Ê÷µ
-        if (circleRadiusText) circleRadiusText.text = spotData.isRotating ? $"{spotData.circleRadius:F1}°„" : "0°„";
+        // ÔøΩÿ±ÔøΩ ±ÔøΩÔøΩ æ 0ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ ±ÔøΩÔøΩ æ µÔøΩ ±ÔøΩÔøΩÔøΩ÷µ
+        if (circleRadiusText) circleRadiusText.text = spotData.isRotating ? $"{spotData.circleRadius:F1}ÔøΩÔøΩ" : "0ÔøΩÔøΩ";
     }
 
     private void UpdatePreview()
@@ -229,5 +262,28 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
             lt.color = spotData.colorTop;
             lt.intensity = spotData.alpha * 5f;
         }
+    }
+
+    // Êää Dummy ÂêåÊ≠•Âà∞ÂΩìÂâç spotData ÁöÑ Position / Rotation / Scale
+    private void UpdateVisuals()
+    {
+        if (myDummyInstance != null && spotData != null)
+        {
+            myDummyInstance.transform.position = spotData.Position + new Vector3(0, 0.5f, 0f);
+            myDummyInstance.transform.rotation = spotData.Rotation;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (myDummyInstance != null) Destroy(myDummyInstance);
+    }
+
+    private void SetLayerRecursively(GameObject obj, int newLayer)
+    {
+        if (obj == null) return;
+        obj.layer = newLayer;
+        foreach (Transform child in obj.transform)
+            SetLayerRecursively(child.gameObject, newLayer);
     }
 }

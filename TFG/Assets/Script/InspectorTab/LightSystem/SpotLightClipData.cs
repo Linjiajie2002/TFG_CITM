@@ -31,15 +31,15 @@ public class SpotLightClipData
     public float alpha = 1f;
     public float breathSpeed = 0f;
     public Color colorTop = new Color(0f, 0f, 0f, 1f);
-    public Color colorBottom = new Color(0f, 0f, 0f, 1f);
+    public Color colorBottom = new Color(255f, 0f, 0f, 1f);
 
     // ---------- ŒÔ¿Ìµ∆π‚ ----------
     public float range = 15f;
 
     // ---------- Slider ∑∂Œß ----------
-    public float posXMin = -20f; public float posXMax = 20f;
+    public float posXMin = -7f; public float posXMax = 8f;
     public float posYMin = 0f; public float posYMax = 20f;
-    public float posZMin = -20f; public float posZMax = 20f;
+    public float posZMin = -8f; public float posZMax = 8f;
     public float rotMin = -180f; public float rotMax = 180f;
     public float scaleMin = 0.1f; public float scaleMax = 10f;
     public float rotSpeedMin = 0f; public float rotSpeedMax = 360f;

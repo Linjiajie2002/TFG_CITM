@@ -90,6 +90,9 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         if (colorPickerBottom != null)
         {
             colorPickerBottom.onColorChanged.RemoveAllListeners();
+
+            spotData.colorBottom = Color.red;
+
             colorPickerBottom.SetColor(spotData.colorBottom, notify: false);
             colorPickerBottom.onColorChanged.AddListener(c => { spotData.colorBottom = c; Refresh(); });
         }

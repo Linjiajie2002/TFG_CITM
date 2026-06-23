@@ -85,7 +85,7 @@ public class PointLightClipInspectorPanel : ClipInspectorPanel
                 posY = 3f,
                 posZ = 0f,
                 color = Color.white,
-                intensity = 1f,
+                intensity = 25f,
                 range = 10f,
                 posXMin = posXMin,
                 posXMax = posXMax,

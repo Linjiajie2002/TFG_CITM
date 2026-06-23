@@ -11126,7 +11126,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &138294334
 RectTransform:
   m_ObjectHideFlags: 0
@@ -30695,12 +30695,12 @@ MonoBehaviour:
   posXValueText: {fileID: 202789186}
   posYValueText: {fileID: 1767823309}
   posZValueText: {fileID: 587994193}
-  posXMin: -4
-  posXMax: 4
-  posYMin: 0.6
-  posYMax: 3.6
-  posZMin: -3.6
-  posZMax: 3.6
+  posXMin: -5
+  posXMax: 5
+  posYMin: 0.4
+  posYMax: 6
+  posZMin: -7
+  posZMax: 7
   sliderRotX: {fileID: 262569912}
   sliderRotY: {fileID: 1167089184}
   sliderRotZ: {fileID: 1784871647}
@@ -100129,7 +100129,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1452048192
 RectTransform:
   m_ObjectHideFlags: 0
@@ -151892,7 +151892,7 @@ MonoBehaviour:
   intensityValueText: {fileID: 1293373211}
   rangeValueText: {fileID: 204576860}
   intensityMin: 0
-  intensityMax: 50
+  intensityMax: 100
   rangeMin: 1
   rangeMax: 50
   colorPicker: {fileID: 549190723}

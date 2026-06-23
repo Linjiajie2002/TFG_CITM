@@ -8255,12 +8255,12 @@ MonoBehaviour:
   posXText: {fileID: 1723491718}
   posYText: {fileID: 1810483140}
   posZText: {fileID: 1702166393}
-  posXMin: -20
-  posXMax: 20
-  posYMin: -5
-  posYMax: 15
-  posZMin: -20
-  posZMax: 20
+  posXMin: -8
+  posXMax: 8
+  posYMin: 0.4
+  posYMax: 6
+  posZMin: -8
+  posZMax: 5
   sliderRotX: {fileID: 0}
   sliderRotY: {fileID: 0}
   sliderRotZ: {fileID: 0}
@@ -9018,12 +9018,12 @@ MonoBehaviour:
   posXText: {fileID: 276301110}
   posYText: {fileID: 216821927}
   posZText: {fileID: 845923298}
-  posXMin: -20
-  posXMax: 20
-  posYMin: -5
-  posYMax: 15
-  posZMin: -20
-  posZMax: 20
+  posXMin: -8
+  posXMax: 8
+  posYMin: 0.4
+  posYMax: 6
+  posZMin: -8
+  posZMax: 5
   sliderRotX: {fileID: 0}
   sliderRotY: {fileID: 0}
   sliderRotZ: {fileID: 0}
@@ -11126,7 +11126,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &138294334
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11321,7 +11321,7 @@ MonoBehaviour:
     position: {x: -8, y: 2, z: 0.1}
     eulerAngles: {x: -0, y: 90, z: -0}
   - pointName: 
-    position: {x: 0, y: 2, z: 5}
+    position: {x: 0, y: 2, z: 8}
     eulerAngles: {x: -0, y: 180, z: -0}
   - pointName: 
     position: {x: 8, y: 2, z: 0.1}
@@ -15316,7 +15316,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FeatureButtonHandler
   moduleSystem: {fileID: 211859215}
-  featureName: VFX2
+  featureName: Fireworks
   defaultDuration: 5
 --- !u!114 &194112057
 MonoBehaviour:
@@ -16942,7 +16942,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: VFX2
+  m_text: Fireworks
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -17102,13 +17102,13 @@ MonoBehaviour:
     featurePanelMaps:
     - featureName: Sakura
       specificInspectorPrefab: {fileID: 1953284036}
-    - featureName: VFX1
+    - featureName: StarBurst
       specificInspectorPrefab: {fileID: 1967285059}
-    - featureName: VFX2
+    - featureName: Fireworks
       specificInspectorPrefab: {fileID: 1220146338}
-    - featureName: VFX3
+    - featureName: Starlight
       specificInspectorPrefab: {fileID: 102277231}
-    - featureName: VFX4
+    - featureName: RadialBurst
       specificInspectorPrefab: {fileID: 99760346}
   - moduleName: Shader
     allowOverlap: 0
@@ -17209,16 +17209,16 @@ MonoBehaviour:
   - featureName: Sakura
     prefab: {fileID: 1830688534800398, guid: 9dca676f2ff988a45a505d56f3bd0bb6, type: 3}
     maxSimultaneous: 1
-  - featureName: VFX1
+  - featureName: StarBurst
     prefab: {fileID: 2393111809793729749, guid: 05609566f0df27848962c113cb77d33c, type: 3}
     maxSimultaneous: 10
-  - featureName: VFX2
+  - featureName: Fireworks
     prefab: {fileID: 6248455984205620138, guid: 943f1f3193990ba449e06e1a7ff60721, type: 3}
     maxSimultaneous: 10
-  - featureName: VFX3
+  - featureName: Starlight
     prefab: {fileID: 2046140665488341963, guid: 9d292543345e17f47a88af867d7eabbd, type: 3}
     maxSimultaneous: 10
-  - featureName: VFX4
+  - featureName: RadialBurst
     prefab: {fileID: 6145854677200143934, guid: 87dfa69dd72f5914b9ddf1c5ffcbf703, type: 3}
     maxSimultaneous: 10
   vfxContainer: {fileID: 1715580955}
@@ -28919,7 +28919,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: VFX4
+  m_text: RadialBurst
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -29602,7 +29602,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FeatureButtonHandler
   moduleSystem: {fileID: 211859215}
-  featureName: VFX3
+  featureName: Starlight
   defaultDuration: 5
 --- !u!114 &376158815
 MonoBehaviour:
@@ -30695,12 +30695,12 @@ MonoBehaviour:
   posXValueText: {fileID: 202789186}
   posYValueText: {fileID: 1767823309}
   posZValueText: {fileID: 587994193}
-  posXMin: -4
-  posXMax: 4
-  posYMin: 0.6
-  posYMax: 3.6
-  posZMin: -3.6
-  posZMax: 3.6
+  posXMin: -5
+  posXMax: 5
+  posYMin: 0.4
+  posYMax: 5
+  posZMin: -8
+  posZMax: 4
   sliderRotX: {fileID: 262569912}
   sliderRotY: {fileID: 1167089184}
   sliderRotZ: {fileID: 1784871647}
@@ -36413,7 +36413,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &479841367
 RectTransform:
   m_ObjectHideFlags: 0
@@ -39131,67 +39131,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -92.50722}
   m_SizeDelta: {x: 0, y: -108.93298}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1001 &521809839
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 180
-      objectReference: {fileID: 0}
-    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4371159903800506424, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_Name
-      value: Museum
-      objectReference: {fileID: 0}
-    - target: {fileID: 6644851100421517106, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 4
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
 --- !u!1 &523448489
 GameObject:
   m_ObjectHideFlags: 0
@@ -41432,7 +41371,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: VFX 4
+  m_text: RadialBurst
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d511bf5912420f04bb23d91d46654b02, type: 2}
   m_sharedMaterial: {fileID: 2317021696977296641, guid: d511bf5912420f04bb23d91d46654b02, type: 2}
@@ -45476,7 +45415,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: VFX1
+  m_text: StarBurst
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -63363,7 +63302,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: VFX 3
+  m_text: Starlight
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d511bf5912420f04bb23d91d46654b02, type: 2}
   m_sharedMaterial: {fileID: 2317021696977296641, guid: d511bf5912420f04bb23d91d46654b02, type: 2}
@@ -70324,12 +70263,12 @@ MonoBehaviour:
   rotXText: {fileID: 1646842196}
   rotYText: {fileID: 975710684}
   rotZText: {fileID: 1845309282}
-  posXMin: -20
-  posXMax: 20
-  posYMin: 0
-  posYMax: 15
-  posZMin: -20
-  posZMax: 5
+  posXMin: -5
+  posXMax: 5
+  posYMin: 0.4
+  posYMax: 6
+  posZMin: -7
+  posZMax: 7
   previewCamera: {fileID: 479811859}
   cameraDummyPrefab: {fileID: 906260502}
   startColor: {r: 0, g: 1, b: 0, a: 0.6}
@@ -84749,12 +84688,12 @@ MonoBehaviour:
   posXText: {fileID: 1537970866}
   posYText: {fileID: 574873330}
   posZText: {fileID: 465841431}
-  posXMin: -20
-  posXMax: 20
-  posYMin: -5
-  posYMax: 15
-  posZMin: -20
-  posZMax: 20
+  posXMin: -8
+  posXMax: 8
+  posYMin: 0.4
+  posYMax: 6
+  posZMin: -8
+  posZMax: 5
   sliderRotX: {fileID: 0}
   sliderRotY: {fileID: 0}
   sliderRotZ: {fileID: 0}
@@ -88546,7 +88485,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FeatureButtonHandler
   moduleSystem: {fileID: 211859215}
-  featureName: VFX1
+  featureName: StarBurst
   defaultDuration: 5
 --- !u!114 &1266781301
 MonoBehaviour:
@@ -88931,6 +88870,118 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1273061796}
   m_CullTransparentMesh: 1
+--- !u!1 &1273377959
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1273377963}
+  - component: {fileID: 1273377962}
+  - component: {fileID: 1273377961}
+  - component: {fileID: 1273377960}
+  m_Layer: 0
+  m_Name: Cube
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!65 &1273377960
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273377959}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &1273377961
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273377959}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: eafbdb487cff23e4da3c1f92da06889f, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1273377962
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273377959}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1273377963
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273377959}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.22, y: 2.91, z: -14}
+  m_LocalScale: {x: 31, y: 6, z: 0.1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1273390115
 GameObject:
   m_ObjectHideFlags: 0
@@ -91306,7 +91357,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1310876013}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.007, y: 0.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -99347,6 +99398,67 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1432207711}
   m_CullTransparentMesh: 1
+--- !u!1001 &1432611371
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: 4026968386662949506, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4371159903800506424, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_Name
+      value: Museum
+      objectReference: {fileID: 0}
+    - target: {fileID: 6644851100421517106, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 4
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1c763f144e8325c48b96097cd4d26f27, type: 3}
 --- !u!1 &1433694426
 GameObject:
   m_ObjectHideFlags: 0
@@ -103047,7 +103159,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FeatureButtonHandler
   moduleSystem: {fileID: 211859215}
-  featureName: VFX4
+  featureName: RadialBurst
   defaultDuration: 5
 --- !u!114 &1495743705
 MonoBehaviour:
@@ -111793,6 +111905,8 @@ MonoBehaviour:
   breathSpeedText: {fileID: 887714505}
   colorPickerTop: {fileID: 1474827795}
   colorPickerBottom: {fileID: 7096703}
+  spotDummyPrefab: {fileID: 2830191582893543614, guid: d4717ac2886d38540a14e1abd95d2914, type: 3}
+  selectedColor: {r: 1, g: 0.5, b: 0, a: 1}
 --- !u!114 &1626825933
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116079,7 +116193,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: VFX 1
+  m_text: StarBurst
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d511bf5912420f04bb23d91d46654b02, type: 2}
   m_sharedMaterial: {fileID: 2317021696977296641, guid: d511bf5912420f04bb23d91d46654b02, type: 2}
@@ -118853,7 +118967,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: VFX3
+  m_text: Starlight
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -136391,12 +136505,12 @@ MonoBehaviour:
   posXText: {fileID: 636048468}
   posYText: {fileID: 2074294274}
   posZText: {fileID: 366301848}
-  posXMin: -20
-  posXMax: 20
-  posYMin: -5
-  posYMax: 15
-  posZMin: -20
-  posZMax: 20
+  posXMin: -8
+  posXMax: 8
+  posYMin: 1
+  posYMax: 6
+  posZMin: -8
+  posZMax: 8
   sliderRotX: {fileID: 99134645}
   sliderRotY: {fileID: 793045750}
   sliderRotZ: {fileID: 1530662592}
@@ -136412,7 +136526,7 @@ MonoBehaviour:
   scaleYText: {fileID: 218815054}
   scaleZText: {fileID: 785664418}
   scaleMin: 0.1
-  scaleMax: 5
+  scaleMax: 1
   sliderSpeed: {fileID: 29493753}
   speedValueText: {fileID: 804101082}
   toggleLoop: {fileID: 45855804}
@@ -137573,12 +137687,12 @@ MonoBehaviour:
   posXText: {fileID: 1491670158}
   posYText: {fileID: 1573829597}
   posZText: {fileID: 299491991}
-  posXMin: -20
-  posXMax: 20
-  posYMin: -5
-  posYMax: 15
-  posZMin: -20
-  posZMax: 20
+  posXMin: -8
+  posXMax: 8
+  posYMin: 0.4
+  posYMax: 6
+  posZMin: -8
+  posZMax: 5
   sliderRotX: {fileID: 0}
   sliderRotY: {fileID: 0}
   sliderRotZ: {fileID: 0}
@@ -139385,7 +139499,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: VFX 2
+  m_text: Fireworks
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d511bf5912420f04bb23d91d46654b02, type: 2}
   m_sharedMaterial: {fileID: 2317021696977296641, guid: d511bf5912420f04bb23d91d46654b02, type: 2}
@@ -151871,17 +151985,19 @@ MonoBehaviour:
   posXMax: 6
   posYMin: 0.5
   posYMax: 5.5
-  posZMin: -6
-  posZMax: 6
+  posZMin: -5
+  posZMax: 5
   sliderIntensity: {fileID: 1777348512}
   sliderRange: {fileID: 716293418}
   intensityValueText: {fileID: 1293373211}
   rangeValueText: {fileID: 204576860}
   intensityMin: 0
-  intensityMax: 50
+  intensityMax: 100
   rangeMin: 1
   rangeMax: 50
   colorPicker: {fileID: 549190723}
+  lightDummyPrefab: {fileID: 2830191582893543614, guid: d4717ac2886d38540a14e1abd95d2914, type: 3}
+  selectedColor: {r: 1, g: 0.5, b: 0, a: 1}
   lightPlaybackSystem: {fileID: 211859219}
 --- !u!222 &6368277566451462703
 CanvasRenderer:
@@ -152074,7 +152190,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 1061785645}
   - {fileID: 799310170}
-  - {fileID: 521809839}
+  - {fileID: 1432611371}
   - {fileID: 1944301600}
   - {fileID: 1588466572}
   - {fileID: 763382346}
@@ -152088,3 +152204,4 @@ SceneRoots:
   - {fileID: 1068479428}
   - {fileID: 1319763088}
   - {fileID: 1050956567}
+  - {fileID: 1273377963}

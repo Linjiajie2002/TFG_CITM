@@ -42,6 +42,6 @@ Material:
     - _NormalThreshold: 3
     - _OVERLAY: 1
     m_Colors:
-    - _OutlineColor: {r: 0.24415639, g: 0.68561065, b: 0.6659281, a: 1}
+    - _OutlineColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

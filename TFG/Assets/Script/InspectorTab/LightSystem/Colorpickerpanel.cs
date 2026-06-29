@@ -1,39 +1,39 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 using UnityEngine.Events;
 
 // ==========================================
-// ×¨Òµ¼¶ÑÕÉ«Ñ¡ÔñÆ÷ (Ö÷Àà·ÅÔÚ×îÉÏÃæ£¬·ÀÖ¹ Unity Ê¶±ğ´íÎó)
+// ×¨Òµï¿½ï¿½ï¿½ï¿½É«Ñ¡ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ£¬ï¿½ï¿½Ö¹ Unity Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½)
 // ==========================================
 public class ColorPickerPanel : MonoBehaviour,
     IPointerDownHandler, IDragHandler
 {
-    [Header("=== ÕÛµşÌ¬ ===")]
-    public Button swatchButton;           // µã»÷Õ¹¿ª
-    public Image swatchImage;            // ÏÔÊ¾µ±Ç°ÑÕÉ«
+    [Header("=== ï¿½Ûµï¿½Ì¬ ===")]
+    public Button swatchButton;           // ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½
+    public Image swatchImage;            // ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½É«
 
-    [Header("=== ÍêÕûÑ¡É«°å ===")]
-    public GameObject pickerPanel;        // Õû¸öÕ¹¿ªÃæ°å
+    [Header("=== ï¿½ï¿½ï¿½ï¿½Ñ¡É«ï¿½ï¿½ ===")]
+    public GameObject pickerPanel;        // ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    [Header("=== SV ·½ĞÎÇøÓò ===")]
-    public RawImage svSquare;             // ±¥ºÍ¶È/Ã÷¶È
-    public RectTransform svCursor;        // Ğ¡Ô²È¦¹â±ê
+    [Header("=== SV ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===")]
+    public RawImage svSquare;             // ï¿½ï¿½ï¿½Í¶ï¿½/ï¿½ï¿½ï¿½ï¿½
+    public RectTransform svCursor;        // Ğ¡Ô²È¦ï¿½ï¿½ï¿½
 
-    [Header("=== É«ÏàÌõ ===")]
+    [Header("=== É«ï¿½ï¿½ï¿½ï¿½ ===")]
     public RawImage hueBar;
     public RectTransform hueCursor;
 
-    [Header("=== Í¸Ã÷¶ÈÌõ ===")]
+    [Header("=== Í¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ===")]
     public RawImage alphaBar;
     public RectTransform alphaCursor;
 
-    [Header("=== Ô¤ÀÀ ===")]
+    [Header("=== Ô¤ï¿½ï¿½ ===")]
     public Image previewOld;
     public Image previewNew;
 
-    [Header("=== RGBA »¬Ìõ ===")]
+    [Header("=== RGBA ï¿½ï¿½ï¿½ï¿½ ===")]
     public Slider sliderR;
     public Slider sliderG;
     public Slider sliderB;
@@ -43,23 +43,24 @@ public class ColorPickerPanel : MonoBehaviour,
     public TextMeshProUGUI labelB;
     public TextMeshProUGUI labelA;
 
-    [Header("=== Hex ÊäÈë¿ò ===")]
+    [Header("=== Hex ï¿½ï¿½ï¿½ï¿½ï¿½ ===")]
     public TMP_InputField hexInput;
 
-    [Header("=== ¹Ø±Õ°´Å¥ ===")]
+    [Header("=== ï¿½Ø±Õ°ï¿½Å¥ ===")]
     public Button closeButton;
 
-    // ¶ÔÍâÊÂ¼ş
-    [Header("=== ÊÂ¼ş ===")]
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+    [Header("=== ï¿½Â¼ï¿½ ===")]
     public UnityEvent<Color> onColorChanged;
 
-    // ©¤©¤ ÄÚ²¿×´Ì¬ ©¤©¤
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ú²ï¿½×´Ì¬ ï¿½ï¿½ï¿½ï¿½
     private float h = 0f, s = 1f, v = 1f, a = 1f;
     private bool isOpen = false;
     private Color oldColor = Color.white;
     private bool suppressCallbacks = false;
+    private bool colorAlreadySet = false; // æ ‡è®° SetColor æ˜¯å¦å·²è¢«å¤–éƒ¨(å¦‚ BindClip)è°ƒç”¨è¿‡
 
-    // ÎÆÀí·Ö±æÂÊ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½
     private const int SV_SIZE = 128;
     private const int HUE_SIZE = 128;
     private const int BAR_W = 128;
@@ -69,11 +70,11 @@ public class ColorPickerPanel : MonoBehaviour,
     private Texture2D hueTex;
     private Texture2D alphaTex;
 
-    // ¼ÇÂ¼µ±Ç°ÕıÔÚÍÏÄÄ¸öÇøÓò
+    // ï¿½ï¿½Â¼ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½
     private enum DragTarget { None, SV, Hue, Alpha }
     private DragTarget dragTarget = DragTarget.None;
 
-    // ¼ÇÂ¼¸¸¼¶µÄ ScrollRect Ô­Ê¼×´Ì¬
+    // ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ScrollRect Ô­Ê¼×´Ì¬
     private ScrollRect parentScroll;
     private bool originalVertical;
     private bool originalHorizontal;
@@ -81,7 +82,7 @@ public class ColorPickerPanel : MonoBehaviour,
     // ==========================================
     void Awake()
     {
-        // ¡¾¶¯Ì¬Ìí¼ÓÊÂ¼ş×ª·¢Æ÷¡¿
+        // ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         AttachForwarder(svSquare);
         AttachForwarder(hueBar);
         AttachForwarder(alphaBar);
@@ -94,11 +95,12 @@ public class ColorPickerPanel : MonoBehaviour,
         RegisterSliderListeners();
         if (hexInput != null) hexInput.onEndEdit.AddListener(OnHexSubmit);
 
-        SetColor(Color.white, notify: false);
+        if (!colorAlreadySet)
+            SetColor(Color.white, notify: false);
         if (pickerPanel != null) pickerPanel.SetActive(false);
     }
 
-    // ¸ø·ÖÀëµ½Íâ²¿µÄ UI ¹ÒÔØ×ª·¢Æ÷
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ëµ½ï¿½â²¿ï¿½ï¿½ UI ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½
     private void AttachForwarder(RawImage targetImage)
     {
         if (targetImage != null)
@@ -110,10 +112,11 @@ public class ColorPickerPanel : MonoBehaviour,
     }
 
     // ==========================================
-    // Íâ²¿µ÷ÓÃ£ºÉèÖÃÑÕÉ«
+    // ï¿½â²¿ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
     // ==========================================
     public void SetColor(Color c, bool notify = true)
     {
+        colorAlreadySet = true;
         suppressCallbacks = true;
 
         Color.RGBToHSV(c, out h, out s, out v);
@@ -191,7 +194,7 @@ public class ColorPickerPanel : MonoBehaviour,
     }
 
     // ==========================================
-    // Êó±ê/ÍÏ×§
+    // ï¿½ï¿½ï¿½/ï¿½ï¿½×§
     // ==========================================
     public void OnPointerDown(PointerEventData data)
     {
@@ -258,7 +261,7 @@ public class ColorPickerPanel : MonoBehaviour,
     }
 
     // ==========================================
-    // HSV/A ±ä»¯ºóÍ³Ò»¸üĞÂËùÓĞ UI
+    // HSV/A ï¿½ä»¯ï¿½ï¿½Í³Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ UI
     // ==========================================
     private void OnHSVChanged()
     {
@@ -315,7 +318,7 @@ public class ColorPickerPanel : MonoBehaviour,
     }
 
     // ==========================================
-    // RGBA »¬Ìõ¼àÌı
+    // RGBA ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     // ==========================================
     private void RegisterSliderListeners()
     {
@@ -343,7 +346,7 @@ public class ColorPickerPanel : MonoBehaviour,
     }
 
     // ==========================================
-    // ÎÆÀíÉú³É
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     // ==========================================
     private void BuildTextures()
     {
@@ -404,7 +407,7 @@ public class ColorPickerPanel : MonoBehaviour,
 }
 
 // ==========================================
-// ¿ç²ã¼¶ÊÂ¼ş×ª·¢Æ÷ (¸¨ÖúÀà·Åµ½ÏÂÃæ)
+// ï¿½ï¿½ã¼¶ï¿½Â¼ï¿½×ªï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½ï¿½ï¿½ï¿½ï¿½)
 // ==========================================
 public class ColorPickerEventForwarder : MonoBehaviour, IPointerDownHandler, IDragHandler
 {

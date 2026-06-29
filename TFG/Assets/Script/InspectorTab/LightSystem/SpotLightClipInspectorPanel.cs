@@ -73,6 +73,7 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         isReady = false;
         base.BindClip(clip, mgr);
 
+        bool isBrandNewClip = !(clip.customData is SpotLightClipData);
         spotData = clip.customData is SpotLightClipData ex ? ex : new SpotLightClipData();
         clip.customData = spotData;
 
@@ -111,7 +112,8 @@ public class SpotLightClipInspectorPanel : ClipInspectorPanel
         {
             colorPickerBottom.onColorChanged.RemoveAllListeners();
 
-            spotData.colorBottom = Color.red;
+            if (isBrandNewClip)
+                spotData.colorBottom = Color.red;
 
             colorPickerBottom.SetColor(spotData.colorBottom, notify: false);
             colorPickerBottom.onColorChanged.AddListener(c => { spotData.colorBottom = c; Refresh(); });
